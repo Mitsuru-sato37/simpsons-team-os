@@ -1,15 +1,18 @@
 # Specification entry point
 
-This file is the fixed specification entry point for Codex sessions.
+This file is the fixed specification entry point for cross-PC Codex work. The repository does not yet have a fixed application architecture, so this file indexes the durable project context rather than inventing one.
 
 ## Canonical sources
 
-1. `docs/PROJECT_CONTEXT.md` — durable Simpsons / ラキポタ project context.
-2. `AGENTS.md` — repository rules, brand constraints, and workflow.
-3. `README.md` — repository purpose and entry instructions.
+Read these in order:
 
-There is intentionally no application-specific product specification yet. Do not invent architecture, automation, posting behavior, integrations, or paid services until a concrete task requires them.
+1. `AGENTS.md` — working rules, brand constraints, and handoff requirements.
+2. `README.md` — repository scope and multi-PC workflow.
+3. `docs/PROJECT_CONTEXT.md` — current durable Simpsons / ラキポタ project decisions.
+4. `docs/PROGRESS.md` — current implementation state and next-step handoff.
+
+Do not infer an application, Instagram automation, posting schedule, external integration, or paid service unless explicitly requested.
 
 ## Update rule
 
-Add durable project requirements to `docs/PROJECT_CONTEXT.md`. If an application-specific product specification is introduced later, reference it from this file rather than duplicating it.
+Record durable project or brand decisions in `docs/PROJECT_CONTEXT.md`. Record implementation progress and the next concrete task in `docs/PROGRESS.md`. Keep this file as a stable entry point only.
