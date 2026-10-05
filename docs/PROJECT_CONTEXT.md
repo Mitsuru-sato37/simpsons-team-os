@@ -40,8 +40,8 @@ The repository's first operational feature is the Google Apps Script fee collect
 - Spreadsheet: `Simpsons_集金台帳_試作版`
 - Spreadsheet ID: `1yVT9_c1RVdnosvZlN3r2bse6B3NtJo9JvKDggqDI61E`
 - Required tabs: `試合`, `参加者`, `受領履歴`
-- Payment methods: `現金` and `PayPay`; default fee is 300 yen.
-- Each unpaid player is presented with `現金300円` and `PayPay確認`; the receipt records the actual accepted amount, method, server timestamp, and receipt ID.
+- Payment channels are cash, PayPay, and bank transfer; the default fee is 300 yen.
+- Each unpaid player is presented with `現金300円`, `PayPay確認`, and `銀行振込確認`; the receipt records the actual accepted amount, method, server timestamp, and receipt ID.
 - Receipts are append-only records. Cancellation changes the status to `取消` and never deletes the row.
 - Completing a game selects the next open game in sheet order; manual selection remains available for past and future games.
 - Completed and cancelled games remain selectable for review, but cannot be marked complete again from either the UI or the server action.
