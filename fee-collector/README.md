@@ -6,6 +6,8 @@ Simpsonsの試合参加費を、試合当日にスマホから受領確認する
 
 - Spreadsheet: `Simpsons_集金台帳_試作版`
 - Spreadsheet ID: `1yVT9_c1RVdnosvZlN3r2bse6B3NtJo9JvKDggqDI61E`
+- Player master spreadsheet: `Simpsons_選手マスター`
+- Player master spreadsheet ID: `1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4`
 - Time zone used by the app: `Asia/Tokyo`
 
 必要なタブとヘッダー:
@@ -17,6 +19,7 @@ Simpsonsの試合参加費を、試合当日にスマホから受領確認する
 | `受領履歴` | 受領ID / 試合ID / 選手ID / 選手名 / 受領日時 / 金額 / 支払方法 / 状態 / メモ |
 
 `当日集金` タブは台帳側の集計用で、アプリの正式な受領根拠は `受領履歴` です。
+選手名と背番号は、別の `選手マスター` スプレッドシートを正として参照します。既存の `P001` 形式の参加者IDもマスターの `001` として解決します。
 
 ## 動作
 

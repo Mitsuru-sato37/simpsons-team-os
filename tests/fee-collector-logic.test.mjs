@@ -6,7 +6,12 @@ import vm from 'node:vm';
 const logicSource = readFileSync(new URL('../fee-collector/Logic.gs', import.meta.url), 'utf8');
 const logicContext = {};
 vm.runInNewContext(logicSource, logicContext);
-const { isPaymentMethodAllowed_, pickNextOpenGame_, projectReceipts_ } = logicContext;
+const {
+  isPaymentMethodAllowed_,
+  pickNextOpenGame_,
+  projectReceipts_,
+  resolveMasterPlayer_,
+} = logicContext;
 const codeGs = readFileSync(new URL('../fee-collector/Code.gs', import.meta.url), 'utf8');
 const indexHtml = readFileSync(new URL('../fee-collector/Index.html', import.meta.url), 'utf8');
 const appHtml = readFileSync(new URL('../fee-collector/App.html', import.meta.url), 'utf8');
@@ -79,6 +84,17 @@ test('accepts bank transfer as a manual payment method', () => {
   assert.equal(isPaymentMethodAllowed_('unknown'), false);
 });
 
+test('resolves legacy participant IDs through the player master', () => {
+  const player = resolveMasterPlayer_([
+    ['001', '23', '渡部 琉斗'],
+    ['002', '4', '渡邉 匠'],
+  ], 'P001');
+
+  assert.equal(player.playerId, '001');
+  assert.equal(player.jerseyNumber, '23');
+  assert.equal(player.name, '渡部 琉斗');
+});
+
 test('UI exposes cancelled receipt history', () => {
   assert.match(indexHtml, /cancelledList/);
   assert.match(indexHtml, /取消履歴/);
@@ -95,6 +111,16 @@ test('UI labels the standard cash collection action as 現金300円', () => {
 test('UI exposes a manual bank transfer confirmation action', () => {
   assert.match(appHtml, /data-method="銀行振込"/);
   assert.match(appHtml, /銀行振込確認/);
+});
+
+test('UI displays the jersey number from the player master', () => {
+  assert.match(appHtml, /player\.jerseyNumber/);
+  assert.match(appHtml, /player\.name/);
+});
+
+test('Apps Script config points to the native player master spreadsheet', () => {
+  assert.match(codeGs, /PLAYER_MASTER_SPREADSHEET_ID/);
+  assert.match(codeGs, /1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4/);
 });
 
 test('completed and cancelled games cannot be completed again', () => {

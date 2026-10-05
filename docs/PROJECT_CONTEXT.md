@@ -36,10 +36,14 @@ Known preferences:
 The repository's first operational feature is the Google Apps Script fee collector in `fee-collector/`.
 
 - Source repository: `Mitsuru-sato37/simpsons-team-os`
-- Active branch: `main` (implemented on `codex/fee-collector` and merged on 2026-10-05)
+- Active branch: `codex/player-master-integration`
 - Spreadsheet: `Simpsons_集金台帳_試作版`
 - Spreadsheet ID: `1yVT9_c1RVdnosvZlN3r2bse6B3NtJo9JvKDggqDI61E`
 - Required tabs: `試合`, `参加者`, `受領履歴`
+- Player master: `Simpsons_選手マスター` (native Google Spreadsheet)
+- Player master spreadsheet ID: `1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4`
+- Player master sheet: `選手マスター`; source columns are `選手ID`, `背番号`, and `氏名`.
+- Participant rows may retain legacy `P001`-style IDs; the app normalizes them against the master ID and displays the master `背番号` and `氏名`.
 - Payment channels are cash, PayPay, and bank transfer; the default fee is 300 yen.
 - Each unpaid player is presented with `現金300円`, `PayPay確認`, and `銀行振込確認`; the receipt records the actual accepted amount, method, server timestamp, and receipt ID.
 - Receipts are append-only records. Cancellation changes the status to `取消` and never deletes the row.

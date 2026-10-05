@@ -120,7 +120,7 @@ function renderParticipants() {
     .map((player) => {
       return '<article class="player-card" data-player-id="' + escapeHtml(player.playerId) + '">' +
         '<div class="player-top">' +
-          '<div class="player-name">' + escapeHtml(player.name) + '</div>' +
+          '<div class="player-name">' + escapeHtml((player.jerseyNumber ? '#' + player.jerseyNumber + ' ' : '') + player.name) + '</div>' +
           '<div class="player-due">' + yen(player.outstanding) + '</div>' +
         '</div>' +
         '<div class="payment-actions">' +

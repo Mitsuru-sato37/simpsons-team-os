@@ -10,17 +10,18 @@ This file is the stable handoff entry point. Detailed project context and progre
 - Repository initialized for cross-PC Codex development.
 - Durable Simpsons / ラキポタ context is recorded.
 - The Google Apps Script fee collector in `fee-collector/` is merged into `main`.
-- The collector records cash and manually confirmed PayPay receipts against `Simpsons_集金台帳_試作版`, preserves cancellations, prevents duplicate active receipts, and advances to the next open game after completion.
+- The collector records cash, manually confirmed PayPay, and bank-transfer receipts against `Simpsons_集金台帳_試作版`, preserves cancellations, prevents duplicate active receipts, and advances to the next open game after completion.
+- The collector now integrates with the native Google Sheets player master `1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4` for jersey numbers and names.
 
 ## Active branch
 
 Update this field at the end of each meaningful development session.
 
-`main`
+`codex/player-master-integration`
 
 ## Next
 
-Deploy the fee collector as a private Apps Script web app and run an iPhone operation test against the real sheet. Confirm receipt display, cancellation, duplicate-tap prevention, and automatic next-game selection. Record the result in `docs/PROGRESS.md`.
+Run an iPhone operation test against the updated private Apps Script and real sheet. Confirm jersey-number display, receipt display, cancellation, duplicate-tap prevention, and automatic next-game selection. Record the result in `docs/PROGRESS.md`.
 
 ## Required handoff update
 
