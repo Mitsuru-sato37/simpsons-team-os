@@ -1,7 +1,7 @@
 # Project context
 
 Status: Simpsons運営OSの開発中
-Last updated: 2026-10-02
+Last updated: 2026-10-05
 
 ## Team
 
@@ -41,8 +41,10 @@ The repository's first operational feature is the Google Apps Script fee collect
 - Spreadsheet ID: `1yVT9_c1RVdnosvZlN3r2bse6B3NtJo9JvKDggqDI61E`
 - Required tabs: `試合`, `参加者`, `受領履歴`
 - Payment methods: `現金` and `PayPay`; default fee is 300 yen.
+- Each unpaid player is presented with `現金300円` and `PayPay確認`; the receipt records the actual accepted amount, method, server timestamp, and receipt ID.
 - Receipts are append-only records. Cancellation changes the status to `取消` and never deletes the row.
 - Completing a game selects the next open game in sheet order; manual selection remains available for past and future games.
+- Completed and cancelled games remain selectable for review, but cannot be marked complete again from either the UI or the server action.
 - PayPay is manually confirmed from the PayPay transfer history; there is no API integration.
 
 The current feature does not include roster-image recognition, automatic participant registration, authentication, or public deployment.

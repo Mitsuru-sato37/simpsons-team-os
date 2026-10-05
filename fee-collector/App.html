@@ -82,7 +82,7 @@ function renderGames() {
     return;
   }
 
-  els.completeGameButton.disabled = selectedGame.status === '完了';
+  els.completeGameButton.disabled = selectedGame.status === '完了' || selectedGame.status === '中止';
   els.gameMeta.innerHTML = [
     '<strong>' + escapeHtml(selectedGame.date) + '</strong>',
     escapeHtml(selectedGame.opponent || '対戦相手未設定'),
@@ -124,7 +124,7 @@ function renderParticipants() {
           '<div class="player-due">' + yen(player.outstanding) + '</div>' +
         '</div>' +
         '<div class="payment-actions">' +
-          '<button class="cash-button" data-action="pay" data-method="現金" data-player="' + escapeHtml(player.playerId) + '">現金 ' + yen(player.outstanding) + '</button>' +
+          '<button class="cash-button" data-action="pay" data-method="現金" data-player="' + escapeHtml(player.playerId) + '">現金300円</button>' +
           '<button class="paypay-button" data-action="pay" data-method="PayPay" data-player="' + escapeHtml(player.playerId) + '">PayPay確認</button>' +
         '</div>' +
       '</article>';
