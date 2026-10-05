@@ -1,0 +1,348 @@
+<script>
+const state = {
+  data: null,
+  selectedGameId: null,
+  lastReceipt: null,
+  toastTimer: null,
+};
+
+const els = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+  Object.assign(els, {
+    gameSelect: document.getElementById('gameSelect'),
+    gameMeta: document.getElementById('gameMeta'),
+    summary: document.getElementById('summary'),
+    unpaidList: document.getElementById('unpaidList'),
+    unpaidCount: document.getElementById('unpaidCount'),
+    receivedList: document.getElementById('receivedList'),
+    receivedCount: document.getElementById('receivedCount'),
+    receivedToggle: document.getElementById('receivedToggle'),
+    cancelledList: document.getElementById('cancelledList'),
+    cancelledCount: document.getElementById('cancelledCount'),
+    cancelledToggle: document.getElementById('cancelledToggle'),
+    refreshButton: document.getElementById('refreshButton'),
+    completeGameButton: document.getElementById('completeGameButton'),
+    toast: document.getElementById('toast'),
+    receiptDialog: document.getElementById('receiptDialog'),
+    receiptBody: document.getElementById('receiptBody'),
+    closeReceiptButton: document.getElementById('closeReceiptButton'),
+    completeDialog: document.getElementById('completeDialog'),
+    cancelCompleteButton: document.getElementById('cancelCompleteButton'),
+    confirmCompleteButton: document.getElementById('confirmCompleteButton'),
+  });
+
+  els.gameSelect.addEventListener('change', () => load(els.gameSelect.value));
+  els.refreshButton.addEventListener('click', () => load(state.selectedGameId));
+  els.receivedToggle.addEventListener('click', toggleReceived);
+  els.cancelledToggle.addEventListener('click', toggleCancelled);
+  els.closeReceiptButton.addEventListener('click', () => els.receiptDialog.close());
+  els.completeGameButton.addEventListener('click', () => els.completeDialog.showModal());
+  els.cancelCompleteButton.addEventListener('click', () => els.completeDialog.close());
+  els.confirmCompleteButton.addEventListener('click', completeSelectedGame);
+
+  load(null);
+});
+
+function load(gameId) {
+  setLoading(true);
+  google.script.run
+    .withSuccessHandler((data) => {
+      state.data = data;
+      state.selectedGameId = data.selectedGame ? data.selectedGame.id : null;
+      render();
+      setLoading(false);
+    })
+    .withFailureHandler(handleError)
+    .getBootstrap(gameId);
+}
+
+function render() {
+  renderGames();
+  renderSummary();
+  renderParticipants();
+  renderReceived();
+  renderCancelled();
+}
+
+function renderGames() {
+  const { games, selectedGame } = state.data;
+  els.gameSelect.innerHTML = games
+    .map((game) => {
+      const selected = selectedGame && game.id === selectedGame.id ? ' selected' : '';
+      return '<option value="' + escapeHtml(game.id) + '"' + selected + '>' +
+        escapeHtml(game.date + ' ' + (game.opponent || '対戦相手未設定') + ' [' + game.status + ']') +
+        '</option>';
+    })
+    .join('');
+
+  if (!selectedGame) {
+    els.gameMeta.textContent = '試合が登録されていません。';
+    els.completeGameButton.disabled = true;
+    return;
+  }
+
+  els.completeGameButton.disabled = selectedGame.status === '完了' || selectedGame.status === '中止';
+  els.gameMeta.innerHTML = [
+    '<strong>' + escapeHtml(selectedGame.date) + '</strong>',
+    escapeHtml(selectedGame.opponent || '対戦相手未設定'),
+    escapeHtml(selectedGame.location || '場所未設定'),
+  ].join(' ・ ');
+}
+
+function renderSummary() {
+  const s = state.data.summary;
+  els.summary.innerHTML = [
+    summaryCard('参加', s.participants + '人'),
+    summaryCard('請求予定', yen(s.expected)),
+    summaryCard('受領済', yen(s.received)),
+    summaryCard('未収', yen(s.outstanding), 'outstanding'),
+  ].join('');
+}
+
+function summaryCard(label, value, className = '') {
+  return '<div class="summary-card ' + className + '">' +
+    '<div class="summary-label">' + escapeHtml(label) + '</div>' +
+    '<div class="summary-value">' + escapeHtml(value) + '</div>' +
+    '</div>';
+}
+
+function renderParticipants() {
+  const unpaid = state.data.participants.filter((player) => !player.paid);
+  els.unpaidCount.textContent = unpaid.length;
+
+  if (!unpaid.length) {
+    els.unpaidList.innerHTML = '<div class="empty-state">全員受領済みです。</div>';
+    return;
+  }
+
+  els.unpaidList.innerHTML = unpaid
+    .map((player) => {
+      return '<article class="player-card" data-player-id="' + escapeHtml(player.playerId) + '">' +
+        '<div class="player-top">' +
+          '<div class="player-name">' + escapeHtml(player.name) + '</div>' +
+          '<div class="player-due">' + yen(player.outstanding) + '</div>' +
+        '</div>' +
+        '<div class="payment-actions">' +
+          '<button class="cash-button" data-action="pay" data-method="現金" data-player="' + escapeHtml(player.playerId) + '">現金300円</button>' +
+          '<button class="paypay-button" data-action="pay" data-method="PayPay" data-player="' + escapeHtml(player.playerId) + '">PayPay確認</button>' +
+        '</div>' +
+      '</article>';
+    })
+    .join('');
+
+  els.unpaidList.querySelectorAll('[data-action="pay"]').forEach((button) => {
+    button.addEventListener('click', () => {
+      recordPayment(button.dataset.player, button.dataset.method, button);
+    });
+  });
+}
+
+function renderReceived() {
+  const receivedPlayers = state.data.participants.filter((player) => player.paid);
+  els.receivedCount.textContent = receivedPlayers.length;
+
+  if (!receivedPlayers.length) {
+    els.receivedList.innerHTML = '<div class="empty-state">まだ受領記録はありません。</div>';
+    return;
+  }
+
+  els.receivedList.innerHTML = receivedPlayers
+    .map((player) => {
+      const receipt = player.receipts[player.receipts.length - 1];
+      if (!receipt) return '';
+      return '<div class="received-row">' +
+        '<div>' +
+          '<div class="received-name">' + escapeHtml(player.name) + '</div>' +
+          '<div class="received-meta">' + escapeHtml(receipt.method + ' ・ ' + receipt.receivedAt) + '</div>' +
+        '</div>' +
+        '<div class="received-amount">✓ ' + yen(receipt.amount) + '</div>' +
+        '<button class="receipt-link" data-receipt="' + escapeHtml(receipt.id) + '">受領票を表示</button>' +
+      '</div>';
+    })
+    .join('');
+
+  els.receivedList.querySelectorAll('[data-receipt]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const receipt = findReceipt(button.dataset.receipt);
+      if (receipt) showReceipt(receipt);
+    });
+  });
+}
+
+function renderCancelled() {
+  const cancelled = state.data.cancelled || [];
+  els.cancelledCount.textContent = cancelled.length;
+
+  if (!cancelled.length) {
+    els.cancelledList.innerHTML = '<div class="empty-state">取消履歴はありません。</div>';
+    return;
+  }
+
+  els.cancelledList.innerHTML = cancelled
+    .map((receipt) => {
+      return '<div class="cancelled-row">' +
+        '<div>' +
+          '<div class="received-name">' + escapeHtml(receipt.name) + '</div>' +
+          '<div class="received-meta">' + escapeHtml(receipt.method + ' ・ ' + receipt.receivedAt) + '</div>' +
+          '<div class="cancelled-meta">ID: ' + escapeHtml(receipt.id) + '</div>' +
+        '</div>' +
+        '<div class="cancelled-status">取消<br>' + yen(receipt.amount) + '</div>' +
+      '</div>';
+    })
+    .join('');
+}
+
+function recordPayment(playerId, method, button) {
+  if (!state.selectedGameId) return;
+
+  const card = button.closest('.player-card');
+  card.classList.add('loading');
+  card.querySelectorAll('button').forEach((btn) => (btn.disabled = true));
+
+  google.script.run
+    .withSuccessHandler((result) => {
+      if (!result.ok && result.code === 'ALREADY_PAID') {
+        state.data = result.state;
+        render();
+        showToast(result.message);
+        return;
+      }
+
+      state.lastReceipt = result.receipt;
+      state.data = result.state;
+      render();
+      showPaymentToast(result.receipt);
+    })
+    .withFailureHandler(handleError)
+    .recordPayment({
+      gameId: state.selectedGameId,
+      playerId,
+      method,
+    });
+}
+
+function showPaymentToast(receipt) {
+  clearTimeout(state.toastTimer);
+  els.toast.innerHTML =
+    '<span class="toast-message">' +
+      escapeHtml(receipt.name + ' ' + receipt.method + ' ' + yen(receipt.amount) + ' を受領') +
+    '</span>' +
+    '<button id="showReceiptToastButton" type="button">受領票</button>' +
+    '<button id="undoToastButton" type="button">取り消す</button>';
+  els.toast.classList.add('is-visible');
+
+  document.getElementById('showReceiptToastButton').addEventListener('click', () => {
+    showReceipt(receipt);
+  });
+  document.getElementById('undoToastButton').addEventListener('click', () => {
+    undoReceipt(receipt.id);
+  });
+
+  state.toastTimer = setTimeout(hideToast, 9000);
+}
+
+function showToast(message) {
+  clearTimeout(state.toastTimer);
+  els.toast.innerHTML = '<span class="toast-message">' + escapeHtml(message) + '</span>';
+  els.toast.classList.add('is-visible');
+  state.toastTimer = setTimeout(hideToast, 5000);
+}
+
+function hideToast() {
+  els.toast.classList.remove('is-visible');
+}
+
+function undoReceipt(receiptId) {
+  setLoading(true);
+  google.script.run
+    .withSuccessHandler((result) => {
+      if (result.state) {
+        state.data = result.state;
+        state.selectedGameId = result.state.selectedGame ? result.state.selectedGame.id : state.selectedGameId;
+      }
+      render();
+      hideToast();
+      showToast('受領記録を取り消しました。履歴は削除せず「取消」として残ります。');
+      setLoading(false);
+    })
+    .withFailureHandler(handleError)
+    .cancelReceipt(receiptId);
+}
+
+function showReceipt(receipt) {
+  const game = state.data.games.find((item) => item.id === receipt.gameId) || state.data.selectedGame;
+  els.receiptBody.innerHTML =
+    '<dl class="receipt-grid">' +
+      receiptLine('試合', game ? game.date + ' ' + game.opponent : receipt.gameId) +
+      receiptLine('選手', receipt.name) +
+      receiptLine('金額', yen(receipt.amount)) +
+      receiptLine('方法', receipt.method) +
+      receiptLine('受領日時', receipt.receivedAt) +
+      receiptLine('受領ID', receipt.id) +
+    '</dl>';
+  els.receiptDialog.showModal();
+}
+
+function receiptLine(label, value) {
+  return '<dt>' + escapeHtml(label) + '</dt><dd>' + escapeHtml(value || '') + '</dd>';
+}
+
+function completeSelectedGame() {
+  if (!state.selectedGameId) return;
+  els.completeDialog.close();
+  setLoading(true);
+
+  google.script.run
+    .withSuccessHandler((data) => {
+      state.data = data;
+      state.selectedGameId = data.selectedGame ? data.selectedGame.id : null;
+      render();
+      showToast('試合を完了しました。次の未完了試合に切り替えました。');
+      setLoading(false);
+    })
+    .withFailureHandler(handleError)
+    .completeGame(state.selectedGameId);
+}
+
+function toggleReceived() {
+  const collapsed = els.receivedList.classList.toggle('is-collapsed');
+  els.receivedToggle.setAttribute('aria-expanded', String(!collapsed));
+}
+
+function toggleCancelled() {
+  const collapsed = els.cancelledList.classList.toggle('is-collapsed');
+  els.cancelledToggle.setAttribute('aria-expanded', String(!collapsed));
+}
+
+function findReceipt(receiptId) {
+  for (const player of state.data.participants) {
+    const receipt = (player.receipts || []).find((item) => item.id === receiptId);
+    if (receipt) return receipt;
+  }
+  return null;
+}
+
+function setLoading(isLoading) {
+  document.body.classList.toggle('loading', isLoading);
+}
+
+function handleError(error) {
+  setLoading(false);
+  const message = error && error.message ? error.message : String(error || 'エラーが発生しました。');
+  showToast(message);
+}
+
+function yen(value) {
+  return '¥' + Number(value || 0).toLocaleString('ja-JP');
+}
+
+function escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+</script>

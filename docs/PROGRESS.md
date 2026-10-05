@@ -1,29 +1,36 @@
 # Progress
 
-Status: Repository initialized
-Last updated: 2026-10-01
+Status: fee collector verified and hardened on `codex/fee-collector`
+Last updated: 2026-10-05
 
 ## Completed
 
-- GitHub repository initialized for cross-PC Codex development.
-- Codex project instructions added.
-- Current Simpsons / ラキポタ context recorded.
-- Secret and local-file ignore rules added.
+- GitHub repository identity is now documented as `Mitsuru-sato37/simpsons-team-os`.
+- Existing Apps Script fee collector is connected by design to spreadsheet ID `1yVT9_c1RVdnosvZlN3r2bse6B3NtJo9JvKDggqDI61E`.
+- Deterministic next-open-game selection and receipt projection helpers were added.
+- Payment double-submit protection remains backed by the Apps Script lock and active-receipt recheck.
+- Game completion now uses a lock and selects the next open game.
+- Cancelled receipts remain in the sheet and are shown in a separate collapsed `取消履歴` section.
+- Repository design and implementation plan were added under `docs/superpowers/`.
+- Unpaid-player cards now use the operational labels `現金300円` and `PayPay確認`.
+- `完了` と `中止` の試合は手動選択して確認できるが、完了操作を再実行できない。Apps Script側も状態を確認して更新を拒否する。
 
-## Current state
+## Verification
 
-No application framework or runtime has been selected yet. This is intentional because the next concrete development task for this repository has not been fixed.
+- `node --test tests/fee-collector-logic.test.mjs` — 12 tests passed (2026-10-05)
+- `git diff --check`
+- Google Sheets metadata and headers were checked for `試合`, `参加者`, `受領履歴`, and `当日集金`.
 
-## Next step
+## Remaining scope
 
-When a Simpsons/Instagram-related development task is assigned:
-
-1. record any new durable requirement in `docs/PROJECT_CONTEXT.md`;
-2. choose the smallest appropriate technical structure for that task;
-3. implement on a `codex/<topic>` branch;
-4. test/verify the result;
-5. update this file before handoff.
+- Apps Script deployment and real iPhone operation test remain external steps.
+- Participant registration from a starting-lineup image remains a later feature.
+- PayPay API integration, authentication, and public deployment remain out of scope.
 
 ## Handoff
 
-Record the active branch, completed work, remaining work, and external dependencies here at the end of each meaningful Codex session.
+Current branch: `codex/fee-collector`
+
+Next task: deploy the Apps Script to a private web app and perform an iPhone operation test against the real sheet, including receipt display, cancellation, duplicate-tap prevention, and automatic next-game selection.
+
+Push the verified branch before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.

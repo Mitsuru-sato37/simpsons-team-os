@@ -1,7 +1,7 @@
 # Project context
 
-Status: Current known decisions
-Last updated: 2026-10-01
+Status: Simpsons運営OSの開発中
+Last updated: 2026-10-05
 
 ## Team
 
@@ -31,16 +31,24 @@ Known preferences:
 - Make effective use of the circular crop used by profile icons.
 - Avoid designs that are overly similar to third-party characters or existing copyrighted visual identities.
 
+## Fee collector
+
+The repository's first operational feature is the Google Apps Script fee collector in `fee-collector/`.
+
+- Source repository: `Mitsuru-sato37/simpsons-team-os`
+- Active branch: `codex/fee-collector`
+- Spreadsheet: `Simpsons_集金台帳_試作版`
+- Spreadsheet ID: `1yVT9_c1RVdnosvZlN3r2bse6B3NtJo9JvKDggqDI61E`
+- Required tabs: `試合`, `参加者`, `受領履歴`
+- Payment methods: `現金` and `PayPay`; default fee is 300 yen.
+- Each unpaid player is presented with `現金300円` and `PayPay確認`; the receipt records the actual accepted amount, method, server timestamp, and receipt ID.
+- Receipts are append-only records. Cancellation changes the status to `取消` and never deletes the row.
+- Completing a game selects the next open game in sheet order; manual selection remains available for past and future games.
+- Completed and cancelled games remain selectable for review, but cannot be marked complete again from either the UI or the server action.
+- PayPay is manually confirmed from the PayPay transfer history; there is no API integration.
+
+The current feature does not include roster-image recognition, automatic participant registration, authentication, or public deployment.
+
 ## Scope boundary
 
-The exact software/product scope of this repository is not yet fixed.
-
-Do not assume that this repository must become:
-
-- an Instagram auto-posting tool;
-- a social media analytics service;
-- a full team-management application;
-- an image-generation pipeline;
-- or a website.
-
-Codex should implement only the next explicitly assigned task and update this context when durable decisions are made.
+Do not assume that this repository must become an Instagram auto-posting tool, a social media analytics service, a full team-management application, an image-generation pipeline, or a public website. Implement only the next explicitly assigned task and update this context when durable decisions are made.

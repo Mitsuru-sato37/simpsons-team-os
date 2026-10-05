@@ -16,6 +16,7 @@ venv/
 # Local assets / generated scratch
 .local/
 tmp/
+.superpowers/
 
 # Editors / OS
 .vscode/

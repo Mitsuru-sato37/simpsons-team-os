@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#4b2e83">
+  <title>Simpsons 集金</title>
+  <?!= include('Styles'); ?>
+</head>
+<body>
+  <main class="shell">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">SIMPSONS</p>
+        <h1>当日集金</h1>
+      </div>
+      <button id="refreshButton" class="icon-button" type="button" aria-label="更新">↻</button>
+    </header>
+
+    <section class="game-panel">
+      <label for="gameSelect">対象試合</label>
+      <select id="gameSelect"></select>
+      <div id="gameMeta" class="game-meta"></div>
+      <button id="completeGameButton" class="text-button" type="button">この試合を完了</button>
+    </section>
+
+    <section id="summary" class="summary-grid" aria-label="集金状況"></section>
+
+    <section class="section-block">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">TO COLLECT</p>
+          <h2>未収</h2>
+        </div>
+        <span id="unpaidCount" class="count-badge">0</span>
+      </div>
+      <div id="unpaidList" class="player-list"></div>
+    </section>
+
+    <section class="section-block received-section">
+      <button id="receivedToggle" class="section-heading toggle-heading" type="button" aria-expanded="false">
+        <div>
+          <p class="eyebrow">RECEIVED</p>
+          <h2>受領済み</h2>
+        </div>
+        <span id="receivedCount" class="count-badge">0</span>
+      </button>
+      <div id="receivedList" class="received-list is-collapsed"></div>
+    </section>
+
+    <section class="section-block cancelled-section">
+      <button id="cancelledToggle" class="section-heading toggle-heading" type="button" aria-expanded="false">
+        <div>
+          <p class="eyebrow">CANCELLED</p>
+          <h2>取消履歴</h2>
+        </div>
+        <span id="cancelledCount" class="count-badge">0</span>
+      </button>
+      <div id="cancelledList" class="cancelled-list is-collapsed"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <dialog id="receiptDialog" class="receipt-dialog">
+    <div class="receipt-card">
+      <p class="eyebrow">SIMPSONS RECEIPT</p>
+      <h2>受領票</h2>
+      <div id="receiptBody"></div>
+      <button id="closeReceiptButton" class="primary-button full-width" type="button">閉じる</button>
+    </div>
+  </dialog>
+
+  <dialog id="completeDialog" class="confirm-dialog">
+    <div class="confirm-card">
+      <h2>この試合を完了しますか？</h2>
+      <p>完了すると、次にサイトを開いたときは次の未完了試合が自動で選ばれます。過去試合はプルダウンから確認できます。</p>
+      <div class="dialog-actions">
+        <button id="cancelCompleteButton" class="secondary-button" type="button">やめる</button>
+        <button id="confirmCompleteButton" class="primary-button" type="button">完了する</button>
+      </div>
+    </div>
+  </dialog>
+
+  <?!= include('App'); ?>
+</body>
+</html>
