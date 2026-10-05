@@ -36,7 +36,7 @@ Known preferences:
 The repository's first operational feature is the Google Apps Script fee collector in `fee-collector/`.
 
 - Source repository: `Mitsuru-sato37/simpsons-team-os`
-- Active branch: `codex/fee-collector`
+- Active branch: `main` (implemented on `codex/fee-collector` and merged on 2026-10-05)
 - Spreadsheet: `Simpsons_集金台帳_試作版`
 - Spreadsheet ID: `1yVT9_c1RVdnosvZlN3r2bse6B3NtJo9JvKDggqDI61E`
 - Required tabs: `試合`, `参加者`, `受領履歴`

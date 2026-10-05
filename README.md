@@ -16,7 +16,7 @@ GitHub: `Mitsuru-sato37/simpsons-team-os`
 
 `fee-collector/` に、Google Sheets 台帳と連携する Apps Script 製の当日集金サイトがあります。
 
-- 開発ブランチ: `codex/fee-collector`
+- 統合先ブランチ: `main`（実装履歴: `codex/fee-collector`）
 - 画面: `fee-collector/Index.html`, `App.html`, `Styles.html`
 - サーバー処理: `fee-collector/Code.gs`
 - 純粋ロジック: `fee-collector/Logic.gs`

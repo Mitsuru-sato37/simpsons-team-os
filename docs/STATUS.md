@@ -9,8 +9,8 @@ This file is the stable handoff entry point. Detailed project context and progre
 
 - Repository initialized for cross-PC Codex development.
 - Durable Simpsons / ラキポタ context is recorded.
-- No application framework or runtime has been selected, intentionally.
-- No concrete next development task is currently fixed in the repository.
+- The Google Apps Script fee collector in `fee-collector/` is merged into `main`.
+- The collector records cash and manually confirmed PayPay receipts against `Simpsons_集金台帳_試作版`, preserves cancellations, prevents duplicate active receipts, and advances to the next open game after completion.
 
 ## Active branch
 
@@ -20,7 +20,7 @@ Update this field at the end of each meaningful development session.
 
 ## Next
 
-When a concrete Simpsons-related task starts, record the durable requirement in `docs/PROJECT_CONTEXT.md`, implement the smallest suitable technical structure, and update `docs/PROGRESS.md` before handoff.
+Deploy the fee collector as a private Apps Script web app and run an iPhone operation test against the real sheet. Confirm receipt display, cancellation, duplicate-tap prevention, and automatic next-game selection. Record the result in `docs/PROGRESS.md`.
 
 ## Required handoff update
 

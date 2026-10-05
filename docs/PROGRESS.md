@@ -1,6 +1,6 @@
 # Progress
 
-Status: fee collector verified and hardened on `codex/fee-collector`
+Status: fee collector verified and merged into `main`
 Last updated: 2026-10-05
 
 ## Completed
@@ -14,6 +14,7 @@ Last updated: 2026-10-05
 - Repository design and implementation plan were added under `docs/superpowers/`.
 - Unpaid-player cards now use the operational labels `現金300円` and `PayPay確認`.
 - `完了` と `中止` の試合は手動選択して確認できるが、完了操作を再実行できない。Apps Script側も状態を確認して更新を拒否する。
+- `codex/fee-collector` was merged into `main` on 2026-10-05.
 
 ## Verification
 
@@ -29,8 +30,8 @@ Last updated: 2026-10-05
 
 ## Handoff
 
-Current branch: `codex/fee-collector`
+Current branch: `main`
 
 Next task: deploy the Apps Script to a private web app and perform an iPhone operation test against the real sheet, including receipt display, cancellation, duplicate-tap prevention, and automatic next-game selection.
 
-Push the verified branch before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.
+The merged `main` branch must be pushed before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.
