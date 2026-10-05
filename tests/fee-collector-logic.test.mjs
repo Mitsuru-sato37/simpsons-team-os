@@ -6,7 +6,7 @@ import vm from 'node:vm';
 const logicSource = readFileSync(new URL('../fee-collector/Logic.gs', import.meta.url), 'utf8');
 const logicContext = {};
 vm.runInNewContext(logicSource, logicContext);
-const { pickNextOpenGame_, projectReceipts_ } = logicContext;
+const { isPaymentMethodAllowed_, pickNextOpenGame_, projectReceipts_ } = logicContext;
 const codeGs = readFileSync(new URL('../fee-collector/Code.gs', import.meta.url), 'utf8');
 const indexHtml = readFileSync(new URL('../fee-collector/Index.html', import.meta.url), 'utf8');
 const appHtml = readFileSync(new URL('../fee-collector/App.html', import.meta.url), 'utf8');
@@ -74,6 +74,11 @@ test('payment path keeps the active-receipt recheck', () => {
   assert.match(recordPayment, /ALREADY_PAID/);
 });
 
+test('accepts bank transfer as a manual payment method', () => {
+  assert.equal(isPaymentMethodAllowed_('銀行振込'), true);
+  assert.equal(isPaymentMethodAllowed_('unknown'), false);
+});
+
 test('UI exposes cancelled receipt history', () => {
   assert.match(indexHtml, /cancelledList/);
   assert.match(indexHtml, /取消履歴/);
@@ -85,6 +90,11 @@ test('UI exposes cancelled receipt history', () => {
 
 test('UI labels the standard cash collection action as 現金300円', () => {
   assert.match(appHtml, /現金300円/);
+});
+
+test('UI exposes a manual bank transfer confirmation action', () => {
+  assert.match(appHtml, /data-method="銀行振込"/);
+  assert.match(appHtml, /銀行振込確認/);
 });
 
 test('completed and cancelled games cannot be completed again', () => {

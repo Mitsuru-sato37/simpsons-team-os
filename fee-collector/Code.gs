@@ -4,7 +4,7 @@ const CONFIG = Object.freeze({
   SHEET_RECEIPTS: '受領履歴',
   DEFAULT_FEE: 300,
   TIME_ZONE: 'Asia/Tokyo',
-  PAYMENT_METHODS: ['現金', 'PayPay'],
+  PAYMENT_METHODS: ['現金', 'PayPay', '銀行振込'],
 });
 
 function doGet() {
@@ -30,7 +30,7 @@ function recordPayment(payload) {
   }
 
   const method = String(payload.method || '');
-  if (!CONFIG.PAYMENT_METHODS.includes(method)) {
+  if (!isPaymentMethodAllowed_(method)) {
     throw new Error('支払方法が不正です。');
   }
 

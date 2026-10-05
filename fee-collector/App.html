@@ -126,6 +126,7 @@ function renderParticipants() {
         '<div class="payment-actions">' +
           '<button class="cash-button" data-action="pay" data-method="現金" data-player="' + escapeHtml(player.playerId) + '">現金300円</button>' +
           '<button class="paypay-button" data-action="pay" data-method="PayPay" data-player="' + escapeHtml(player.playerId) + '">PayPay確認</button>' +
+          '<button class="bank-button" data-action="pay" data-method="銀行振込" data-player="' + escapeHtml(player.playerId) + '">銀行振込確認</button>' +
         '</div>' +
       '</article>';
     })

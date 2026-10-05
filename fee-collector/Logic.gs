@@ -1,3 +1,7 @@
+function isPaymentMethodAllowed_(method) {
+  return ['現金', 'PayPay', '銀行振込'].includes(String(method || ''));
+}
+
 function isOpenGame_(game) {
   return game && game.status !== '完了' && game.status !== '中止';
 }
