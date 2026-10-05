@@ -45,3 +45,47 @@ Never discard unrelated local changes in order to synchronize.
 ## Handoff
 
 Before stopping a meaningful development session, update `docs/PROGRESS.md` with completed work, current branch, next task, and any blocking dependency.
+
+
+## Cross-PC Codex handoff standard
+
+This repository must remain resumable from another PC without relying on Codex chat history or uncommitted local files.
+
+### Fixed entry points
+
+At the start of every meaningful session, read in this order:
+
+1. `AGENTS.md`
+2. `docs/SPEC.md`
+3. `docs/STATUS.md`
+4. the canonical documents referenced by those files
+
+Codex conversation history is not a source of truth. Durable requirements, decisions, status, and next steps belong in the repository.
+
+### Start of session
+
+1. Run `git status` and preserve any unrelated local work.
+2. Run `git fetch origin`.
+3. Read `docs/STATUS.md` and resume the active branch recorded by its canonical handoff document when one exists; otherwise synchronize `main`.
+4. Pull with `git pull --ff-only`.
+5. Read the specification/status sources before changing code.
+
+Do not discard local changes merely to synchronize.
+
+### During work
+
+- Record durable product or architecture decisions in the repository in the same change as the implementation.
+- Do not leave important context only in a Codex conversation, terminal scrollback, or an uncommitted file.
+- Keep one coherent task on one branch unless the repository explicitly defines another workflow.
+
+### End of session / PC handoff
+
+Before work is considered safely handed off:
+
+1. Update the canonical handoff document referenced by `docs/STATUS.md` (or `docs/STATUS.md` itself when it is canonical).
+2. Record at least: active branch, completed work, next work, verification performed, and blockers/external dependencies.
+3. Commit all intended changes.
+4. Push the active branch to GitHub.
+5. Confirm the pushed branch contains the handoff update.
+
+On another PC, recovery is: fetch -> switch to the recorded branch -> pull -> read `AGENTS.md`, `docs/SPEC.md`, and `docs/STATUS.md`.
