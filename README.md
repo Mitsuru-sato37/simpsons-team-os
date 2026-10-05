@@ -21,7 +21,7 @@ GitHub: `Mitsuru-sato37/simpsons-team-os`
 - サーバー処理: `fee-collector/Code.gs`
 - 純粋ロジック: `fee-collector/Logic.gs`
 - 台帳仕様と起動手順: `fee-collector/README.md`
-- 未収者には `現金300円` と `PayPay確認` を表示し、受領票・取消履歴・二重受領防止を備える。
+- 未収者には残額に応じた現金ボタン、`PayPay確認`、`銀行振込確認`を表示し、受領票・取消履歴・二重受領防止を備える。
 
 ## Multi-PC development
 

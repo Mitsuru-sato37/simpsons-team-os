@@ -12,6 +12,7 @@ This file is the stable handoff entry point. Detailed project context and progre
 - The Google Apps Script fee collector in `fee-collector/` is merged into `main`.
 - The collector records cash, manually confirmed PayPay, and bank-transfer receipts against `Simpsons_集金台帳_試作版`, preserves cancellations, prevents duplicate active receipts, and advances to the next open game after completion.
 - The collector now integrates with the native Google Sheets player master `1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4` for jersey numbers and names.
+- The private web app is at deployment version 4; cash records the full outstanding balance, while PayPay and bank transfer remain 300 yen per action. Per-game participants are currently registered in the `参加者` tab with game ID and player ID; names resolve from the master, with no in-app roster picker yet.
 
 ## Active branch
 
@@ -21,7 +22,7 @@ Update this field at the end of each meaningful development session.
 
 ## Next
 
-Run an iPhone operation test against the updated private Apps Script and real sheet. Confirm jersey-number display, receipt display, cancellation, duplicate-tap prevention, and automatic next-game selection. Record the result in `docs/PROGRESS.md`.
+Run an iPhone operation test against the updated private Apps Script and real sheet. Confirm jersey-number display, full-balance cash collection, PayPay/bank-transfer confirmation, receipt display, cancellation, duplicate-tap prevention, and automatic next-game selection. Then decide whether to add an in-app player-master picker for participant registration. Record the result in `docs/PROGRESS.md`.
 
 ## Required handoff update
 

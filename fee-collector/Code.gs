@@ -59,7 +59,10 @@ function recordPayment(payload) {
       };
     }
 
-    const amount = Math.min(CONFIG.DEFAULT_FEE, due - received);
+    const outstanding = due - received;
+    const amount = method === '現金'
+      ? outstanding
+      : Math.min(CONFIG.DEFAULT_FEE, outstanding);
     const now = new Date();
     const receiptId = makeReceiptId_(now);
     const receiptSheet = ss.getSheetByName(CONFIG.SHEET_RECEIPTS);

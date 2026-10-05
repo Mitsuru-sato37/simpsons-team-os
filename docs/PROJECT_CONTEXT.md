@@ -45,7 +45,8 @@ The repository's first operational feature is the Google Apps Script fee collect
 - Player master sheet: `選手マスター`; source columns are `選手ID`, `背番号`, and `氏名`.
 - Participant rows may retain legacy `P001`-style IDs; the app normalizes them against the master ID and displays the master `背番号` and `氏名`.
 - Payment channels are cash, PayPay, and bank transfer; the default fee is 300 yen.
-- Each unpaid player is presented with `現金300円`, `PayPay確認`, and `銀行振込確認`; the receipt records the actual accepted amount, method, server timestamp, and receipt ID.
+- Each unpaid player is presented with a cash button for the full outstanding balance (for example, `現金500円`), `PayPay確認`, and `銀行振込確認`; PayPay and bank-transfer confirmations remain capped at the default 300 yen per action. The receipt records the accepted amount, method, server timestamp, and receipt ID.
+- For each game, attendance is currently registered as rows in `参加者` using `試合ID` and `選手ID`; the player name is resolved from the master for display. The web app does not yet provide a roster picker or attendee-registration UI.
 - Receipts are append-only records. Cancellation changes the status to `取消` and never deletes the row.
 - Completing a game selects the next open game in sheet order; manual selection remains available for past and future games.
 - Completed and cancelled games remain selectable for review, but cannot be marked complete again from either the UI or the server action.
