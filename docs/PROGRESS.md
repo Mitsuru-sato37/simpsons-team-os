@@ -35,6 +35,10 @@ Last updated: 2026-10-06
 - Updated FEATURE PLAYER workflow after the Enjoys post: per-game layouts can vary, the selected player's source photo remains unchanged, any generated background excludes people/logos/text, and the official Feature Player folder logo is added small as an independent Canva image layer.
 - Recorded the user-confirmed Instagram caption structure and the requirement to offer three music options with a marked first choice.
 
+- 2026-10-06: Added the user-approved 180×180 Apple touch icon to the fee collector and linked it from `Index.html`.
+- Updated the existing owner-only Apps Script deployment to version 7; the deployment ID, URL, and access setting remain unchanged.
+- 2026-10-06: Changed the existing version 7 Apps Script deployment access from owner-only to anyone with the URL, at the user's request. It continues to execute as the owner, and the deployment ID and URL are unchanged.
+- 2026-10-06: Added and published a static GitHub Pages entry at `https://mitsuru-sato37.github.io/simpsons-team-os/`. The top-level page links the adopted 180×180 touch icon and embeds the existing Apps Script app, preserving the app UI and app deployment URL.
 ## Verification
 
 - `node --test tests/instagram-production.test.mjs`
@@ -52,6 +56,10 @@ Last updated: 2026-10-06
 - Added touch-device / embedded-viewport sizing regression coverage; current test run: `node --test tests/fee-collector-logic.test.mjs` — 19 tests passed; `git diff --check` passed.
 - `jq empty instagram/designs.json` and `git diff --check` passed for the current documentation and workflow-registry changes. Automated tests were not run.
 
+- Browser verification after deployment version 7 confirmed the app opens and its served HTML contains the 180×180 `apple-touch-icon` URL. The public Drive image loads as a 180×180 image. No payment action was performed.
+- Apps Script Manage deployments confirmed version 7, execute-as-owner, access `全員` (anyone), and the same deployment ID and web app URL after the access update. No payment action was performed.
+- GitHub Actions Pages deployment succeeded (run 1). The live entry page's top-level DOM has one `apple-touch-icon` link to `/apple-touch-icon.png` with `sizes="180x180"`; the page loads the existing Apps Script app in its iframe. No payment action was performed.
+- The user confirmed the adopted icon is displayed on the iPhone Home Screen after using the GitHub Pages entry URL and said touch-device sizing does not need further checking.
 ## Remaining scope
 
 - The current STARTING LINEUP Drive folders are empty and no matching Canva design was found; production must stop until the existing source/method is identified.
@@ -61,12 +69,12 @@ Last updated: 2026-10-06
 - Verify the deployed private Apps Script on an iPhone after refreshing the version 6 layout; do not record a real payment during the test.
 - Participant registration from a starting-lineup image remains a later feature.
 - Consider adding an in-app player-master picker to register participants per game without manually entering IDs; no such UI exists yet.
-- PayPay API integration, authentication, and public deployment remain out of scope.
+- PayPay API integration and user authentication remain out of scope. Public directory listing is not enabled; app access requires its URL.
 
 ## Handoff
 
-Current branch: `main` (PR #7, FEATURE PLAYER workflow and contract updates, was merged on 2026-10-06; merge commit `474b343`).
+Current branch: `main` (PR #8, the home-screen icon setup, merged on 2026-10-06).
 
-Next task: confirm the official logo image in the Feature Player Drive folder and update the Drive SNS guide if it remains the canonical production guide. The fee-collector iPhone verification remains a separate outstanding task.
+Next task: confirm the official logo image in the Feature Player Drive folder and update the Drive SNS guide if it remains the canonical production guide. The user confirmed the home-screen icon appears on iPhone; icon work is complete. The fee-collector iPhone verification remains a separate outstanding task.
 
 The merged `main` branch must be pushed before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.
