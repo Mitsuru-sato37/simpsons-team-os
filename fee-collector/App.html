@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelledCount: document.getElementById('cancelledCount'),
     cancelledToggle: document.getElementById('cancelledToggle'),
     refreshButton: document.getElementById('refreshButton'),
+    ledgerLink: document.getElementById('ledgerLink'),
     completeGameButton: document.getElementById('completeGameButton'),
     toast: document.getElementById('toast'),
     receiptDialog: document.getElementById('receiptDialog'),
@@ -50,6 +51,8 @@ function load(gameId) {
     .withSuccessHandler((data) => {
       state.data = data;
       state.selectedGameId = data.selectedGame ? data.selectedGame.id : null;
+      els.ledgerLink.href = data.ledgerUrl;
+      els.ledgerLink.hidden = !data.ledgerUrl;
       render();
       setLoading(false);
     })

@@ -223,11 +223,13 @@ function pickGame_(games, preferredGameId) {
 }
 
 function buildState_(games, gameId) {
+  const ss = getSpreadsheet_();
   const selected = games.find((game) => game.id === gameId) || null;
   if (!selected) {
     return {
       games,
       selectedGame: null,
+      ledgerUrl: ss.getUrl(),
       participants: [],
       received: [],
       cancelled: [],
@@ -235,7 +237,6 @@ function buildState_(games, gameId) {
     };
   }
 
-  const ss = getSpreadsheet_();
   const participantSheet = ss.getSheetByName(CONFIG.SHEET_PARTICIPANTS);
   const participantRows = participantSheet.getDataRange().getValues().slice(1);
   const masterRows = getPlayerMasterRows_();
@@ -305,6 +306,7 @@ function buildState_(games, gameId) {
   return {
     games,
     selectedGame: selected,
+    ledgerUrl: ss.getUrl(),
     participants,
     received: activeReceipts.sort((a, b) =>
       b.receivedAt.localeCompare(a.receivedAt)
