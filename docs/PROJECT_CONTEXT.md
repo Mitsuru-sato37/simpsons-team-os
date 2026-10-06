@@ -54,7 +54,7 @@ The repository's first operational feature is the Google Apps Script fee collect
 
 The current feature does not include roster-image recognition, automatic participant registration, or user authentication. The Apps Script deployment is intentionally accessible to anyone who has its URL and executes as the owner; it is not discoverable by public directory listing.
 
-- The fee collector uses the user-approved 180×180 Simpsons home-screen icon at `fee-collector/apple-touch-icon.png`. Its Apple touch icon reference is in `fee-collector/Index.html`; the PNG is also stored in Drive as a link-readable image so Safari can fetch it. The Apps Script web app executes as the owner and is accessible to anyone with its URL.
+- The fee collector uses the user-approved 180×180 Simpsons home-screen icon at `fee-collector/apple-touch-icon.png`. The Apps Script web app executes as the owner and is accessible to anyone with its URL. Since Apps Script HTML Service runs inside nested iframes, iPhone Home Screen installation uses the public GitHub Pages entry at `https://mitsuru-sato37.github.io/simpsons-team-os/`, which declares the icon in the top-level document and embeds the unchanged Apps Script app. The original app's `Index.html` also retains its inner-frame icon reference.
 ## Instagram production module
 
 - Instagram image production is available as a Codex workflow in `instagram/` and is independent of the fee-collection app (集金機能とは独立) in `fee-collector/`.
