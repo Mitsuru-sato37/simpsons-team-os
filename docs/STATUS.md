@@ -1,7 +1,7 @@
 # Status
 
 Status: Active cross-PC handoff entry point
-Last updated: 2026-10-05
+Last updated: 2026-10-06
 
 This file is the stable handoff entry point. Detailed project context and progress remain authoritative in `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md`.
 
@@ -18,11 +18,11 @@ This file is the stable handoff entry point. Detailed project context and progre
 
 Update this field at the end of each meaningful development session.
 
-`codex/player-master-integration`
+`codex/feature-player-workflow`
 
 ## Next
 
-Refresh the version 6 private Apps Script on an iPhone and verify touch-device sizing; version 5 did not change the displayed sizing in the user's screenshot. Do not create a receipt as part of visual verification. Then run the remaining iPhone operation checks against the real sheet and decide whether to add an in-app player-master picker for participant registration. Record the result in `docs/PROGRESS.md`.
+Push the committed FEATURE PLAYER workflow update when GitHub connectivity is available. Then verify the official logo asset in the Feature Player Drive folder and align `Simpsons_試合後SNS標準運用ガイド_v2.1` with the photo-preserving Canva layer workflow. The trusted-read bridge required before editing an existing Google Doc was unavailable here, so the Drive guide was not changed.
 
 ## Required handoff update
 

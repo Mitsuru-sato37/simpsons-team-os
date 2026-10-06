@@ -56,12 +56,19 @@
       "exampleFileIds": [
         "1prfwWlb45EZIXOsmSZSWgnqYjpJ_4mbz",
         "1Yih7Sch1q2MKhLZSKMq_LS8Zqj8mHYuC",
-        "1GsK2c5o7zd9qQdii2ODEP4SUJCm9QdNc"
+        "1GsK2c5o7zd9qQdii2ODEP4SUJCm9QdNc",
+        "1DYuHiq6msAUOeRJnurEBfsxc-EYWI5SS"
       ]
     },
     "canva": {
       "editableDesignId": null,
-      "method": "convert-approved-drive-reference-image-to-editable-design-per-match"
+      "method": "compose-per-match-canva-layers",
+      "layers": {
+        "playerPhoto": "preserve-user-supplied-photo-unchanged",
+        "background": "may-vary; generated background must contain no people-logos-or-text",
+        "officialLogo": "use-small-separate-image-layer-from-feature-player-drive-folder",
+        "copy": "keep-critical-text-editable-in-canva"
+      }
     }
   },
   "startingLineup": {
