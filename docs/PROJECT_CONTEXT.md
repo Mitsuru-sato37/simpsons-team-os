@@ -1,7 +1,7 @@
 # Project context
 
 Status: Simpsons運営OSの開発中
-Last updated: 2026-10-05
+Last updated: 2026-10-06
 
 ## Team
 
@@ -54,6 +54,7 @@ The repository's first operational feature is the Google Apps Script fee collect
 
 The current feature does not include roster-image recognition, automatic participant registration, authentication, or public deployment.
 
+- The fee collector uses the user-approved 180×180 Simpsons home-screen icon at `fee-collector/apple-touch-icon.png`. Its Apple touch icon reference is in `fee-collector/Index.html`; the PNG is also stored in Drive as a link-readable image so Safari can fetch it. The Apps Script web app itself remains owner-only.
 ## Instagram production module
 
 - Instagram image production is available as a Codex workflow in `instagram/` and is independent of the fee-collection app (集金機能とは独立) in `fee-collector/`.
