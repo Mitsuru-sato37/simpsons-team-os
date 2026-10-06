@@ -272,6 +272,30 @@ dialog::backdrop { background: rgba(24, 16, 32, .55); }
 .receipt-grid dd { margin: 0; font-weight: 750; overflow-wrap: anywhere; }
 .dialog-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
 .loading { opacity: .55; pointer-events: none; }
+@media (max-width: 559px) {
+  body { font-size: 17px; }
+  .shell {
+    width: 100%;
+    padding: 16px 12px calc(32px + env(safe-area-inset-bottom));
+  }
+  h1 { font-size: 32px; }
+  h2 { font-size: 23px; }
+  .eyebrow { font-size: 12px; }
+  .game-panel, .section-block { padding: 18px; }
+  .game-panel label, .summary-label { font-size: 14px; }
+  .game-panel select { min-height: 54px; font-size: 17px; }
+  .game-meta { font-size: 16px; }
+  .summary-card { min-height: 100px; padding: 16px; }
+  .summary-value { font-size: 26px; }
+  .player-card { padding: 16px; }
+  .player-name, .player-due { font-size: 21px; }
+  .primary-button, .cash-button, .paypay-button, .secondary-button {
+    min-height: 56px;
+    font-size: 17px;
+  }
+  .bank-button { min-height: 52px; font-size: 16px; }
+  .count-badge { min-width: 36px; font-size: 14px; }
+}
 @media (min-width: 560px) {
   .summary-grid { grid-template-columns: repeat(4, 1fr); }
   .summary-value { font-size: 22px; }

@@ -1,7 +1,7 @@
 # Progress
 
 Status: fee collector uses the native Google Sheets player master; cash receipts collect the full outstanding balance
-Last updated: 2026-10-05
+Last updated: 2026-10-06
 
 ## Completed
 
@@ -23,6 +23,7 @@ Last updated: 2026-10-05
 - Cash collection now records the full outstanding balance and labels the button with that amount; PayPay and bank-transfer actions retain the 300-yen per-action cap.
 - The private Apps Script web app was updated to deployment version 4 at the existing URL; the live sample with a 500-yen balance displayed `現金500円`.
 - Confirmed the current participant workflow: attendance is entered per game in `参加者` with game ID and player ID; player names resolve from the master, but there is no in-app roster picker yet.
+- Added a narrow-screen CSS layout for the fee collector: full-width content, larger typography, larger game selector, and 52–56px payment controls. Desktop breakpoints and payment behavior are unchanged.
 
 ## Verification
 
@@ -30,6 +31,8 @@ Last updated: 2026-10-05
 - Visually inspected the live version 4 web app: sample game showed 6 participants, ¥2,000 billed, ¥1,500 received, ¥500 outstanding, and `現金500円` for the unpaid player. No receipt/payment action was triggered.
 - Google Sheets metadata and headers were checked for `試合`, `参加者`, `受領履歴`, and `当日集金`.
 - Native player master metadata and `選手マスター!A1:C12` were checked; the live web app version 4 loaded the real collection data successfully without creating a new receipt.
+- Added a regression test for mobile-width layout sizing and updated a stale cash-button test to match the existing full-outstanding-balance label.
+- `node --test tests/fee-collector-logic.test.mjs` and `git diff --check` — run after implementation; see handoff below for current result.
 
 ## Remaining scope
 
@@ -41,6 +44,6 @@ Last updated: 2026-10-05
 
 Current branch: `codex/player-master-integration`
 
-Next task: perform an iPhone operation test, including jersey-number display, full-balance cash collection, PayPay/bank-transfer confirmation, receipt display, cancellation, duplicate-tap prevention, and automatic next-game selection. Decide whether to add a player-master picker for per-game participant registration.
+Next task: deploy the updated `Styles.html` to the existing private Apps Script web app and verify the mobile layout on an iPhone. Do not test by recording a real payment. Then continue the existing iPhone operation checks and decide whether to add a player-master picker for per-game participant registration.
 
 The merged `main` branch must be pushed before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.
