@@ -2,9 +2,11 @@ const CONFIG = Object.freeze({
   SHEET_GAMES: '試合',
   SHEET_PARTICIPANTS: '参加者',
   SHEET_RECEIPTS: '受領履歴',
+  PLAYER_MASTER_SHEET: '選手マスター',
+  PLAYER_MASTER_SPREADSHEET_ID: '1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4',
   DEFAULT_FEE: 300,
   TIME_ZONE: 'Asia/Tokyo',
-  PAYMENT_METHODS: ['現金', 'PayPay'],
+  PAYMENT_METHODS: ['現金', 'PayPay', '銀行振込'],
 });
 
 function doGet() {
@@ -30,7 +32,7 @@ function recordPayment(payload) {
   }
 
   const method = String(payload.method || '');
-  if (!CONFIG.PAYMENT_METHODS.includes(method)) {
+  if (!isPaymentMethodAllowed_(method)) {
     throw new Error('支払方法が不正です。');
   }
 
@@ -57,7 +59,10 @@ function recordPayment(payload) {
       };
     }
 
-    const amount = Math.min(CONFIG.DEFAULT_FEE, due - received);
+    const outstanding = due - received;
+    const amount = method === '現金'
+      ? outstanding
+      : Math.min(CONFIG.DEFAULT_FEE, outstanding);
     const now = new Date();
     const receiptId = makeReceiptId_(now);
     const receiptSheet = ss.getSheetByName(CONFIG.SHEET_RECEIPTS);
@@ -177,6 +182,13 @@ function getSpreadsheet_() {
   return active;
 }
 
+function getPlayerMasterRows_() {
+  const ss = SpreadsheetApp.openById(CONFIG.PLAYER_MASTER_SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(CONFIG.PLAYER_MASTER_SHEET);
+  if (!sheet) throw new Error('選手マスターの「選手マスター」タブがありません。');
+  return sheet.getDataRange().getValues().slice(1);
+}
+
 function getGames_() {
   const ss = getSpreadsheet_();
   const sheet = ss.getSheetByName(CONFIG.SHEET_GAMES);
@@ -226,6 +238,7 @@ function buildState_(games, gameId) {
   const ss = getSpreadsheet_();
   const participantSheet = ss.getSheetByName(CONFIG.SHEET_PARTICIPANTS);
   const participantRows = participantSheet.getDataRange().getValues().slice(1);
+  const masterRows = getPlayerMasterRows_();
   const receiptRows = ss
     .getSheetByName(CONFIG.SHEET_RECEIPTS)
     .getDataRange()
@@ -254,6 +267,7 @@ function buildState_(games, gameId) {
     )
     .map((row) => {
       const playerId = String(row[1]);
+      const masterPlayer = resolveMasterPlayer_(masterRows, playerId);
       const charge = Number(row[5] || row[3] || CONFIG.DEFAULT_FEE);
       const playerReceipts = receiptsByPlayer[playerId] || [];
       const receivedAmount = playerReceipts.reduce(
@@ -262,7 +276,8 @@ function buildState_(games, gameId) {
       );
       return {
         playerId,
-        name: String(row[2] || ''),
+        name: masterPlayer ? masterPlayer.name : String(row[2] || ''),
+        jerseyNumber: masterPlayer ? masterPlayer.jerseyNumber : '',
         charge,
         receivedAmount,
         outstanding: Math.max(0, charge - receivedAmount),
@@ -316,7 +331,10 @@ function findParticipant_(ss, gameId, playerId) {
   return {
     gameId: String(row[0]),
     playerId: String(row[1]),
-    name: String(row[2] || ''),
+    name: (() => {
+      const masterPlayer = resolveMasterPlayer_(getPlayerMasterRows_(), row[1]);
+      return masterPlayer ? masterPlayer.name : String(row[2] || '');
+    })(),
     fee: Number(row[3] || CONFIG.DEFAULT_FEE),
     target: String(row[4] || ''),
     charge: Number(row[5] || row[3] || CONFIG.DEFAULT_FEE),

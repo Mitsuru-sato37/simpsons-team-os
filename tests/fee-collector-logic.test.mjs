@@ -6,10 +6,16 @@ import vm from 'node:vm';
 const logicSource = readFileSync(new URL('../fee-collector/Logic.gs', import.meta.url), 'utf8');
 const logicContext = {};
 vm.runInNewContext(logicSource, logicContext);
-const { pickNextOpenGame_, projectReceipts_ } = logicContext;
+const {
+  isPaymentMethodAllowed_,
+  pickNextOpenGame_,
+  projectReceipts_,
+  resolveMasterPlayer_,
+} = logicContext;
 const codeGs = readFileSync(new URL('../fee-collector/Code.gs', import.meta.url), 'utf8');
 const indexHtml = readFileSync(new URL('../fee-collector/Index.html', import.meta.url), 'utf8');
 const appHtml = readFileSync(new URL('../fee-collector/App.html', import.meta.url), 'utf8');
+const stylesHtml = readFileSync(new URL('../fee-collector/Styles.html', import.meta.url), 'utf8');
 const documentation = [
   readFileSync(new URL('../README.md', import.meta.url), 'utf8'),
   readFileSync(new URL('../docs/PROJECT_CONTEXT.md', import.meta.url), 'utf8'),
@@ -74,6 +80,36 @@ test('payment path keeps the active-receipt recheck', () => {
   assert.match(recordPayment, /ALREADY_PAID/);
 });
 
+test('accepts bank transfer as a manual payment method', () => {
+  assert.equal(isPaymentMethodAllowed_('銀行振込'), true);
+  assert.equal(isPaymentMethodAllowed_('unknown'), false);
+});
+
+test('uses a larger full-width layout and touch targets on narrow screens', () => {
+  assert.match(stylesHtml, /@media\s*\(max-width:\s*559px\)/);
+  assert.match(stylesHtml, /\.shell\s*\{[^}]*width:\s*100%/s);
+  assert.match(stylesHtml, /\.shell\s*\{[^}]*padding:\s*16px\s+12px/s);
+  assert.match(stylesHtml, /\.primary-button,\s*\.cash-button,[^}]*min-height:\s*56px/s);
+  assert.match(stylesHtml, /\.game-meta[^}]*font-size:\s*16px/s);
+});
+
+test('adapts touch sizing when the embedded viewport is wider than the phone', () => {
+  assert.match(stylesHtml, /@media\s*\(max-width:\s*1024px\)\s*and\s*\(pointer:\s*coarse\)/);
+  assert.match(stylesHtml, /font-size:\s*4\.5vw/);
+  assert.match(stylesHtml, /min-height:\s*14vw/);
+});
+
+test('resolves legacy participant IDs through the player master', () => {
+  const player = resolveMasterPlayer_([
+    ['001', '23', '渡部 琉斗'],
+    ['002', '4', '渡邉 匠'],
+  ], 'P001');
+
+  assert.equal(player.playerId, '001');
+  assert.equal(player.jerseyNumber, '23');
+  assert.equal(player.name, '渡部 琉斗');
+});
+
 test('UI exposes cancelled receipt history', () => {
   assert.match(indexHtml, /cancelledList/);
   assert.match(indexHtml, /取消履歴/);
@@ -83,8 +119,23 @@ test('UI exposes cancelled receipt history', () => {
   assert.match(appHtml, /取り消す/);
 });
 
-test('UI labels the standard cash collection action as 現金300円', () => {
-  assert.match(appHtml, /現金300円/);
+test('UI labels cash collection with the full current outstanding balance', () => {
+  assert.match(appHtml, /現金' \+ escapeHtml\(String\(player\.outstanding\)\) \+ '円/);
+});
+
+test('UI exposes a manual bank transfer confirmation action', () => {
+  assert.match(appHtml, /data-method="銀行振込"/);
+  assert.match(appHtml, /銀行振込確認/);
+});
+
+test('UI displays the jersey number from the player master', () => {
+  assert.match(appHtml, /player\.jerseyNumber/);
+  assert.match(appHtml, /player\.name/);
+});
+
+test('Apps Script config points to the native player master spreadsheet', () => {
+  assert.match(codeGs, /PLAYER_MASTER_SPREADSHEET_ID/);
+  assert.match(codeGs, /1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4/);
 });
 
 test('completed and cancelled games cannot be completed again', () => {
