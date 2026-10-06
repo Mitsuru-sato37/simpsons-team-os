@@ -93,6 +93,12 @@ test('uses a larger full-width layout and touch targets on narrow screens', () =
   assert.match(stylesHtml, /\.game-meta[^}]*font-size:\s*16px/s);
 });
 
+test('adapts touch sizing when the embedded viewport is wider than the phone', () => {
+  assert.match(stylesHtml, /@media\s*\(max-width:\s*1024px\)\s*and\s*\(pointer:\s*coarse\)/);
+  assert.match(stylesHtml, /font-size:\s*4\.5vw/);
+  assert.match(stylesHtml, /min-height:\s*14vw/);
+});
+
 test('resolves legacy participant IDs through the player master', () => {
   const player = resolveMasterPlayer_([
     ['001', '23', '渡部 琉斗'],
