@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://simpsons-team-os.local/schemas/match-context.schema.json",
+  "title": "Simpsons MatchContext",
+  "description": "共有する試合情報。個別フローで必要な未確定値はそのフローの入力確認で停止する。",
+  "type": "object",
+  "required": ["matchId", "date", "opponent", "venue"],
+  "properties": {
+    "matchId": { "type": "string", "minLength": 1 },
+    "date": { "type": "string", "format": "date" },
+    "opponent": { "type": "string", "minLength": 1 },
+    "venue": { "type": "string", "minLength": 1 },
+    "weekday": { "type": "string", "enum": ["月", "火", "水", "木", "金", "土", "日"] },
+    "simpsonsBattingOrder": { "type": "string", "enum": ["first", "second"] },
+    "score": {
+      "type": "object",
+      "properties": {
+        "simpsons": { "type": "integer", "minimum": 0 },
+        "opponent": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "runs": { "type": "integer", "minimum": 0 },
+        "hits": { "type": "integer", "minimum": 0 },
+        "walksHbp": { "type": "integer", "minimum": 0 },
+        "stolenBases": { "type": "integer", "minimum": 0 },
+        "extraBaseHits": { "type": "integer", "minimum": 0 },
+        "rbis": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "featurePlayer": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "photoRef": { "type": "string", "minLength": 1 },
+        "performanceFacts": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "startingLineupRef": { "type": "string", "minLength": 1 },
+    "scorebookRef": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}
