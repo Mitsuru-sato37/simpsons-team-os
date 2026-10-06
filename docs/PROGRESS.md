@@ -65,8 +65,8 @@ Last updated: 2026-10-06
 
 ## Handoff
 
-Current branch: `codex/feature-player-workflow` (workflow and contract changes published to GitHub through the connected GitHub integration; PR is open for review).
+Current branch: `main` (PR #7, FEATURE PLAYER workflow and contract updates, was merged on 2026-10-06; merge commit `474b343`).
 
-Next task: confirm the official logo asset in the Feature Player Drive folder and update the Drive SNS guide. The fee-collector iPhone verification remains a separate outstanding task.
+Next task: confirm the official logo image in the Feature Player Drive folder and update the Drive SNS guide if it remains the canonical production guide. The fee-collector iPhone verification remains a separate outstanding task.
 
 The merged `main` branch must be pushed before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.
