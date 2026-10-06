@@ -94,4 +94,6 @@ Completed in this handoff: photo-library implementation and operating instructio
 
 Next task: after the user adds photos to `99_未仕分け`, run a preview, review candidates/unknowns with the user, and only then write confirmed metadata to the Drive catalog. Separate follow-ups remain: confirm the official logo image in the Feature Player Drive folder and align the Drive SNS guide if it remains canonical; fee-collector iPhone verification is also outstanding.
 
+- 2026-10-06 correction: verified the current `99_未仕分け` folder is a direct child of the active `03_選手写真` folder. Do not use any `00` folder or archive as the photo intake source. Updated the Instagram operating route and project context to preserve that boundary.
+
 The merged `main` branch must be pushed before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.
