@@ -19,11 +19,11 @@ await library.getReviewQueue();
 await library.summarize();
 ```
 
-Inject a repository implementing `list`, `get`, `findByDriveFileId`, `save`, and `saveMany`; a `PhotoSource` from `photo-source.mjs`; and `playerDirectory.getById(playerId)`, backed by the existing player master. `createDrivePhotoLibrary` in `runtime.mjs` wires a host's existing Drive connector callbacks to the service and Drive JSON repository. The provider supplies `listImages(folderId)`, `getPreview(fileId)`, `readJsonFile(fileId)`, and `replaceJsonFile(fileId, contents)`. `createJsonFilePhotoAssetRepository` is available for an explicitly selected local JSON file. Credentials and Google client dependencies stay outside this module.
+Inject a repository implementing `list`, `get`, `findByDriveFileId`, `save`, and `saveMany`; a `PhotoSource` from `photo-source.mjs`; and `playerDirectory.getById(playerId)`, backed by the existing player master. `createDrivePhotoLibrary` in `runtime.mjs` wires a host's existing Drive connector callbacks to the service and Drive JSON repository. It requires the configured active `inboxFolderId` and accepts `excludedFolderIds`; the source refuses to list unapproved folders and rejects excluded archive IDs. The provider supplies `listImages(folderId)`, `getPreview(fileId)`, `readJsonFile(fileId)`, and `replaceJsonFile(fileId, contents)`. `createJsonFilePhotoAssetRepository` is available for an explicitly selected local JSON file. Credentials and Google client dependencies stay outside this module.
 
 ### Current Codex Drive connector mapping
 
-This repository's production pattern is a Codex workflow, so the host provider uses the existing Google Drive connector rather than a new Google API client:
+This repository's production pattern is a Codex workflow, so the host provider uses the existing Google Drive connector rather than a new Google API client. Only list the `inboxFolderId` recorded in `drive-sources.json`. Never open, list, fetch, preview, or otherwise use the excluded archive `184xMcL_Gdk8UyZaIz1ufpEbA4FYMwv8B`:
 
 | Provider callback | Codex connector operation |
 | --- | --- |

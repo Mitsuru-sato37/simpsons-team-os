@@ -1,7 +1,8 @@
 {
-  "description": "Existing Simpsons photo folders. Use these sources in place; do not move or rename originals.",
+  "description": "Use active Simpsons photo folders in place; never inspect or import from the excluded archive.",
   "playerPhotosFolderId": "1aKYXMNMrN5ZZy-VM7tglFHXSyrZCt_JN",
   "inboxFolderId": "1rXzSh9w7eO7oqyh1oqMbJgUdSj81iRqA",
+  "excludedArchiveFolderIds": ["184xMcL_Gdk8UyZaIz1ufpEbA4FYMwv8B"],
   "gamePhotosFolderId": "1CE_FNt0gtgCZ3UksaSD2iBE2jf2uWblY",
   "catalogFileId": "11QeVpv1yhrrx8wSGjNVnsxPoF8hJ2gib",
   "masterSources": {

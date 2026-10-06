@@ -7,11 +7,14 @@ import { createPhotoSource } from './photo-source.mjs';
  * callbacks backed by its existing Drive connector and player master; this
  * module owns no credentials and performs no connector calls itself.
  */
-export function createDrivePhotoLibrary({ catalogFileId, driveProvider, playerDirectory, clock }) {
+export function createDrivePhotoLibrary({ catalogFileId, inboxFolderId, excludedFolderIds = [], driveProvider, playerDirectory, clock }) {
   if (!driveProvider) throw new TypeError('driveProvider is required');
+  if (!inboxFolderId) throw new TypeError('inboxFolderId is required');
   const source = createPhotoSource({
     listImages: (folderId) => driveProvider.listImages(folderId),
     getPreview: (fileId) => driveProvider.getPreview(fileId),
+    allowedInboxFolderIds: [inboxFolderId],
+    excludedFolderIds,
   });
   const repository = createDriveJsonPhotoAssetRepository({
     fileId: catalogFileId,
