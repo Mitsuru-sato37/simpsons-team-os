@@ -45,3 +45,10 @@ Never discard unrelated local changes in order to synchronize.
 ## Handoff
 
 Before stopping a meaningful development session, update `docs/PROGRESS.md` with completed work, current branch, next task, and any blocking dependency.
+
+## Instagram production routes
+
+- For a pre-game lineup request (for example, `試合前投稿作成` or `STARTING LINEUP`), read and follow `instagram/AGENTS.md` using the `starting-lineup` route.
+- For a post-game asset request (for example, `試合後投稿作成`, `GAME RESULT`, `GAME STATS`, or `FEATURE PLAYER`), read and follow `instagram/AGENTS.md` using the `post-game` route. Produce only the requested asset or combination.
+- Use `instagram/match-context.schema.json` for match information shared by both routes. Keep the Instagram workflow independently callable from `fee-collector/`.
+- Do not infer missing scorebook/player/design facts, create a STARTING LINEUP master, or use new AI image generation as a fallback. Follow the Canva preview/approval and Drive-save requirements in `instagram/AGENTS.md`.

@@ -1,0 +1,72 @@
+# Instagram 制作フロー
+
+この指示はInstagram制作タスクに適用する。ユーザーが明示した試合前／試合後の対象だけを実行する。
+
+## 呼び出し口
+
+- `starting-lineup`: 試合前のSTARTING LINEUPだけを制作する。
+- `post-game`: 試合後のGAME RESULT、GAME STATS、FEATURE PLAYERを個別に、または指定された組み合わせで制作する。
+
+入口間で状態を共有する場合は `match-context.schema.json` の `MatchContext` を使う。集金アプリ `fee-collector/` のコードや台帳には接続しない。試合ID、日付、対戦相手、会場はすべての成果物で一致させる。
+
+## 事実の確認
+
+1. 試合後制作の開始時に、Google Driveの `Simpsons_試合後SNS標準運用ガイド_v2.1`（`designs.json` の `guide.driveFileId`）を読み、スコアブックから日付、会場、相手、先攻／後攻、最終スコア、Simpsonsの得点、安打、四死球、盗塁、長打、打点、FEATURE PLAYER候補と活躍内容を確認する。
+2. スタメン制作ではユーザーが示した参加者・打順・写真などの現行素材を確認する。
+3. 不明な値、判読できない箇所、情報の食い違いは推測しない。影響する項目だけ列挙して確認を求め、その項目の制作を止める。
+4. 作業対象で必要な `matchId`, `date`, `opponent`, `venue` が確認できなければCanva/Driveへの書き込みを始めない。スコア、打順、個人記録などの項目は各制作物の開始条件として追加確認する。
+
+## STARTING LINEUP
+
+- 現行制作方法を使う。新規MASTERを作らず、GAME RESULT等の別MASTERで代用しない。
+- 既存の制作元や現行手順をDrive、Canva、または会話内の明示資料から特定できた場合だけ続行する。
+- 2026-10-06のDrive確認時点で関連STARTING LINEUPフォルダは空で、Canva検索でも該当デザインは見つかっていない。呼び出し時にも接続ツールで再検索し、なお現行素材／手順が特定できなければ、ユーザーに参照画像または現行方法を確認して停止する。
+- AI画像生成での代替、空MASTERの新規作成、独自のレイアウト推測は禁止する。
+
+## GAME RESULT
+
+- 必ずCanva Design ID `DAHWk9bIJ3U`（`A案（レイヤー分け済）`）を `canva_copy_design` で複製して編集する。指定IDと取得タイトルを操作直前に再確認する。
+- 編集可能項目は `teamNames`, `battingOrderLayout`, `simpsonsScore`, `opponentScore`, `date`, `venue`, `weekday` のみ。先攻／後攻に応じた左右配置をスコアブックで確かめる。
+- 複製できない、ID／タイトルが一致しない、編集対象要素を一意に特定できない、または必要情報が不明なら変更せず停止する。
+- スコアが二桁の場合は文字の重なり、はみ出し、サイズ崩れをプレビューで確認する。
+
+## GAME STATS
+
+- 必ずCanva Design ID `DAHWxMb6kxg`（`GAME STATSレイヤーA案`）を `canva_copy_design` で複製して編集する。DriveのSAMPLE画像は見本確認用で、編集元ではない。
+- 更新してよいのは6数値（`runs`, `hits`, `walksHbp`, `stolenBases`, `extraBaseHits`, `rbis`）と対戦相手、日付、会場だけ。
+- `得点`, `安打`, `四死球`, `盗塁`, `長打`, `打点` のラベル、スタッツ枠、ラキポタ、タイトル、サブタイトル、既存ロゴ、背景、装飾、配色は固定する。
+- 相手チーム個人のスタッツ、相手／Simpsonsのロゴ追加、三振・失策等の別指標は入れない。二桁でも数字が折り返さず、元のテキスト幅に収まることを確認する。
+- 複製できない、固定要素と可変要素を識別できない、または確定値がない場合は停止する。
+
+## FEATURE PLAYER
+
+- `designs.json` のDrive `referenceFileId` と `exampleFileIds` を読み、基準デザインと完成例を確認する。選手写真を主役にし、背景効果を抑え、写真の構図を保つ。
+- 既存のCanva編集可能MASTERは確認できていない。基準デザイン画像を使う場合は `canva_image_to_design` で当該参照画像を当該試合の編集可能な成果物に変換し、MASTERとして登録しない。変換に失敗したら停止する。
+- 選手写真、選手名、確認済み成績、写真と試合内容に合う短い英語コピー、日本語の一言を使う。英語コピーは毎回内容に合わせて考える。
+- ユーザーが提供／指定したゴースト入りSimpsonsロゴだけを使い、選手写真やロゴを生成しない。大見出し、成績ボックス、強い発光、炎、過剰な金色効果は足さない。
+
+## Canva操作と保存
+
+GAME RESULT / GAME STATSは下記の順序を守る。各対象は別の複製にする。
+
+1. `canva_get_design` でマスターIDとタイトルを読み取り確認する。
+2. `canva_copy_design` で複製を作る。以後は返された複製IDだけを編集する。
+3. `canva_start_editing_transaction` で複製を開き、テキスト／画像要素とページを確認する。
+4. `canva_perform_editing_operations` で許可された要素だけ変更する。
+5. `canva_get_design_thumbnail` でドラフトのプレビューを取得し、ユーザーに見せる。レイアウトや事実が不正確なら保存せず修正または停止する。
+6. プレビュー提示後、ユーザーの明示的な承認を得るまで `canva_commit_editing_transaction` を呼ばない。承認後にのみ確定保存する。
+
+Driveへ完成画像を保存する依頼がある場合:
+
+- `designs.json` の参照用SAMPLE／空MASTERには出力を置かない。Google Driveで対象種別の完成物フォルダを確認する。保存先が特定できなければ、フォルダを勝手に作成せず保存先を確認する。
+- Canvaの確定保存後、Canva画面のダウンロード機能を使える場合はPNGを書き出し、取得した実ファイルを `google_drive_upload_file` で確認済みの保存先へアップロードする。ファイル名は試合日、対戦相手、種別が分かるものにする。
+- Canvaの書き出し画面／ファイルを取得できない、またはDriveアップロードに失敗した場合は、Drive保存済みと報告しない。Canvaリンクと失敗点を報告し、必要な対応を確認する。
+- 最後にCanva複製の編集リンク、Drive保存リンク（保存できた場合）、ファイル名を確認して報告する。
+
+## 禁止事項
+
+- 新規AI画像生成へのフォールバック。`canva_generate_image` または `image_gen__imagegen` を呼ばない。
+- 元MASTERを直接編集すること。
+- 不明な試合情報、選手情報、デザイン要素を推測して埋めること。
+- SAMPLE／空MASTERを出力先として上書きすること。
+- Instagramへ自動投稿すること、投稿予約や認証を追加すること。
