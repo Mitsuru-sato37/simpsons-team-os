@@ -62,8 +62,9 @@ The current feature does not include roster-image recognition, automatic partici
 - GAME RESULT uses Canva Design ID `DAHWk9bIJ3U` (`A案（レイヤー分け済）`) by copying it and editing only its allowed fields.
 - GAME STATS uses Canva Design ID `DAHWxMb6kxg` by copying it and updating only the six approved Simpsons stat values, opponent, date, and venue.
 - STARTING LINEUP keeps the current production method and must not be converted into a new master. If the current source/method is not available, ask and stop.
-- FEATURE PLAYER uses the Drive reference design and examples. A reference image may be converted to an editable per-match output; it is not registered as a master.
-- Never guess unclear source facts or use new AI image generation as a fallback. Show a Canva preview and get explicit approval before committing edits. Instagram posting remains manual.
+- FEATURE PLAYER layouts may vary per game, using the Drive reference design and examples as visual direction rather than fixed templates. Preserve the selected player's source photo unchanged, add the official logo as a small separate Canva image layer from the Feature Player Drive folder, and keep critical text editable where practical.
+- Generated visuals may be used only as separate backgrounds without people, logos, or text; never regenerate the player's photo or official logo. Show a Canva preview and get explicit approval before committing edits. Instagram posting remains manual.
+- For Instagram captions, use an available prior post as the style reference. The latest user-confirmed format is account name, date/opponent, brief game narrative and score, FEATURE PLAYER jersey number, then the established hashtags. Provide three suitable music options and mark one first choice.
 - Current checked Drive reference IDs, Canva operation sequence, output rules, and Codex routes are recorded in `instagram/designs.json` and `instagram/AGENTS.md`.
 
 ## Scope boundary

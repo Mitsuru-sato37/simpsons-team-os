@@ -1,6 +1,6 @@
 # Progress
 
-Status: fee collector uses the native Google Sheets player master; Instagram production workflow is added and pending main integration
+Status: fee collector uses the native Google Sheets player master; Instagram production instructions are updated locally for photo-preserving FEATURE PLAYER composition
 Last updated: 2026-10-06
 
 ## Completed
@@ -32,6 +32,8 @@ Last updated: 2026-10-06
 - Added a narrow-screen CSS layout for the fee collector: full-width content, larger typography, larger game selector, and 52–56px payment controls. Desktop breakpoints and payment behavior are unchanged.
 - Deployed the initial mobile readability update to the existing private Apps Script web app as version 5 on 2026-10-06. The deployment remains restricted to the owner and retains the same URL.
 - The iPhone screenshot after version 5 still showed the old compact sizing. Added a touch-device rule for embedded viewports up to 1024px, using viewport-relative sizing to compensate for the Apps Script frame; deployed as version 6 on 2026-10-06, retaining owner-only access and the existing URL.
+- Updated FEATURE PLAYER workflow after the Enjoys post: per-game layouts can vary, the selected player's source photo remains unchanged, any generated background excludes people/logos/text, and the official Feature Player folder logo is added small as an independent Canva image layer.
+- Recorded the user-confirmed Instagram caption structure and the requirement to offer three music options with a marked first choice.
 
 - 2026-10-06: Added the user-approved 180×180 Apple touch icon to the fee collector and linked it from `Index.html`.
 - Updated the existing owner-only Apps Script deployment to version 7; the deployment ID, URL, and access setting remain unchanged.
@@ -52,6 +54,7 @@ Last updated: 2026-10-06
 - `node --test tests/fee-collector-logic.test.mjs` — 18 tests passed; `git diff --check` passed.
 - Reloaded the existing web app URL after deployment and confirmed the current sample game and participant data render. No payment, cancellation, or completion action was triggered. Desktop screenshot verified the unchanged wide-screen layout; verify mobile sizing on the user's iPhone after refresh.
 - Added touch-device / embedded-viewport sizing regression coverage; current test run: `node --test tests/fee-collector-logic.test.mjs` — 19 tests passed; `git diff --check` passed.
+- `jq empty instagram/designs.json` and `git diff --check` passed for the current documentation and workflow-registry changes. Automated tests were not run.
 
 - Browser verification after deployment version 7 confirmed the app opens and its served HTML contains the 180×180 `apple-touch-icon` URL. The public Drive image loads as a 180×180 image. No payment action was performed.
 - Apps Script Manage deployments confirmed version 7, execute-as-owner, access `全員` (anyone), and the same deployment ID and web app URL after the access update. No payment action was performed.
@@ -62,14 +65,16 @@ Last updated: 2026-10-06
 - The current STARTING LINEUP Drive folders are empty and no matching Canva design was found; production must stop until the existing source/method is identified.
 - Canva has no direct export operation in the connected tool inventory. During an actual production request, verify the Canva browser download and Google Drive upload path; report any incomplete Drive save honestly.
 - Resolve the intended completed-output Drive folder for each asset type when none is discoverable.
+- Verify which official logo file is in the Feature Player Drive folder and align the Drive SNS guide after the required file-backed trusted read is available.
+- Verify the deployed private Apps Script on an iPhone after refreshing the version 6 layout; do not record a real payment during the test.
 - Participant registration from a starting-lineup image remains a later feature.
 - Consider adding an in-app player-master picker to register participants per game without manually entering IDs; no such UI exists yet.
 - PayPay API integration and user authentication remain out of scope. Public directory listing is not enabled; app access requires its URL.
 
 ## Handoff
 
-Current branch: `codex/home-screen-icon` (includes the Instagram workflow; pending this PR to `main`).
+Current branch: `main` (PR #8, the home-screen icon setup, merged on 2026-10-06).
 
-Next task: no remaining work for the home-screen icon. The user confirmed the icon appears on iPhone and does not need further touch-device sizing checks. The embedded app executes as the owner and is accessible to anyone with its URL.
+Next task: confirm the official logo image in the Feature Player Drive folder and update the Drive SNS guide if it remains the canonical production guide. The user confirmed the home-screen icon appears on iPhone; icon work is complete. The fee-collector iPhone verification remains a separate outstanding task.
 
 The merged `main` branch must be pushed before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.

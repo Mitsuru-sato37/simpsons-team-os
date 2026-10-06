@@ -18,11 +18,11 @@ This file is the stable handoff entry point. Detailed project context and progre
 
 Update this field at the end of each meaningful development session.
 
-`codex/home-screen-icon`
+`main`
 
 ## Next
 
-The user confirmed the adopted icon appears on the iPhone Home Screen from the GitHub Pages entry and said the touch-device sizing does not need further checking. Home-screen icon work is complete. The entry page and Apps Script app are link-accessible; the app executes as its owner.
+Confirm the official logo image in the Feature Player Drive folder and update the Drive SNS guide if it remains the canonical production guide. The trusted-read bridge required before editing the existing Google Doc was unavailable, so the Drive guide was not changed. The home-screen icon task is complete and the user confirmed it appears on iPhone.
 
 ## Required handoff update
 

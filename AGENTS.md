@@ -51,7 +51,7 @@ Before stopping a meaningful development session, update `docs/PROGRESS.md` with
 - For a pre-game lineup request (for example, `試合前投稿作成` or `STARTING LINEUP`), read and follow `instagram/AGENTS.md` using the `starting-lineup` route.
 - For a post-game asset request (for example, `試合後投稿作成`, `GAME RESULT`, `GAME STATS`, or `FEATURE PLAYER`), read and follow `instagram/AGENTS.md` using the `post-game` route. Produce only the requested asset or combination.
 - Use `instagram/match-context.schema.json` for match information shared by both routes. Keep the Instagram workflow independently callable from `fee-collector/`.
-- Do not infer missing scorebook/player/design facts, create a STARTING LINEUP master, or use new AI image generation as a fallback. Follow the Canva preview/approval and Drive-save requirements in `instagram/AGENTS.md`.
+- Do not infer missing scorebook/player/design facts or create a STARTING LINEUP master. For FEATURE PLAYER, generated visuals must not recreate the supplied player photo or official logo; follow the photo-preserving Canva workflow in `instagram/AGENTS.md`. Follow its preview/approval and Drive-save requirements.
 
 ## Cross-PC Codex handoff standard
 
@@ -95,3 +95,14 @@ Before work is considered safely handed off:
 5. Confirm the pushed branch contains the handoff update.
 
 On another PC, recovery is: fetch -> switch to the recorded branch -> pull -> read `AGENTS.md`, `docs/SPEC.md`, and `docs/STATUS.md`.
+
+
+## Quick Git sync check
+
+On Windows, run this from the repository root at the start of work and before handing work to another PC:
+
+```powershell
+.\git-status.cmd
+```
+
+It fetches `origin` and reports the current branch, uncommitted changes, whether pull or push is needed, and whether the current feature branch is merged into `main`. If GitHub CLI (`gh`) is available, PR state is used for a more precise merge result; otherwise Git history/patch equivalence is used as a fallback.
