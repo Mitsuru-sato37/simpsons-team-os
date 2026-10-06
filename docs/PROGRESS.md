@@ -1,6 +1,6 @@
 # Progress
 
-Status: fee collector uses the native Google Sheets player master; Instagram production workflow is added and pending main integration
+Status: fee collector uses the native Google Sheets player master; Instagram production instructions are updated locally for photo-preserving FEATURE PLAYER composition
 Last updated: 2026-10-06
 
 ## Completed
@@ -32,6 +32,8 @@ Last updated: 2026-10-06
 - Added a narrow-screen CSS layout for the fee collector: full-width content, larger typography, larger game selector, and 52–56px payment controls. Desktop breakpoints and payment behavior are unchanged.
 - Deployed the initial mobile readability update to the existing private Apps Script web app as version 5 on 2026-10-06. The deployment remains restricted to the owner and retains the same URL.
 - The iPhone screenshot after version 5 still showed the old compact sizing. Added a touch-device rule for embedded viewports up to 1024px, using viewport-relative sizing to compensate for the Apps Script frame; deployed as version 6 on 2026-10-06, retaining owner-only access and the existing URL.
+- Updated FEATURE PLAYER workflow after the Enjoys post: per-game layouts can vary, the selected player's source photo remains unchanged, any generated background excludes people/logos/text, and the official Feature Player folder logo is added small as an independent Canva image layer.
+- Recorded the user-confirmed Instagram caption structure and the requirement to offer three music options with a marked first choice.
 
 ## Verification
 
@@ -48,12 +50,14 @@ Last updated: 2026-10-06
 - `node --test tests/fee-collector-logic.test.mjs` — 18 tests passed; `git diff --check` passed.
 - Reloaded the existing web app URL after deployment and confirmed the current sample game and participant data render. No payment, cancellation, or completion action was triggered. Desktop screenshot verified the unchanged wide-screen layout; verify mobile sizing on the user's iPhone after refresh.
 - Added touch-device / embedded-viewport sizing regression coverage; current test run: `node --test tests/fee-collector-logic.test.mjs` — 19 tests passed; `git diff --check` passed.
+- `jq empty instagram/designs.json` and `git diff --check` passed for the current documentation and workflow-registry changes. Automated tests were not run.
 
 ## Remaining scope
 
 - The current STARTING LINEUP Drive folders are empty and no matching Canva design was found; production must stop until the existing source/method is identified.
 - Canva has no direct export operation in the connected tool inventory. During an actual production request, verify the Canva browser download and Google Drive upload path; report any incomplete Drive save honestly.
 - Resolve the intended completed-output Drive folder for each asset type when none is discoverable.
+- Verify which official logo file is in the Feature Player Drive folder and align the Drive SNS guide after the required file-backed trusted read is available.
 - Verify the deployed private Apps Script on an iPhone after refreshing the version 6 layout; do not record a real payment during the test.
 - Participant registration from a starting-lineup image remains a later feature.
 - Consider adding an in-app player-master picker to register participants per game without manually entering IDs; no such UI exists yet.
@@ -61,8 +65,8 @@ Last updated: 2026-10-06
 
 ## Handoff
 
-Current branch: `codex/fee-collector` (includes the Instagram workflow; pending this PR to `main`).
+Current branch: `codex/feature-player-workflow` (workflow and contract changes published to GitHub through the connected GitHub integration; PR is open for review).
 
-Next task: refresh the private web app on an iPhone and confirm the version 6 layout and touch targets. A desktop reload confirmed the app and collection data still load; it cannot verify the touch-device media query. Do not test by recording a real payment. Then continue the existing iPhone operation checks and decide whether to add a player-master picker for per-game participant registration.
+Next task: confirm the official logo asset in the Feature Player Drive folder and update the Drive SNS guide. The fee-collector iPhone verification remains a separate outstanding task.
 
 The merged `main` branch must be pushed before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.

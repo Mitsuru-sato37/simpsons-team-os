@@ -84,15 +84,20 @@ test('design registry fixes master IDs and limits GAME STATS to its six approved
   assert.ok(designs.gameStats.canva.fixedElements.includes('mascot'));
   assert.equal(designs.startingLineup.canvaDesignId, null);
   assert.equal(designs.startingLineup.requiresConfirmationWhenSourceUnresolved, true);
-  assert.equal(designs.featurePlayer.canva.method, 'convert-approved-drive-reference-image-to-editable-design-per-match');
+  assert.equal(designs.featurePlayer.canva.method, 'compose-per-match-canva-layers');
+  assert.equal(designs.featurePlayer.canva.layers.playerPhoto, 'preserve-user-supplied-photo-unchanged');
+  assert.equal(designs.featurePlayer.canva.layers.officialLogo, 'use-small-separate-image-layer-from-feature-player-drive-folder');
 });
 
-test('workflow stops on uncertain sources and forbids generated-image fallback', () => {
+test('workflow stops on uncertain sources and protects player photos and logos', () => {
   assert.equal(existsSync(workflowPath), true, 'Instagram Codex workflow must exist');
   const workflow = readFileSync(workflowPath, 'utf8');
   assert.match(workflow, /不明.*確認/);
   assert.match(workflow, /複製できない.*停止/);
-  assert.match(workflow, /AI画像生成.*禁止/);
+  assert.match(workflow, /選手本人.*公式ロゴを生成または再構成すること/);
+  assert.match(workflow, /人物・ロゴ・文字を含まない独立した背景素材/);
+  assert.match(workflow, /写真と公式ロゴを独立したCanva画像レイヤー/);
+  assert.match(workflow, /過去の投稿例.*文体と行構成に合わせる/);
   assert.match(workflow, /STARTING LINEUP.*新規MASTERを作らず/s);
 });
 
