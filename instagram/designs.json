@@ -1,0 +1,77 @@
+{
+  "guide": {
+    "title": "Simpsons_試合後SNS標準運用ガイド_v2.1",
+    "driveFileId": "1wx-wUouhFd2-HZxAFxuAy9S-atoBn0A9oEzODPv3V3c"
+  },
+  "gameResult": {
+    "canva": {
+      "designId": "DAHWk9bIJ3U",
+      "title": "A案（レイヤー分け済）",
+      "editableFields": [
+        "teamNames",
+        "battingOrderLayout",
+        "simpsonsScore",
+        "opponentScore",
+        "date",
+        "venue",
+        "weekday"
+      ],
+      "fixedElements": ["designLanguage", "background", "decorations", "palette"]
+    },
+    "drive": {
+      "folderId": "1o1RolFm9_WR2JQMbVu-PflgekJtANZ_7",
+      "sampleFileId": "1gtgWq39tAxcbLo7BxzT5JKirB8VwzHpR",
+      "blankMasterFileId": "1r3h7SDA_b1v8AtK3b45HY_yidvTxgVSe"
+    }
+  },
+  "gameStats": {
+    "canva": {
+      "designId": "DAHWxMb6kxg",
+      "title": "GAME STATSレイヤーA案",
+      "editableFields": ["opponent", "date", "venue"],
+      "editableStats": ["runs", "hits", "walksHbp", "stolenBases", "extraBaseHits", "rbis"],
+      "fixedLabels": ["得点", "安打", "四死球", "盗塁", "長打", "打点"],
+      "fixedElements": [
+        "statFrames",
+        "mascot",
+        "title",
+        "subtitle",
+        "logos",
+        "background",
+        "decorations",
+        "palette"
+      ]
+    },
+    "drive": {
+      "folderId": "1yInos9_FzalUWIRrkCyMsyZ6YmuV-oll",
+      "sampleFileId": "1QX_fHNN5PEXIvA-acXS7Jz7GivHLHoJZ",
+      "blankMasterFolderId": "1VWTFiD6G2HS75CBuDZXWgbZe6UXn6HoF",
+      "blankMasterFileId": null
+    }
+  },
+  "featurePlayer": {
+    "drive": {
+      "folderId": "1Om6-gseDi3Utonzzm8P0fKQe4czSW0Qc",
+      "referenceFileId": "1coH8OyXgS44gUrH5lskFbl8eQfblOqFk",
+      "exampleFileIds": [
+        "1prfwWlb45EZIXOsmSZSWgnqYjpJ_4mbz",
+        "1Yih7Sch1q2MKhLZSKMq_LS8Zqj8mHYuC",
+        "1GsK2c5o7zd9qQdii2ODEP4SUJCm9QdNc"
+      ]
+    },
+    "canva": {
+      "editableDesignId": null,
+      "method": "convert-approved-drive-reference-image-to-editable-design-per-match"
+    }
+  },
+  "startingLineup": {
+    "driveFolderId": "1JvY9-2BwyxMWuch5KGlumDpyak1AvmDu",
+    "canvaDesignId": null,
+    "sourceCurrentlyLocated": false,
+    "requiresConfirmationWhenSourceUnresolved": true
+  },
+  "outputs": {
+    "driveDestinationMustBeLocatedOrConfirmed": true,
+    "neverSaveIntoReferenceSampleOrBlankMasterFolders": true
+  }
+}
