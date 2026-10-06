@@ -1,3 +1,23 @@
+function resolveMasterPlayer_(rows, playerId) {
+  const key = normalizeMasterPlayerId_(playerId);
+  const row = rows.find((item) => normalizeMasterPlayerId_(item[0]) === key);
+  if (!row) return null;
+
+  return {
+    playerId: String(row[0] || ''),
+    jerseyNumber: String(row[1] || ''),
+    name: String(row[2] || ''),
+  };
+}
+
+function normalizeMasterPlayerId_(playerId) {
+  return String(playerId || '').trim().replace(/^P/i, '').padStart(3, '0');
+}
+
+function isPaymentMethodAllowed_(method) {
+  return ['現金', 'PayPay', '銀行振込'].includes(String(method || ''));
+}
+
 function isOpenGame_(game) {
   return game && game.status !== '完了' && game.status !== '中止';
 }
