@@ -95,3 +95,14 @@ Before work is considered safely handed off:
 5. Confirm the pushed branch contains the handoff update.
 
 On another PC, recovery is: fetch -> switch to the recorded branch -> pull -> read `AGENTS.md`, `docs/SPEC.md`, and `docs/STATUS.md`.
+
+
+## Quick Git sync check
+
+On Windows, run this from the repository root at the start of work and before handing work to another PC:
+
+```powershell
+.\git-status.cmd
+```
+
+It fetches `origin` and reports the current branch, uncommitted changes, whether pull or push is needed, and whether the current feature branch is merged into `main`. If GitHub CLI (`gh`) is available, PR state is used for a more precise merge result; otherwise Git history/patch equivalence is used as a fallback.
