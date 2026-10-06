@@ -39,6 +39,7 @@ Last updated: 2026-10-06
 - Updated the existing owner-only Apps Script deployment to version 7; the deployment ID, URL, and access setting remain unchanged.
 - 2026-10-06: Changed the existing version 7 Apps Script deployment access from owner-only to anyone with the URL, at the user's request. It continues to execute as the owner, and the deployment ID and URL are unchanged.
 - 2026-10-06: Added and published a static GitHub Pages entry at `https://mitsuru-sato37.github.io/simpsons-team-os/`. The top-level page links the adopted 180×180 touch icon and embeds the existing Apps Script app, preserving the app UI and app deployment URL.
+- 2026-10-06: Restricted the GitHub Pages deployment workflow to `main`. Manual dispatches from feature branches now skip deployment, avoiding failures from the `github-pages` environment protection rules. The post-merge deployment from `main` succeeded.
 ## Verification
 
 - `node --test tests/instagram-production.test.mjs`
@@ -60,6 +61,7 @@ Last updated: 2026-10-06
 - Apps Script Manage deployments confirmed version 7, execute-as-owner, access `全員` (anyone), and the same deployment ID and web app URL after the access update. No payment action was performed.
 - GitHub Actions Pages deployment succeeded (run 1). The live entry page's top-level DOM has one `apple-touch-icon` link to `/apple-touch-icon.png` with `sizes="180x180"`; the page loads the existing Apps Script app in its iframe. No payment action was performed.
 - The user confirmed the adopted icon is displayed on the iPhone Home Screen after using the GitHub Pages entry URL and said touch-device sizing does not need further checking.
+- After PR #8 merged, the GitHub Pages workflow succeeded on `main` (run 6). Feature-branch workflow runs failed because the `github-pages` environment protection rules reject `codex/*` branches; the workflow trigger is now restricted to `main`.
 ## Remaining scope
 
 - The current STARTING LINEUP Drive folders are empty and no matching Canva design was found; production must stop until the existing source/method is identified.
@@ -73,7 +75,7 @@ Last updated: 2026-10-06
 
 ## Handoff
 
-Current branch: `main` (PR #8, the home-screen icon setup, merged on 2026-10-06).
+Current branch: `main` (PR #8 and the Pages trigger fix merged on 2026-10-06).
 
 Next task: confirm the official logo image in the Feature Player Drive folder and update the Drive SNS guide if it remains the canonical production guide. The user confirmed the home-screen icon appears on iPhone; icon work is complete. The fee-collector iPhone verification remains a separate outstanding task.
 
