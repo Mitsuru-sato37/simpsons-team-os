@@ -88,13 +88,14 @@ Last updated: 2026-10-06
 
 ## Handoff
 
-Current branch: `codex/player-photo-library`.
+Current branch: `main`.
 
-Completed in this handoff: photo-library implementation and operating instructions are recorded on this branch. The current Codex host can use it when its Google Drive connector is available and authorized; a separate cloud task must also have that connector and access. No photos have been classified or moved.
+Completed in this handoff: photo-library implementation and operating instructions were merged from `codex/player-photo-library` into `main` by fast-forward at `2ce4b32`. The current Codex host can use it when its Google Drive connector is available and authorized; a separate cloud task must also have that connector and access. No photos have been classified or moved.
 
 Next task: after the user adds photos to `99_未仕分け`, run a preview, review candidates/unknowns with the user, and only then write confirmed metadata to the Drive catalog. Separate follow-ups remain: confirm the official logo image in the Feature Player Drive folder and align the Drive SNS guide if it remains canonical; fee-collector iPhone verification is also outstanding.
 
 - 2026-10-06 correction: verified the current `99_未仕分け` folder is a direct child of the active `03_選手写真` folder. Do not use any `00` folder or archive as the photo intake source. Updated the Instagram operating route and project context to preserve that boundary.
 - 2026-10-06: User supplied the `99_アーカイブ` folder URL and explicitly prohibited using anything in it as a reference. Read only its metadata (not its contents) to confirm the folder identity. Added its ID to the exclusion list and a runtime allowlist so photo intake can list only the configured inbox; no archive files were opened.
+- 2026-10-07: Fast-forward merged `codex/player-photo-library` into `main`; `git fetch origin` completed before merge and `git diff --check` had no whitespace errors. Automated tests were not run for this merge request.
 
 The merged `main` branch must be pushed before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.
