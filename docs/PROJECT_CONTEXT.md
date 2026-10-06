@@ -52,9 +52,9 @@ The repository's first operational feature is the Google Apps Script fee collect
 - Completed and cancelled games remain selectable for review, but cannot be marked complete again from either the UI or the server action.
 - PayPay is manually confirmed from the PayPay transfer history; there is no API integration.
 
-The current feature does not include roster-image recognition, automatic participant registration, authentication, or public deployment.
+The current feature does not include roster-image recognition, automatic participant registration, or user authentication. The Apps Script deployment is intentionally accessible to anyone who has its URL and executes as the owner; it is not discoverable by public directory listing.
 
-- The fee collector uses the user-approved 180×180 Simpsons home-screen icon at `fee-collector/apple-touch-icon.png`. Its Apple touch icon reference is in `fee-collector/Index.html`; the PNG is also stored in Drive as a link-readable image so Safari can fetch it. The Apps Script web app itself remains owner-only.
+- The fee collector uses the user-approved 180×180 Simpsons home-screen icon at `fee-collector/apple-touch-icon.png`. Its Apple touch icon reference is in `fee-collector/Index.html`; the PNG is also stored in Drive as a link-readable image so Safari can fetch it. The Apps Script web app executes as the owner and is accessible to anyone with its URL.
 ## Instagram production module
 
 - Instagram image production is available as a Codex workflow in `instagram/` and is independent of the fee-collection app (集金機能とは独立) in `fee-collector/`.

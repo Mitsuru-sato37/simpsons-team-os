@@ -35,6 +35,7 @@ Last updated: 2026-10-06
 
 - 2026-10-06: Added the user-approved 180×180 Apple touch icon to the fee collector and linked it from `Index.html`.
 - Updated the existing owner-only Apps Script deployment to version 7; the deployment ID, URL, and access setting remain unchanged.
+- 2026-10-06: Changed the existing version 7 Apps Script deployment access from owner-only to anyone with the URL, at the user's request. It continues to execute as the owner, and the deployment ID and URL are unchanged.
 ## Verification
 
 - `node --test tests/instagram-production.test.mjs`
@@ -52,20 +53,21 @@ Last updated: 2026-10-06
 - Added touch-device / embedded-viewport sizing regression coverage; current test run: `node --test tests/fee-collector-logic.test.mjs` — 19 tests passed; `git diff --check` passed.
 
 - Browser verification after deployment version 7 confirmed the app opens and its served HTML contains the 180×180 `apple-touch-icon` URL. The public Drive image loads as a 180×180 image. No payment action was performed.
+- Apps Script Manage deployments confirmed version 7, execute-as-owner, access `全員` (anyone), and the same deployment ID and web app URL after the access update. No payment action was performed.
 ## Remaining scope
 
 - The current STARTING LINEUP Drive folders are empty and no matching Canva design was found; production must stop until the existing source/method is identified.
 - Canva has no direct export operation in the connected tool inventory. During an actual production request, verify the Canva browser download and Google Drive upload path; report any incomplete Drive save honestly.
 - Resolve the intended completed-output Drive folder for each asset type when none is discoverable.
-- Verify version 7 on an iPhone after refreshing the private Apps Script; confirm touch-device sizing and the adopted icon without recording a payment.
+- Verify version 7 on an iPhone after refreshing the link-accessible Apps Script; confirm touch-device sizing and the adopted icon without recording a payment.
 - Participant registration from a starting-lineup image remains a later feature.
 - Consider adding an in-app player-master picker to register participants per game without manually entering IDs; no such UI exists yet.
-- PayPay API integration, authentication, and public deployment remain out of scope.
+- PayPay API integration and user authentication remain out of scope. Public directory listing is not enabled; app access requires its URL.
 
 ## Handoff
 
 Current branch: `codex/home-screen-icon` (includes the Instagram workflow; pending this PR to `main`).
 
-Next task: refresh the version 7 private web app on an iPhone, confirm touch-device sizing and the adopted home-screen icon, and record the result here. Remove any prior home-screen shortcut and add the app again in Safari if needed. Do not create a receipt during visual verification.
+Next task: refresh the version 7 web app on an iPhone, confirm touch-device sizing and the adopted home-screen icon, and record the result here. Remove any prior home-screen shortcut and add the app again in Safari if needed. Do not create a receipt during visual verification. The app now executes as the owner and is accessible to anyone with its URL.
 
 The merged `main` branch must be pushed before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.
