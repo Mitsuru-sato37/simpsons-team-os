@@ -83,6 +83,15 @@ test('UI exposes cancelled receipt history', () => {
   assert.match(appHtml, /取り消す/);
 });
 
+test('UI labels the standard cash collection action as 現金300円', () => {
+  assert.match(appHtml, /現金300円/);
+});
+
+test('completed and cancelled games cannot be completed again', () => {
+  assert.match(appHtml, /selectedGame\.status === '完了' \|\| selectedGame\.status === '中止'/);
+  assert.match(codeGs, /\['完了', '中止'\]\.includes\(String\(values\[i\]\[7\]\)\)/);
+});
+
 test('documentation names the current repository and spreadsheet contract', () => {
   assert.match(documentation, /simpsons-team-os/);
   assert.match(documentation, /1yVT9_c1RVdnosvZlN3r2bse6B3NtJo9JvKDggqDI61E/);

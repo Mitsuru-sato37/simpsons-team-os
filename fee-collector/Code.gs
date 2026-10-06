@@ -145,6 +145,11 @@ function completeGame(gameId) {
 
     for (let i = 1; i < values.length; i += 1) {
       if (String(values[i][0]) !== String(gameId)) continue;
+
+      if (['完了', '中止'].includes(String(values[i][7]))) {
+        throw new Error('この試合は完了または中止のため、完了に変更できません。');
+      }
+
       sheet.getRange(i + 1, 8).setValue('完了');
       SpreadsheetApp.flush();
 
