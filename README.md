@@ -34,6 +34,8 @@ GitHub: `Mitsuru-sato37/simpsons-team-os`
 
 詳しいルールは `instagram/AGENTS.md`、デザインIDと参照先は `instagram/designs.json` にあります。
 
+選手写真は `instagram/photo-library/` の資産管理機能から独立して整理・検索できます。`選手写真整理して`、`未仕分けを確認して`、`匠の写真を出して` などと依頼します。Drive原本はその場に残し、写真資産カタログで選手ID・試合ID・判定状態を管理します。
+
 ## Multi-PC development
 
 GitHubを共有の正本として使います。作業は `codex/<topic>` ブランチで行い、PCを切り替える前にコミット・プッシュしてください。

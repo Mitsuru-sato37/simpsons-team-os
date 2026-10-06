@@ -4,10 +4,45 @@
 
 ## 呼び出し口
 
+- `photo-library`: 選手写真の整理・検索・確認。STARTING LINEUPやpost-gameとは独立して呼び出す。
 - `starting-lineup`: 試合前のSTARTING LINEUPだけを制作する。
 - `post-game`: 試合後のGAME RESULT、GAME STATS、FEATURE PLAYERを個別に、または指定された組み合わせで制作する。
 
 入口間で状態を共有する場合は `match-context.schema.json` の `MatchContext` を使う。集金アプリ `fee-collector/` のコードや台帳には接続しない。試合ID、日付、対戦相手、会場はすべての成果物で一致させる。
+
+## PHOTO LIBRARY route
+
+このルートは「選手写真整理して」「新しい写真を仕分けたい」「未仕分けを確認して」「匠の写真を出して」「○○戦の匠の写真を出して」「FEATURE PLAYER用の匠の写真候補を出して」などの依頼で単独実行する。コード契約は `photo-library/`、参照元フォルダは `photo-library/drive-sources.json` を使う。
+
+### 参照元とデータ
+
+- 現在のDrive写真構成を維持し、`03_選手写真/99_未仕分け`、その直下の既存 `#背番号氏名` フォルダ、`01_試合写真` を読み取る。画像以外（動画等）は写真一覧に含めない。
+- `99_未仕分け` は現在空であり、今後追加される写真の受け入れ先として扱う。依頼時に空なら「処理対象0件」と報告して終了する。既存選手別フォルダの写真を新着とみなしたり、過去分の一括登録を始めたりしない。
+- 選手IDと氏名は `Simpsons_選手マスター` (`1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4`, `選手マスター` タブ) を参照する。選手名だけをキーにしない。候補ごとにマスターIDと候補理由を持つ。
+- 試合情報は `match-context.schema.json` の `matchId` を使う。日付、対戦相手、会場などで該当試合が一意に確定できない場合、matchIdはnullにする。
+- `photo-library/drive-sources.json` が指すGoogle Drive JSONカタログを正本として読み書きする。ローカルJSON実装は一時作業用。カタログ読み取り失敗・形式不正の場合は空台帳として続けず停止する。書き込みは一度に1つの処理だけ行い、Drive更新が競合／失敗したら再読み込みして内容を確認する。
+- Drive adapterには既存Codex Google Drive接続を使う。フォルダは `google_drive_list_folder`、写真プレビューとJSONカタログ読取は `google_drive_fetch`、公式選手マスターは `google_drive_get_spreadsheet_metadata` と `google_drive_get_spreadsheet_range` で読む。カタログ更新は更新後JSONを一時 `.json` ファイルに書き、同じファイルIDへ `google_drive_update_file` (`file_uri` に一時ファイル、`mime_type` は `application/json`) で内容を置換し、再fetchで読み戻し確認する。新しいAPI資格情報や接続は作らない。
+- Drive file IDをphotoIdにし、ファイル名、状態、選手ID、matchId、候補、根拠、理由、登録／更新日時、元／現在フォルダID、タグ、状態変更履歴を記録する。同じDrive file IDを二重登録しない。
+
+### 整理手順
+
+1. まず `99_未仕分け` の画像ファイルを一覧し、カタログに存在しないものだけを処理候補にする。ファイルを移動、改名、削除、上書きしない。
+2. 対象画像を個別に確認する。顔そのものを本人認証に使わず、背番号やユニフォーム上の名前など目視可能な確かな識別情報を確認する。必要な画像を確認できない場合は推測せず確認待ちにする。
+3. 背番号、ユニフォーム上の名前、信頼できるメタデータ、またはユーザーの明示的確認があり、選手マスターIDと一致する場合だけ `confirmed` とする。確定には選手IDと強い根拠を記録する。
+4. 位置、グローブ／ミット、防具、前後写真、撮影順、同一場面らしさだけでは確定しない。これらは `candidate` の理由にだけ使う。候補が複数なら全候補のIDと理由を記録する。候補を絞れなければ `unknown` とする。
+5. 画像の試合を日付／対戦相手／会場など信頼できる既知情報で一意に照合できた場合だけmatchIdを付ける。判断できない場合はnullにする。
+6. 書き込み予定の全レコードをdry-runプレビューし、件数、選手別confirmed数、候補一覧、unknown、変更内容を報告する。ユーザーが写真整理を依頼した場合、承認された分類メタデータだけをDriveカタログへ保存する。Driveの写真ファイル／親フォルダは変更しない。
+7. 最後にconfirmed/candidate/unknownの集計と確認が必要な写真ID・候補選手・理由を報告する。
+
+### 検索とSNS制作
+
+- `選手ID`、`matchId`、その組み合わせ、状態で検索する。表示名は毎回選手マスターから解決する。
+- `FEATURE PLAYER用の写真候補` はconfirmedのみを返す。候補／不明写真を使う前にユーザーの本人確認・確定を受ける。自動的な写真品質・活躍評価はしない。
+- STARTING LINEUP、GAME RESULT、GAME STATS、FEATURE PLAYER制作は既存ルールを維持し、写真選択時だけこのカタログを参照する。FEATURE PLAYERの元写真保持ルールを優先する。
+
+### 確認・訂正
+
+「この写真は選手ID X」等の明示指示後、該当photoIdを `confirmed` に更新し、`user_confirmation` 根拠と変更履歴を残す。「別の選手」なら再確認したIDに修正し、「不明のまま」ならunknownへ戻す。推測で履歴や根拠を書き換えない。
 
 ## 事実の確認
 

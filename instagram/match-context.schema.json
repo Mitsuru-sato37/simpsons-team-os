@@ -35,6 +35,7 @@
     "featurePlayer": {
       "type": "object",
       "properties": {
+        "playerId": { "type": "string", "minLength": 1 },
         "name": { "type": "string", "minLength": 1 },
         "photoRef": { "type": "string", "minLength": 1 },
         "performanceFacts": { "type": "array", "items": { "type": "string" } }

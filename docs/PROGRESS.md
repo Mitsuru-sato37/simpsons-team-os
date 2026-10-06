@@ -1,9 +1,15 @@
 # Progress
 
-Status: fee collector uses the native Google Sheets player master; Instagram production instructions are updated locally for photo-preserving FEATURE PLAYER composition
+Status: player photo asset management has been added to the Instagram module; shared Drive catalog initialized, original photos untouched
 Last updated: 2026-10-06
 
 ## Completed
+
+- 2026-10-06: Inspected Simpsons Drive photo folders. Confirmed `03_選手写真`, `99_未仕分け`, `01_試合写真`, and player-specific folders. User clarified that `99_未仕分け` is currently empty; it is the intake location for photos added later. Existing photos are not being bulk-imported.
+- 2026-10-06: Added `instagram/photo-library/` with an ID-based asset schema, source contract, Drive JSON catalog repository, atomic local JSON repository, and domain service for dry-run previews, safe classification, user confirmation history, deduplication, review queues, summaries, and player/match queries. FEATURE PLAYER lookup returns confirmed photos only.
+- 2026-10-06: Added a Drive runtime composition root and documented the concrete Codex connector mapping for folder listing, image/catalog reads, player-master lookup, and same-file JSON catalog replacement/read-back. The Codex host supplies tool callbacks; no new API client, credentials, or cloud infrastructure are introduced.
+- 2026-10-06: Added an independent `photo-library` Codex route and operating rules; `MatchContext.featurePlayer.playerId` now supports master-ID references.
+- 2026-10-06: Created and read-verified the empty Drive catalog `Simpsons_写真資産カタログ.json` (`11QeVpv1yhrrx8wSGjNVnsxPoF8hJ2gib`) inside the existing `03_選手写真` folder. No image or folder was moved, renamed, or modified; no photo has been classified.
 
 - GitHub repository identity is now documented as `Mitsuru-sato37/simpsons-team-os`.
 - Added an independent Codex Instagram production module with separate `starting-lineup` and `post-game` routes and a shared `MatchContext` schema.
@@ -42,6 +48,13 @@ Last updated: 2026-10-06
 - 2026-10-06: Restricted the GitHub Pages deployment workflow to `main`. Manual dispatches from feature branches now skip deployment, avoiding failures from the `github-pages` environment protection rules. The post-merge deployment from `main` succeeded.
 ## Verification
 
+- Initial `git-status.cmd` / `git fetch origin` was blocked by access denied on `.git/FETCH_HEAD`. Local repository was clean on `main` at `origin/main`; `codex/player-photo-library` was created after narrowly scoped approval for Git metadata write.
+- Drive folder inspection and empty catalog content/parent were verified read-only. No tests were added or run because the request did not ask for testing or verification. Implementation checks are still outstanding.
+- `git diff --check` completed without whitespace errors (Git reported only existing LF-to-CRLF normalization notices).
+- Connector execution mapping is documented but has not been exercised end-to-end. The inbox is empty, so the first real preview/write cycle must occur after the user adds photos. Cloud use requires the same Drive tools and access in that cloud task.
+
+- 2026-10-06 handoff: fetched `origin`; `codex/player-photo-library` is based on the current `origin/main` commit `fa626c8`. `git diff --check` completed without whitespace errors (line-ending notices only). Tests were not run. The service/provider contract and concrete Codex connector procedure were reviewed; actual connector callbacks still run in the Codex host and have not been exercised end-to-end.
+
 - `node --test tests/instagram-production.test.mjs`
 - `node --test tests/fee-collector-logic.test.mjs`
 - `git diff --check`
@@ -75,8 +88,10 @@ Last updated: 2026-10-06
 
 ## Handoff
 
-Current branch: `main` (PR #8 and the Pages trigger fix merged on 2026-10-06).
+Current branch: `codex/player-photo-library`.
 
-Next task: confirm the official logo image in the Feature Player Drive folder and update the Drive SNS guide if it remains the canonical production guide. The user confirmed the home-screen icon appears on iPhone; icon work is complete. The fee-collector iPhone verification remains a separate outstanding task.
+Completed in this handoff: photo-library implementation and operating instructions are recorded on this branch. The current Codex host can use it when its Google Drive connector is available and authorized; a separate cloud task must also have that connector and access. No photos have been classified or moved.
+
+Next task: after the user adds photos to `99_未仕分け`, run a preview, review candidates/unknowns with the user, and only then write confirmed metadata to the Drive catalog. Separate follow-ups remain: confirm the official logo image in the Feature Player Drive folder and align the Drive SNS guide if it remains canonical; fee-collector iPhone verification is also outstanding.
 
 The merged `main` branch must be pushed before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.

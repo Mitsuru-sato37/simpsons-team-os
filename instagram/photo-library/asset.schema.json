@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://simpsons-team-os.local/schemas/photo-asset.schema.json",
+  "title": "Simpsons PhotoAsset",
+  "type": "object",
+  "required": [
+    "photoId", "driveFileId", "fileName", "playerId", "matchId", "status",
+    "candidatePlayers", "evidence", "decisionReason", "createdAt", "updatedAt",
+    "originalLocation", "currentLocation", "tags", "history"
+  ],
+  "properties": {
+    "photoId": { "type": "string", "minLength": 1 },
+    "driveFileId": { "type": "string", "minLength": 1 },
+    "fileName": { "type": "string", "minLength": 1 },
+    "playerId": { "type": ["string", "null"] },
+    "matchId": { "type": ["string", "null"] },
+    "status": { "enum": ["confirmed", "candidate", "unknown"] },
+    "candidatePlayers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["playerId", "reason"],
+        "properties": {
+          "playerId": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "description"],
+        "properties": {
+          "type": {
+            "enum": ["jersey_number", "uniform_name", "trusted_metadata", "position", "gear", "proximity", "sequence", "user_confirmation"]
+          },
+          "description": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "decisionReason": { "type": "string", "minLength": 1 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "originalLocation": { "type": ["string", "null"] },
+    "currentLocation": { "type": ["string", "null"] },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["fromStatus", "toStatus", "changedAt", "reason"],
+        "properties": {
+          "fromStatus": { "type": ["string", "null"] },
+          "toStatus": { "enum": ["confirmed", "candidate", "unknown"] },
+          "changedAt": { "type": "string", "format": "date-time" },
+          "reason": { "type": "string", "minLength": 1 },
+          "playerId": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "confirmed" } } },
+      "then": { "properties": { "playerId": { "type": "string", "minLength": 1 } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "candidate" } } },
+      "then": { "properties": { "candidatePlayers": { "minItems": 1 } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "unknown" } } },
+      "then": { "properties": { "playerId": { "type": "null" }, "candidatePlayers": { "maxItems": 0 } } }
+    }
+  ],
+  "additionalProperties": false
+}

@@ -18,11 +18,11 @@ This file is the stable handoff entry point. Detailed project context and progre
 
 Update this field at the end of each meaningful development session.
 
-`main`
+`codex/player-photo-library`
 
 ## Next
 
-Confirm the official logo image in the Feature Player Drive folder and update the Drive SNS guide if it remains the canonical production guide. The trusted-read bridge required before editing the existing Google Doc was unavailable, so the Drive guide was not changed. The home-screen icon task is complete and the user confirmed it appears on iPhone.
+The player photo library service, Drive provider wiring contract, and Codex connector runbook are on `codex/player-photo-library`. The inbox is empty, so the end-to-end photo preview and catalog update remain to be exercised when the user adds photos. Existing separate follow-up: confirm the official logo image in the Feature Player Drive folder and update the Drive SNS guide if it remains canonical. The home-screen icon task is complete and the user confirmed it appears on iPhone.
 
 ## Required handoff update
 

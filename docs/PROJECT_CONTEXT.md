@@ -67,6 +67,16 @@ The current feature does not include roster-image recognition, automatic partici
 - For Instagram captions, use an available prior post as the style reference. The latest user-confirmed format is account name, date/opponent, brief game narrative and score, FEATURE PLAYER jersey number, then the established hashtags. Provide three suitable music options and mark one first choice.
 - Current checked Drive reference IDs, Canva operation sequence, output rules, and Codex routes are recorded in `instagram/designs.json` and `instagram/AGENTS.md`.
 
+## Player photo library
+
+- The independent `photo-library` route lives in `instagram/photo-library/`; it does not connect to `fee-collector/`.
+- Existing Drive photos live under `Simpsons/03_選手写真` (folder `1aKYXMNMrN5ZZy-VM7tglFHXSyrZCt_JN`), with `99_未仕分け` (`1rXzSh9w7eO7oqyh1oqMbJgUdSj81iRqA`), player-specific folders, and `01_試合写真` (`1CE_FNt0gtgCZ3UksaSD2iBE2jf2uWblY`). Preserve this structure and original files.
+- `99_未仕分け` is currently empty. It is the intake location for future photos; when the user requests sorting and it is still empty, report zero items and stop without importing existing player-folder assets.
+- The canonical catalog is the Drive JSON file `Simpsons_写真資産カタログ.json`, ID `11QeVpv1yhrrx8wSGjNVnsxPoF8hJ2gib`, in `03_選手写真`. It was initialized with version 1 and an empty asset list. Its ID is recorded in `instagram/photo-library/drive-sources.json`.
+- Photo identity references the existing player master ID; match association references `MatchContext.matchId`. Unknown match association stays null. Candidate and unknown photos require user review; only confirmed photos are returned for FEATURE PLAYER use.
+- Strong evidence for confirmation is a readable jersey number/name, trusted metadata, or explicit user confirmation. Position, equipment, catcher gear, sequence, neighboring images, and apparent scene continuity can only narrow candidates. No face recognition or automatic identity verification is used.
+- Photos remain in place. The catalog stores Drive file IDs, locations, classification, candidates/reasons, tags, and history. A dry-run preview precedes catalog writes. The Codex workflow maps the Drive list/fetch/update and player-master range connectors into the service provider; read-back verifies catalog replacement. Cloud use depends on those same connectors being available and authorized in the cloud task.
+
 ## Scope boundary
 
 Do not assume that this repository must become an Instagram auto-posting tool, a social media analytics service, a full team-management application, an image-generation pipeline, or a public website. Implement only the next explicitly assigned task and update this context when durable decisions are made.
