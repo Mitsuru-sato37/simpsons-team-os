@@ -22,7 +22,7 @@ Update this field at the end of each meaningful development session.
 
 ## Next
 
-The user confirmed the adopted icon appears on the iPhone Home Screen from the GitHub Pages entry. The remaining device check is touch-device sizing on that entry. Do not create a receipt during visual verification. The entry page and Apps Script app are link-accessible; the app executes as its owner.
+The user confirmed the adopted icon appears on the iPhone Home Screen from the GitHub Pages entry and said the touch-device sizing does not need further checking. Home-screen icon work is complete. The entry page and Apps Script app are link-accessible; the app executes as its owner.
 
 ## Required handoff update
 

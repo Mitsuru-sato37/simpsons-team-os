@@ -56,13 +56,12 @@ Last updated: 2026-10-06
 - Browser verification after deployment version 7 confirmed the app opens and its served HTML contains the 180×180 `apple-touch-icon` URL. The public Drive image loads as a 180×180 image. No payment action was performed.
 - Apps Script Manage deployments confirmed version 7, execute-as-owner, access `全員` (anyone), and the same deployment ID and web app URL after the access update. No payment action was performed.
 - GitHub Actions Pages deployment succeeded (run 1). The live entry page's top-level DOM has one `apple-touch-icon` link to `/apple-touch-icon.png` with `sizes="180x180"`; the page loads the existing Apps Script app in its iframe. No payment action was performed.
-- The user confirmed the adopted icon is now displayed on the iPhone Home Screen after using the GitHub Pages entry URL. Touch-device sizing on the iPhone has not yet been confirmed.
+- The user confirmed the adopted icon is displayed on the iPhone Home Screen after using the GitHub Pages entry URL and said touch-device sizing does not need further checking.
 ## Remaining scope
 
 - The current STARTING LINEUP Drive folders are empty and no matching Canva design was found; production must stop until the existing source/method is identified.
 - Canva has no direct export operation in the connected tool inventory. During an actual production request, verify the Canva browser download and Google Drive upload path; report any incomplete Drive save honestly.
 - Resolve the intended completed-output Drive folder for each asset type when none is discoverable.
-- Confirm touch-device sizing on the iPhone from the GitHub Pages entry URL without recording a payment.
 - Participant registration from a starting-lineup image remains a later feature.
 - Consider adding an in-app player-master picker to register participants per game without manually entering IDs; no such UI exists yet.
 - PayPay API integration and user authentication remain out of scope. Public directory listing is not enabled; app access requires its URL.
@@ -71,6 +70,6 @@ Last updated: 2026-10-06
 
 Current branch: `codex/home-screen-icon` (includes the Instagram workflow; pending this PR to `main`).
 
-Next task: confirm the touch-device sizing on an iPhone from `https://mitsuru-sato37.github.io/simpsons-team-os/`, then record the result here. The user already confirmed the home-screen icon displays. Do not create a receipt during visual verification. The embedded app executes as the owner and is accessible to anyone with its URL.
+Next task: no remaining work for the home-screen icon. The user confirmed the icon appears on iPhone and does not need further touch-device sizing checks. The embedded app executes as the owner and is accessible to anyone with its URL.
 
 The merged `main` branch must be pushed before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.
