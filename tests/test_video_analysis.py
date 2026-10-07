@@ -1,11 +1,12 @@
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from video_analysis.detector import Feature, detect_candidates, format_time, parse_time
 from video_analysis.storage import load_analysis, save_analysis, save_feedback
-from video_analysis.extract import iter_jpegs
+from video_analysis.extract import find_binary, iter_jpegs
 from video_analysis.pipeline import refine_candidates
 from video_analysis.detector import Candidate
 from io import BytesIO
@@ -97,6 +98,17 @@ class StorageTests(unittest.TestCase):
 
 
 class PipelineTests(unittest.TestCase):
+    def test_binary_lookup_finds_winget_ffmpeg_install(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / 'Microsoft' / 'WinGet' / 'Packages'
+            binary = root / 'Gyan.FFmpeg_source' / 'ffmpeg-9.0.2' / 'bin' / 'ffmpeg.exe'
+            binary.parent.mkdir(parents=True)
+            binary.touch()
+            with patch('video_analysis.extract.shutil.which', return_value=None), \
+                 patch.dict('video_analysis.extract.os.environ',
+                            {'LOCALAPPDATA': directory}, clear=True):
+                self.assertEqual(find_binary('ffmpeg'), str(binary))
+
     def test_jpeg_stream_reader_handles_chunk_boundaries(self):
         stream = BytesIO(b'noise\xff\xd8one\xff\xd9\xff\xd8two\xff\xd9')
         self.assertEqual(list(iter_jpegs(stream, chunk_size=3)),

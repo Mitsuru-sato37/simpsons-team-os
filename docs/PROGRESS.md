@@ -1,17 +1,17 @@
 # Progress
 
-Status: ローカル動画解析MVPを実装、実MP4の通し検証待ち
-Last updated: 2026-10-07
+Status: ローカル動画解析MVPを実装しGX010430.mp4の通し解析を完了、候補レビュー待ち
+Last updated: 2026-10-08
 
 ## Active video-analysis work (2026-10-07)
 
 - Active branch: `codex/video-inning-mvp`, based on synchronized `main` and pushed to GitHub. Fee-collector PR #13 remains separate and open.
 - Added `video_analysis/`: FFprobe metadata, FFmpeg low-resolution JPEG stream sampling, OpenCV HSV feature extraction, persistent-change coarse detection, 1-second candidate refinement, local Tkinter review/feedback UI, and JSON records with video identity, analysis timestamp, settings, logic version, candidate scores/evidence, verdict, correction, and comment. Added `start-video-analysis.cmd`. Original videos are read only; outputs are under ignored `.local/video-analysis/`.
-- Reused the user's existing HSV ranges and evaluated the detector on the existing `GX010430_analysis.csv` (340 pre-extracted rows). Coarse candidates: 11:00 (44), 25:00 (90), 34:50 (40), 39:40 (53), 43:20 (78). These are unverified hypotheses, and scores are not probabilities.
-- Follow-up visual spot-check of the 10-second JPEG samples: the 25:00 and 43:20 frames show batter/plate-area activity, so the observed candidates may reflect batter changes rather than inning changes. The samples are too sparse to label these as true or false boundaries; no thresholds were changed based on this inspection. A local contact sheet is in ignored `.local/video-analysis-review/candidate-review.jpg`.
-- Verification: 11 Python unit tests and 48 existing Node tests passed; Python source compilation and `git diff --check` passed. Tests cover persistent changes, brief color flashes, camera motion alone, low-ratio uniform shifts, time parsing, JPEG stream boundaries, detail refinement, unique result files, and feedback persistence/range checks. Full MP4 extraction and UI operation remain unverified: this task environment has a bundled Python without OpenCV and does not find the user-installed `py`, `ffmpeg`, or `ffprobe` on PATH. The direct `git fetch origin` and `git pull --ff-only` succeeded at session start; the required `git-status.cmd` sync check passed after Git metadata access was approved.
-- Next: make the user's Python/OpenCV and FFmpeg/FFprobe executable paths available to the Codex process, then run `GX010430.mp4` through `start-video-analysis.cmd`, inspect candidates in the video, save verdicts/corrections, and tune thresholds against those labels. Avoid claiming second-level timing until verified. Chat invocation and splitting are outside Phase 1.
-- Blocker/external dependency: an accessible Python with OpenCV/NumPy and FFmpeg/FFprobe on the PC executing analysis. The 11.7 GB source file remains outside Git.
+- The original `py`/FFmpeg PATH lookup failed because the binaries live under an ACL-restricted profile folder. A read-only search found Python 3.14.8/OpenCV 5.0.0/NumPy 2.5.3 at `%LOCALAPPDATA%\Python\pythoncore-3.14-64\python.exe` and FFmpeg/FFprobe 9.0.2 under the WinGet package folder. Updated the launcher and discovery code to find these standard paths automatically.
+- 2026-10-08 full video run: analyzed `C:\Users\佐藤充\Downloads\GX010430.mp4` (3395.4 seconds). Saved result to ignored `.local/video-analysis/GX010430-659b395a4e54.json`. Candidates: 11:10 (49), 25:02 (93), 35:12 (52), 39:30 (61), 43:24 (89). These heuristic scores are not probabilities. A local detail contact sheet is at `.local/video-analysis-review/detail-candidates.jpg`; several clips appear to show batter/plate-area activity, and the candidates still need user-confirmed labels.
+- Verification: 12 Python unit tests and 48 existing Node tests passed before the full run; after the tool-discovery update, a 4-second sample returned four frames, FFprobe read the source duration, and Tkinter UI widgets initialized. Full source analysis completed without upload or modification. The source remains outside Git.
+- Next: open the saved result in the local review UI, watch the candidate clips, and save user-confirmed correct/incorrect labels and corrections. Tune detection only after those labels are recorded. Avoid claiming all five are inning boundaries. Chat invocation and splitting remain later phases.
+- Blocker/external dependency: candidate ground-truth feedback is needed for precision evaluation and threshold tuning. The 11.7 GB source and local JSON remain outside Git.
 
 ## Fee collector accounting integration (historical main snapshot)
 

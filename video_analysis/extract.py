@@ -1,10 +1,29 @@
 """Sample local video frames with FFmpeg without writing or uploading the video."""
 
 import json
+import os
 import shutil
 import subprocess
+from pathlib import Path
 
 from .detector import Feature
+
+
+def find_binary(name):
+    executable = name + ('.exe' if os.name == 'nt' else '')
+    found = shutil.which(name)
+    if found:
+        return found
+    configured = os.environ.get(name.upper() + '_BINARY')
+    if configured and Path(configured).is_file():
+        return configured
+    local_app_data = os.environ.get('LOCALAPPDATA')
+    if local_app_data:
+        packages = Path(local_app_data) / 'Microsoft' / 'WinGet' / 'Packages'
+        matches = sorted(packages.glob(f'Gyan.FFmpeg_*/ffmpeg-*/bin/{executable}'))
+        if matches:
+            return str(matches[-1])
+    raise FileNotFoundError(name)
 
 
 def iter_jpegs(stream, chunk_size=65536):
@@ -30,20 +49,27 @@ def iter_jpegs(stream, chunk_size=65536):
 
 
 def require_tools():
-    missing = [name for name in ('ffmpeg', 'ffprobe') if not shutil.which(name)]
+    binaries = {}
+    missing = []
+    for name in ('ffmpeg', 'ffprobe'):
+        try:
+            binaries[name] = find_binary(name)
+        except FileNotFoundError:
+            missing.append(name)
     if missing:
-        raise RuntimeError(f"見つからない実行ファイル: {', '.join(missing)}。PATHに追加してください")
+        raise RuntimeError(f"見つからない実行ファイル: {', '.join(missing)}")
     try:
         import cv2
         import numpy
     except ImportError as error:
         raise RuntimeError('OpenCV と NumPy を使用できる Python で起動してください') from error
-    return cv2, numpy
+    return cv2, numpy, binaries['ffmpeg'], binaries['ffprobe']
 
 
 def probe_duration(video):
+    ffprobe = find_binary('ffprobe')
     process = subprocess.run(
-        ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+        [ffprobe, '-v', 'error', '-show_entries', 'format=duration',
          '-of', 'json', str(video)], capture_output=True, text=True, check=True)
     duration = float(json.loads(process.stdout)['format']['duration'])
     if duration <= 0:
@@ -52,8 +78,8 @@ def probe_duration(video):
 
 
 def sample_features(video, start, duration, interval, progress=None):
-    cv2, np = require_tools()
-    command = ['ffmpeg', '-hide_banner', '-loglevel', 'error', '-nostdin',
+    cv2, np, ffmpeg, _ = require_tools()
+    command = [ffmpeg, '-hide_banner', '-loglevel', 'error', '-nostdin',
                '-ss', str(start), '-t', str(duration), '-i', str(video),
                '-vf', f'fps=1/{interval},scale=640:-2', '-q:v', '5',
                '-f', 'image2pipe', '-vcodec', 'mjpeg', 'pipe:1']

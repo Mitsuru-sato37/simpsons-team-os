@@ -1,13 +1,13 @@
 # Status
 
-Status: Local video-analysis MVP on a feature branch; real MP4 run pending
-Last updated: 2026-10-07
+Status: Local video-analysis MVP processed GX010430.mp4; candidate review and feedback pending
+Last updated: 2026-10-08
 
 This file is the stable handoff entry point. Detailed project context and progress remain authoritative in `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md`.
 
 ## Current state
 
-- Video-analysis work is on `codex/video-inning-mvp`, based on `main`. Its separate desktop module samples local MP4s, lists inning-change candidates, and stores feedback locally. The actual MP4 run is pending because this task environment does not expose the user's Python/OpenCV/FFmpeg installation on PATH.
+- Video-analysis work is on `codex/video-inning-mvp`, based on `main`. Its desktop module processed the local GX010430.mp4 and saved five candidates. Python/OpenCV and FFmpeg were discovered under the user's profile; the launcher now finds those standard installation paths without a PATH edit. Candidate truth labels remain pending.
 - Repository initialized for cross-PC Codex development.
 - Durable Simpsons / ラキポタ context is recorded.
 - The fee collector continues on the separate `codex/fee-collector-roster-picker` branch, with PR #13 open. This video branch is based on `main` and does not include that branch's source changes.
@@ -23,7 +23,7 @@ Update this field at the end of each meaningful development session.
 
 ## Next
 
-Run the video MVP on the configured PC using `GX010430.mp4`, review and save candidate feedback, then tune detection. The separate fee-collector next task is to review PR #13.
+Open the saved GX010430 analysis in the review UI, confirm candidate boundaries and record feedback, then tune detection. The separate fee-collector next task is to review PR #13.
 
 ## Required handoff update
 
