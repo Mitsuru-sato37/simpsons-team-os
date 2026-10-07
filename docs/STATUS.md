@@ -23,7 +23,7 @@ Update this field at the end of each meaningful development session.
 
 ## Next
 
-The existing Apps Script project is now mapped by `fee-collector/.clasp.json`. Before `clasp login`, obtain the user's confirmation because Google OAuth will create persistent local credentials. After login, push from `fee-collector/`, verify the existing edit trigger with a disposable emergency name, confirm its E ID appears in both `メンバー請求` and `メンバー`, then clear the test row. The deployment manager currently shows version 9. The working fixture is marked `TEST-DEMO-20261007`; no payment was recorded. The legacy ledger remains a backup.
+The existing Apps Script project is mapped by `fee-collector/.clasp.json`, and the user completed clasp OAuth login. `clasp push` is blocked until the user enables “Google Apps Script API” at https://script.google.com/home/usersettings. Once enabled, push from `fee-collector/`, verify the existing edit trigger with a disposable emergency name, confirm its E ID appears in both `メンバー請求` and `メンバー`, then clear the test row. The deployment manager currently shows version 9. The working fixture is marked `TEST-DEMO-20261007`; no payment was recorded. The legacy ledger remains a backup.
 
 ## Required handoff update
 

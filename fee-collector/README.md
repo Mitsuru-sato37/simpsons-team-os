@@ -57,11 +57,12 @@ The operational app tabs are `集金_試合`, `集金_参加者`, and `集金_�
 
 このフォルダの `.clasp.json` は既存の「Simpsons 当日集金」Apps Scriptプロジェクトを指し、`.claspignore` は Apps Script 用の6ソースだけを同期対象にします。同期前に、作業ブランチのソースを確認してください。
 
-1. Node.jsを用意し、このフォルダで `npx @google/clasp login` を実行してGoogleアカウントを認証する。
-2. `npx @google/clasp push` で `.gs` / `.html` / `appsscript.json` を既存プロジェクトへ反映する。
-3. Apps Scriptエディタで保存完了と構文エラーがないことを確認する。
-4. 既存の `handleMemberRosterEdit` 編集トリガーを維持する。新しいトリガーは追加しない。
-5. ウェブアプリを更新する場合は、既存デプロイを更新して同じデプロイIDとURLを保つ。
+1. Apps Scriptのユーザー設定で「Google Apps Script API」を有効にする。
+2. Node.jsを用意し、このフォルダで `npx @google/clasp login` を実行してGoogleアカウントを認証する。
+3. `npx @google/clasp push` で `.gs` / `.html` / `appsscript.json` を既存プロジェクトへ反映する。
+4. Apps Scriptエディタで保存完了と構文エラーがないことを確認する。
+5. 既存の `handleMemberRosterEdit` 編集トリガーを維持する。新しいトリガーは追加しない。
+6. ウェブアプリを更新する場合は、既存デプロイを更新して同じデプロイIDとURLを保つ。
 
 `clasp login` はGoogle OAuthのローカル認証情報を作成します。認証情報をリポジトリへ保存・コミットしないでください。
 
