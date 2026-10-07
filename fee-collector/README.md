@@ -53,6 +53,18 @@ The operational app tabs are `集金_試合`, `集金_参加者`, and `集金_�
 5. `installMemberLookupTrigger` を一度実行し、シート編集と選手マスター読取の権限を許可する。インストール型編集トリガーは、作成したアカウントの権限で動作する。
 6. **デプロイ → 新しいデプロイ → ウェブアプリ** から試作アクセスを自分だけにして公開する。
 
+## リポジトリからApps Scriptへ同期
+
+このフォルダの `.clasp.json` は既存の「Simpsons 当日集金」Apps Scriptプロジェクトを指します。同期前に、作業ブランチのソースを確認してください。
+
+1. Node.jsを用意し、このフォルダで `npx @google/clasp login` を実行してGoogleアカウントを認証する。
+2. `npx @google/clasp push` で `.gs` / `.html` / `appsscript.json` を既存プロジェクトへ反映する。
+3. Apps Scriptエディタで保存完了と構文エラーがないことを確認する。
+4. 既存の `handleMemberRosterEdit` 編集トリガーを維持する。新しいトリガーは追加しない。
+5. ウェブアプリを更新する場合は、既存デプロイを更新して同じデプロイIDとURLを保つ。
+
+`clasp login` はGoogle OAuthのローカル認証情報を作成します。認証情報をリポジトリへ保存・コミットしないでください。
+
 ## 次の実装
 
 スタメン表（控えを含む当日参加者全員が載る画像）から `参加者` タブへ自動登録する機能は次段階です。認証、PayPay API、公開範囲の拡大も今回の範囲には含めません。
