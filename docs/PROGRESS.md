@@ -13,8 +13,9 @@ Last updated: 2026-10-08
 - Confirmed by source inspection: current app already calls Apps Script functions through `google.script.run`; `Code.gs` owns spreadsheet access, `LockService`, emergency-ID counter, and invoice/match reconciliation. Target spreadsheet metadata/header reads succeeded; no live values were changed.
 - Emergency participants need stable, server-assigned finance `E###` identities without creating fake player-master records. The app must also safely handle absence/removal and block removal when an active receipt exists.
 - Live Simpsons会計 match, participant, and invoice records were cleared at the user's explicit request on 2026-10-07. Finance tabs, headers/formulas, member roster, and player master remain. No current game is registered; no payment was entered. The old ledger stays as backup.
-- Verification: `node --test tests/fee-collector-logic.test.mjs` — 70 passed; `git diff --check` passed. Tests use local Apps Script sheet fixtures; no live finance rows or receipts were modified.
-- Remaining: complete source review; verify Apps Script syntax/synchronization and update the existing web deployment if the authorized project credentials are available; commit and push, then create/attach a PR if needed. Use the existing app bridge only.
+- Verification: `node --test tests/*.test.mjs` — 82 passed; Apps Script/browser JavaScript parse checks and `git diff --check` passed. Tests use local Apps Script sheet fixtures; no live finance rows or receipts were modified.
+- Source commit: `3b00308` locally; equivalent source tree is on the feature branch at `2fc79bf`. Draft PR #14 targets the fee-collector base branch used by PR #13.
+- Remaining: after PR #13's base changes are integrated, sync this source to the existing Apps Script project and update its deployment while preserving the URL/access. This environment has no `clasp` command or saved clasp OAuth credentials, so no live deployment or sheet mutation was attempted. Keep the PR draft until deployment verification is possible.
 
 ## Active fee-collector work
 
