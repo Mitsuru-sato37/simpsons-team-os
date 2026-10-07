@@ -5,15 +5,20 @@ Last updated: 2026-10-07
 
 ## Active fee-collector work
 
-- Active branch: `codex/fee-collector-roster-picker`, with four commits pushed above `origin/main`; [PR #13](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/13) is open and mergeable. The branch includes the roster picker, accounting name lookup, and emergency participant IDs.
-- The new name selector is on the live `メンバー請求` table's name column, populated from the 40 player-master names; manual text entry is also accepted. The accidental name selector on `メンバー` was removed and that column restored to text.
+- Active branch: `codex/fee-collector-roster-picker`, pushed to GitHub; [PR #13](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/13) is open and mergeable. The branch includes the roster picker, accounting name lookup, and emergency participant IDs.
+- The live `メンバー請求` name column has the 40 player names in a dropdown and accepts unlisted text. A live edit test resolved `渡部 琉斗` to `M001`, and a separate emergency-name test created an `E` ID in both the invoice and member table. Disposable test rows were cleared afterward; no payment was entered. The accidental name selector on `メンバー` remains removed.
 - Source behavior: editing the name in a blank invoice row resolves roster members to their `M` ID. An unregistered emergency name gets a stable `E001`-style ID, is added to `メンバー` without a jersey, and reuses that ID on later invoices with the same name. A locked sequence counter prevents reusing IDs if a row is removed. App-generated rows with an invoice ID are protected from this edit handler.
-- Current local verification: `node --test tests/*.test.mjs` — 56 passed; `git diff --check` passed. A review found stale IDs could remain if a manual invoice name was cleared; this was fixed and covered by a regression test. The live spreadsheet accepted and displayed an emergency free-text test; the test value was cleared afterward. The new `E`-ID script behavior still needs to be published to the Apps Script project and exercised with a disposable invoice row.
-- Live Apps Script inspection: deployment manager shows version 9, and one installable `handleMemberRosterEdit` spreadsheet edit trigger is installed with 0% error rate. The live `Logic.gs` does not contain `resolveEmergencyMemberId_`, so local emergency-ID changes have not reached the live editor yet. Publish the local source before testing a disposable invoice row; do not create a duplicate trigger.
-- Added `fee-collector/.clasp.json` for the existing Apps Script project and documented source synchronization. Next step is user's confirmation before `clasp login`, which creates persistent local Google OAuth credentials; then push and verify with a disposable emergency invoice.
-- The user completed clasp OAuth login. A preflight pull into an ignored temporary directory confirmed the live app is behind the branch. `clasp push --force` then stopped before changing the remote because “Google Apps Script API” is disabled for the account. The repo `.claspignore` limits uploads to the six intended script files, and the manifest mirrors the current public-URL access. User must enable the Apps Script API at https://script.google.com/home/usersettings; then retry push, update the existing web deployment if needed, and verify the emergency edit trigger with a disposable row. OAuth credentials are stored only under ignored `tmp/` and were not committed.
+- Current local verification before the live sync: `node --test tests/*.test.mjs` — 56 passed; `git diff --check` passed. A stale-ID case after clearing a manual invoice name is covered by a regression test.
+- The user enabled the Apps Script API. `clasp push --force` synchronized the six intended source files and the existing web deployment was updated to version 10 at the same deployment ID and URL. The existing `handleMemberRosterEdit` trigger was retained; no duplicate trigger was installed. OAuth credentials remain only under ignored `tmp/` and were not committed.
+- The live dropdown is now a normal validation rule with invalid input allowed, applied from `メンバー請求!C2:C1000`, so normal names remain selectable while emergency names can be typed. The initial table dropdown's strict validation blocked the API edit; its column type was changed to untyped, then the 40-name dropdown rule was restored with free text allowed.
 - A direct `git fetch origin` could not update `.git/FETCH_HEAD` due sandbox restrictions, but the committed branch was pushed successfully and PR #13 was created through the GitHub connection.
 - The `Simpsons会計` spreadsheet (`1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ`) retains its six original finance tabs and operational tabs. The legacy ledger remains untouched as backup; it contained no populated rows during prior migration inspection. Spreadsheet timezone is `Asia/Tokyo`.
+
+## Verification and handoff
+
+- Live sheet test: entering `渡部 琉斗` in a blank invoice name cell filled `M001`; entering `Codex確認用20261007` filled `E002` and added a temporary member row. Both test entries were cleared after read-back verification. The allocator is monotonic, so `E001` and `E002` are consumed and the next new emergency ID will be `E003`.
+- `clasp deployments` confirms the existing web deployment at version 10; the spreadsheet metadata confirms `Asia/Tokyo`. No real payment was entered.
+- Next: review and merge PR #13, then check the live web app's game list and receipt flow without entering a payment. Branch `codex/fee-collector-roster-picker`; push any intended docs changes before handoff.
 
 ## Completed
 
@@ -104,15 +109,15 @@ Last updated: 2026-10-07
 
 ## Handoff
 
-Current branch: `codex/fee-collector-ledger-link`.
+Current branch: `codex/fee-collector-roster-picker` (pushed; PR #13 open).
 
-Completed in this handoff: added the connected spreadsheet link to the fee collector source, updated the existing Apps Script deployment to version 8, and verified the live link opens the ledger in a separate tab. At verification the app showed no registered games, which may need investigation if unexpected. The photo-library implementation and operating instructions are also present at `2ce4b32`; no photos have been classified or moved.
+Completed in this handoff: synchronized local fee-collector source to the existing Apps Script project; updated the existing deployment to version 10; retained its ID, URL, access, and installed edit trigger; enabled a free-typing name field with roster dropdown suggestions; and live-tested roster and emergency ID lookup. The temporary test rows were cleared. No payment was recorded. The legacy ledger remains a backup.
 
-Next task: if the empty game list in the live fee collector is unexpected, inspect its configured ledger connection and current game data without recording a payment. After the user adds photos to `99_未仕分け`, run a preview and review candidates/unknowns before writing confirmed metadata to the Drive catalog. Separate follow-ups remain: confirm the official logo image in the Feature Player Drive folder and align the Drive SNS guide if it remains canonical.
+Next task: review and merge PR #13. Then inspect the live fee-collector's game list and exercise the normal collection workflow without recording a payment. Separate photo-library work remains: after the user adds photos to `99_未仕分け`, preview candidates and review before writing confirmed metadata. No photos have been classified or moved.
 
 - 2026-10-06 correction: verified the current `99_未仕分け` folder is a direct child of the active `03_選手写真` folder. Do not use any `00` folder or archive as the photo intake source. Updated the Instagram operating route and project context to preserve that boundary.
 - 2026-10-06: User supplied the `99_アーカイブ` folder URL and explicitly prohibited using anything in it as a reference. Read only its metadata (not its contents) to confirm the folder identity. Added its ID to the exclusion list and a runtime allowlist so photo intake can list only the configured inbox; no archive files were opened.
 - 2026-10-07: Fast-forward merged `codex/player-photo-library` into `main`; `git fetch origin` completed before merge and `git diff --check` had no whitespace errors. Automated tests were not run for this merge request.
-- 2026-10-07: Fee-collector spreadsheet-link implementation is on `codex/fee-collector-ledger-link`; deployment version 8 and live-link navigation were verified.
+- 2026-10-07: Fee-collector spreadsheet-link implementation landed in the `codex/fee-collector-roster-picker` line; the web deployment is now version 10 and the same ledger URL was confirmed.
 
 The merged `main` branch must be pushed before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.
