@@ -1,20 +1,20 @@
 # Progress
 
-Status: Plan approved; safe cloud attendance writer is blocked (no product code changed)
+Status: App-mediated roster import implementation in progress
 Last updated: 2026-10-07
 
 ## Current handoff — mobile/cloud roster intake
 
 - Active branch: `codex/fee-collector-cloud-roster`, based on `codex/fee-collector-roster-picker` (PR #13 remains open).
-- User approved the design: use a phone to provide a lineup or scorebook image, match known players against the player master, review uncertain identities, and write attendance only after confirmation. Handle last-minute additions and absences from the phone app.
+- User approved the design and implementation plan, and confirmed the cloud assistant reads the phone image successfully. The agreed implementation flow is assistant-generated jersey/name lines → paste into the phone app → master matching and preview → confirm inside app.
 - Implementation plan: `docs/superpowers/plans/2026-10-07-fee-collector-mobile-cloud-roster.md`. No application code or product tests have been changed. Wait for the user's plan review before implementation.
 - Capability check: connected Google Sheets tools successfully read metadata and bounded ranges from `Simpsons会計` and `Simpsons_選手マスター`; target accounting timezone is `Asia/Tokyo` and the operational tab headers are present. This confirms read access only.
-- Blocking dependency: no Apps Script execution tool or authenticated lock-aware writer callback is exposed to the cloud task. A direct Sheets API write would bypass Apps Script `LockService`, emergency `E###` allocation, and `メンバー請求`/`試合会計` reconciliation. A new anonymous write endpoint would increase the risk of the existing anyone-with-URL deployment. No live cell values were changed.
-- Do not start Tasks 2–4 until the user selects a safe write path. Options to discuss: provide an authenticated route to the Apps Script operation, or revise to a user-mediated flow that confirms and applies attendance only inside the existing app. Do not fall back to local-PC files or add a paid OCR/cloud service.
+- Ruling: The current cloud host has no Apps Script execution connector. Use the existing app's `google.script.run` bridge for preview and apply. Direct Sheets writes and a new external endpoint are excluded because direct writes bypass the app's lock/reconciliation and an anonymous endpoint expands the surface of an anyone-with-URL deployment. This adds a copy/paste step from assistant to app, but keeps the write inside the existing attendance UI and Apps Script lock.
+- Confirmed by source inspection: current app already calls Apps Script functions through `google.script.run`; `Code.gs` owns spreadsheet access, `LockService`, emergency-ID counter, and invoice/match reconciliation. Target spreadsheet metadata/header reads succeeded; no live values were changed.
 - Emergency participants need stable, server-assigned finance `E###` identities without creating fake player-master records. The app must also safely handle absence/removal and block removal when an active receipt exists.
 - Live Simpsons会計 match, participant, and invoice records were cleared at the user's explicit request on 2026-10-07. Finance tabs, headers/formulas, member roster, and player master remain. No current game is registered; no payment was entered. The old ledger stays as backup.
 - Verification performed for the plan-only change: plan/spec coverage review and `git diff --check` (no product tests run).
-- Next: ask the user which safe write path to use, update the approved plan/spec accordingly, then resume implementation only when the write boundary is clear.
+- Next: implement the preview and confirmed roster operations, phone UI, and assistant handoff instructions. Use the existing app bridge only.
 
 ## Active fee-collector work
 

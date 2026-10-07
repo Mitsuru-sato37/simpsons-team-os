@@ -4,14 +4,15 @@
 
 **Goal:** Let the user import a game roster from a phone-provided lineup or scorebook image, confirm player matches, and update Simpsons会計 and the existing mobile fee collector safely.
 
-**Architecture:** Keep image interpretation in the cloud-assisted SimpsonsTeamOS workflow and keep attendance/accounting writes behind the existing Apps Script project. A pure roster-import module builds a read-only preview from extracted names/numbers, the player master, and current attendance; after confirmation, an Apps Script operation applies only the confirmed delta under a lock and reconciles invoices and match totals. The existing phone UI remains the day-of collection screen and gains safe attendance adjustments.
+**Architecture:** The cloud assistant reads the phone-attached image and returns copy-ready jersey/name lines. The existing mobile fee-collection app accepts the pasted list, asks Apps Script to match it against the current master and preview the delta, then confirms through the same Apps Script backend. The backend applies the confirmed delta under a lock and reconciles invoices and match totals; direct Google Sheets connector writes are not used.
 
-**Tech Stack:** Google Apps Script, Google Sheets, Node.js ES modules, `node:test`, existing Codex Google Drive/Sheets connector.
+**Tech Stack:** Google Apps Script, Google Sheets, existing `google.script.run` app bridge, Node.js `node:test`.
 
 **Spec:** `docs/superpowers/specs/2026-10-07-fee-collector-mobile-cloud-roster-design.md`
 
 ## Global Constraints
 
+- The user confirmed that phone image reading already works in the cloud assistant; do not add image OCR code to the application.
 - Do not introduce a paid OCR provider, a new cloud service, unattended Drive polling, or a separate attendance database for the first release.
 - Preview is read-only; only explicit confirmation applies the proposed attendance changes.
 - Use player name or jersey number for user-facing identity; never require internal IDs from the user.
@@ -24,7 +25,7 @@
 
 ## Review Focus
 
-- **Cloud capability is unavailable in a future task:** The workflow must stop before a write when image/Sheets access or the safe writer is missing; test missing provider actions.
+- **The copied OCR text is malformed or incomplete:** Do not create guessed participants; keep invalid rows unresolved and block confirmation; test malformed and blank lines.
 - **Player name or jersey is ambiguous:** Show unresolved candidates without guessing; test duplicate normalized names and jersey values.
 - **Preview is stale:** Reject confirmation if the roster changed since preview; test version/fingerprint mismatch.
 - **Repeated confirmation:** Do not duplicate participants or invoices; test idempotent replay of the same confirmation.
@@ -32,38 +33,36 @@
 
 ---
 
-### Task 1: Verify cloud connectors and safe write boundary
+### Task 1: Verify existing app bridge and accounting write boundary
 
 **Files:**
-- Inspect: `instagram/photo-library/runtime.mjs` and `instagram/photo-library/README.md` (existing connector-injection pattern)
-- Inspect: `fee-collector/Code.gs` (Apps Script read/write and reconciliation boundary)
+- Inspect: `fee-collector/App.html` (existing `google.script.run` actions)
+- Inspect: `fee-collector/Code.gs` (Apps Script lock, player master, and reconciliation boundary)
 - Record findings: `docs/PROGRESS.md`
 
 **Interfaces:**
-- Consumes: Existing Google Drive/Sheets connector and current Apps Script deployment configuration.
-- Produces: A verified provider contract for image input, player-master read, Simpsons会計 read, and confirmed attendance write; otherwise a concrete blocker and stop before Tasks 2–4.
+- Consumes: Existing mobile fee-collector UI and Apps Script server functions.
+- Produces: Verified in-app flow for pasted roster text → Apps Script preview → explicit confirmation → lock-protected writer. User confirmed phone image reading; app/server source confirms the existing bridge and accounting boundary.
 
-- [ ] Confirm a cloud task can receive a phone-attached image and read it without requiring a local path or saving it to Drive.
-- [ ] Confirm the available Sheets connector can read the player master and the target accounting ranges.
-- [ ] Confirm the existing Apps Script backend can expose a safe confirmed-roster operation to the cloud workflow without broadening deployment access or bypassing its lock/reconciliation logic.
-- [ ] If any check fails, update `docs/PROGRESS.md` with the exact unavailable capability and stop implementation for user review; do not add credentials, public write endpoints, or an alternate cloud service.
-- [ ] Record the verified callback signatures and deployment boundary before proceeding.
+- [x] Image reading in the phone cloud assistant is confirmed by the user; image recognition is outside the app code.
+- [x] Verify `google.script.run` is already used by the fee collector and the Apps Script backend already owns the sheet lock, player-master read, invoice projection, and match reconciliation.
+- [x] Confirm the target spreadsheets, operational tabs, headers, and timezone using metadata and bounded reads; no live values were edited.
+- [x] Record the planned calls as `previewRosterImport({ gameId, rosterText })` and `applyConfirmedRoster({ gameId, previewFingerprint, playerIds, emergencyNames })` via the existing `google.script.run` bridge. These methods will be added in Task 3; do not create an external/public write endpoint or change deployment access.
 
 ### Task 2: Add deterministic roster preview and matching domain
 
 **Files:**
-- Create: `fee-collector/roster-import/roster-import.mjs`
-- Create: `fee-collector/roster-import/preview.schema.json`
-- Create: `tests/fee-collector-roster-import.test.mjs`
+- Modify: `fee-collector/Logic.gs`
+- Modify: `tests/fee-collector-logic.test.mjs`
 
 **Interfaces:**
-- Produces `normalizeRosterIdentity_(value) -> string`, `matchRosterCandidate_(candidate, masterRows) -> MatchResult`, and `buildRosterPreview({ game, extractedRows, masterRows, currentParticipants }) -> Preview`.
+- Produces `parseRosterPaste_(text) -> Candidate[]`, `normalizeRosterIdentity_(value) -> string`, `matchRosterCandidate_(candidate, masterRows) -> MatchResult`, and `buildRosterPreview_(game, extractedRows, masterRows, currentParticipants, receipts) -> Preview`.
 - `Preview` contains a stable `gameId`, a source fingerprint, matched additions, proposed absences, unresolved rows with candidate choices, and a `readyToConfirm` flag. It contains no spreadsheet write side effects.
 
-- [ ] Add tests named `matches_by_jersey_and_name`, `normalizes_name_spaces`, `leaves_ambiguous_identity_unresolved`, `blocks_duplicate_master_jersey`, `proposes_additions_and_absences`, and `preview_is_read_only`.
-- [ ] Run `node --test tests/fee-collector-roster-import.test.mjs` and confirm the new behavior fails before implementation.
-- [ ] Implement name/jersey matching, duplicate detection, stable preview serialization, and roster delta calculation in `roster-import.mjs`; do not match by batting order or position.
-- [ ] Define the schema in `preview.schema.json` and validate that unresolved or incomplete game identity sets `readyToConfirm` to false.
+- [ ] Add tests named `parses_copy_ready_roster_lines`, `matches_by_jersey_and_name`, `normalizes_name_spaces`, `leaves_ambiguous_identity_unresolved`, `blocks_duplicate_master_jersey`, `proposes_additions_and_absences`, and `preview_is_read_only`.
+- [ ] Run `node --test tests/fee-collector-logic.test.mjs` and confirm the new behavior fails before implementation.
+- [ ] Implement safe parsing of pasted rows, name/jersey matching, duplicate detection, stable preview fingerprint, and roster delta calculation in `Logic.gs`; do not match by batting order or position.
+- [ ] Validate that unresolved or incomplete game identity sets `readyToConfirm` to false.
 - [ ] Re-run the targeted test file and confirm all assertions pass.
 
 ### Task 3: Add lock-protected Apps Script roster application
@@ -76,7 +75,7 @@
 **Interfaces:**
 - Produces `applyConfirmedRoster_(payload) -> { ok, gameId, added, absent, blocked }`.
 - Payload contains `gameId`, `previewFingerprint`, confirmed master `playerIds`, and emergency attendee names; it never treats model-extracted internal IDs as authoritative.
-- The server re-reads game, members, participants, and active receipts under `LockService`, validates the preview fingerprint, resolves current player master identities, and reconciles affected `メンバー請求` and `試合会計` rows.
+- `previewRosterImport({ gameId, rosterText })` is read-only. The server re-reads game, members, participants, and active receipts under `LockService` during `applyConfirmedRoster`, validates the preview fingerprint, resolves current player master identities, and reconciles affected `メンバー請求` and `試合会計` rows.
 
 - [ ] Add tests named `rejects_unknown_game`, `rejects_stale_roster_fingerprint`, `replays_confirmation_without_duplicates`, `blocks_absence_with_active_receipt`, `keeps_cancelled_receipt_history`, and `assigns_emergency_finance_id_server_side`.
 - [ ] Run the targeted fee-collector test and confirm new assertions fail before implementation.
@@ -103,10 +102,9 @@
 - [ ] Keep current collection controls, game selector, and visual structure; add no payment or game-completion behavior to roster import.
 - [ ] Re-run the fee-collector suite and confirm all assertions pass.
 
-### Task 5: Compose the cloud intake route and operational instructions
+### Task 5: Document the assistant-to-app handoff and operating instructions
 
 **Files:**
-- Create: `fee-collector/roster-import/runtime.mjs`
 - Create: `fee-collector/roster-import/README.md`
 - Create: `fee-collector/roster-import/AGENTS.md`
 - Modify: `fee-collector/README.md`
@@ -116,15 +114,15 @@
 - Modify: `tests/fee-collector-roster-import.test.mjs`
 
 **Interfaces:**
-- `createRosterImportRuntime({ readImage, readPlayerMaster, readGame, readParticipants, applyConfirmedRoster })` returns `previewRoster(image, gameHint)` and `confirmRoster(preview, corrections)`.
-- Connector/provider functions are injected; the runtime contains no credentials and cannot write during preview. `confirmRoster` calls the Task 3 writer only after an explicit user confirmation and a fresh read.
+- The cloud assistant route returns one paste-ready line per attendee with jersey number and name, marks uncertain readings, and never calls sheet-write tools.
+- The in-app import text area invokes `previewRosterImport`; the confirmation control invokes `applyConfirmedRoster` via the existing `google.script.run` bridge.
 
-- [ ] Add tests named `preview_does_not_call_writer`, `confirmation_calls_writer_once`, `missing_connector_blocks_before_write`, and `readback_mismatch_reports_partial_result`.
-- [ ] Run `node --test tests/fee-collector-roster-import.test.mjs` and verify the workflow tests fail before runtime implementation.
-- [ ] Implement preview and confirmation composition using the provider interface verified in Task 1; stop cleanly if the host cannot supply it.
+- [ ] Add contract tests named `app_has_roster_preview_and_confirm_bridge`, `assistant_route_never_writes_sheets`, and `copy_ready_output_preserves_uncertain_rows` in `tests/fee-collector-logic.test.mjs`.
+- [ ] Run `node --test tests/fee-collector-logic.test.mjs` and verify these contracts fail before documentation/UI completion.
+- [ ] Document the assistant image-to-copy-list prompt contract and the in-app preview/confirmation steps; never call Google Sheets write tools directly from the assistant route.
 - [ ] Document the phone flow, corrections, confirmation, late arrivals, absences, emergency participants, and recovery steps in Japanese.
 - [ ] Update handoff documents with implementation results, deployment state, exact verification, and remaining dependencies.
-- [ ] Run `node --test tests/fee-collector-logic.test.mjs tests/fee-collector-roster-import.test.mjs` and `git diff --check`; review the final diff before commit.
+- [ ] Run `node --test tests/fee-collector-logic.test.mjs` and `git diff --check`; review the final diff before commit.
 
 ### Task 6: Commit, push, deploy, and verify with a disposable fixture
 
@@ -133,7 +131,7 @@
 
 - [ ] Confirm no unrelated working-tree changes are included.
 - [ ] Commit the implementation on `codex/fee-collector-cloud-roster` and push the branch.
-- [ ] Deploy only through the existing Apps Script project/deployment, retaining its URL and access settings; do not deploy unless the approved safe writer from Task 1 is available.
+- [ ] Deploy only through the existing Apps Script project/deployment, retaining its URL and access settings; use only the in-app bridge to invoke the lock-protected server writer.
 - [ ] Use a disposable fixture to import a sample lineup, verify preview-before-write and app roster totals after read-back, then remove only the fixture data.
 - [ ] Verify an active receipt blocks absence and that no payment was recorded.
 - [ ] Open a pull request if the branch is not already represented by one; attach the PR to the task.
