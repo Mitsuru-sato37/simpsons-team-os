@@ -251,6 +251,11 @@ function handleMemberRosterEdit(e) {
   const range = e.range;
   const sheet = range.getSheet();
   const column = range.getColumn();
+  if (sheet.getName() === CONFIG.MEMBER_INVOICES && column === 3 &&
+      range.getNumColumns() === 1 && range.getLastRow() >= 2) {
+    handleMemberInvoiceNameEdit_(e, range);
+    return;
+  }
   if (sheet.getName() !== CONFIG.MEMBERS || range.getNumColumns() !== 1 ||
       ![1, 2, 8].includes(column) || range.getLastRow() < 2) return;
 
@@ -261,6 +266,7 @@ function handleMemberRosterEdit(e) {
   let notFound = 0;
   let ambiguous = 0;
   let matched = 0;
+  let manualNames = 0;
 
   try {
     for (let row = Math.max(2, range.getRow()); row <= range.getLastRow(); row += 1) {
@@ -280,10 +286,14 @@ function handleMemberRosterEdit(e) {
       if (column !== 1) sheet.getRange(row, 1).clearContent();
       if (column !== 2) sheet.getRange(row, 2).clearContent();
       if (column !== 8) sheet.getRange(row, 8).clearContent();
+      const manualName = column === 2 && result.status === 'not_found';
       editedCell.setNote(result.status === 'ambiguous'
         ? '同じ値に一致する選手が複数います。背番号など別の値で検索してください。'
-        : '選手マスターに一致する選手がありません。入力値を確認してください。');
+        : manualName
+          ? '選手マスター未登録の名前です。名前は保持され、会計IDと背番号は空欄です。緊急参戦者として利用できます。'
+          : '選手マスターに一致する選手がありません。入力値を確認してください。');
       if (result.status === 'ambiguous') ambiguous += 1;
+      else if (manualName) manualNames += 1;
       else notFound += 1;
     }
   } finally {
@@ -295,6 +305,8 @@ function handleMemberRosterEdit(e) {
       ? '同じ値に一致する選手が複数います。背番号など別の値で入力してください。'
       : '選手マスターに一致しません。入力値を確認してください。';
     e.source.toast(message, 'メンバー照合', 5);
+  } else if (manualNames) {
+    e.source.toast('名簿外の名前を保持しました。会計IDと背番号は未設定です。', '緊急参戦者', 5);
   } else if (matched) {
     e.source.toast('名前・背番号・メンバーIDを選手マスターから反映しました。', 'メンバー照合', 3);
   }
@@ -403,13 +415,14 @@ function ensureMemberSnapshot_(ss, memberId, name, jerseyNumber) {
 
 function syncPlayerMasterMembers_(ss) {
   const sheet = ss.getSheetByName(CONFIG.MEMBERS);
+  const masterRows = getPlayerMasterRows_();
   const currentRows = sheet.getDataRange().getValues();
   const rowByMemberId = {};
   currentRows.slice(1).forEach((row, index) => {
     if (row[0]) rowByMemberId[String(row[0])] = index + 2;
   });
   const newMembers = [];
-  getPlayerMasterRows_().forEach((row) => {
+  masterRows.forEach((row) => {
     const player = resolveMasterPlayer_([row], row[0]);
     if (!player) return;
     const memberId = toFeeMemberId_(player.playerId);
@@ -433,6 +446,68 @@ function syncPlayerMasterMembers_(ss) {
       .setValues(newMembers.map((member) => [member[0], member[1]]));
     sheet.getRange(startRow, 8, newMembers.length, 1)
       .setValues(newMembers.map((member) => [member[2]]));
+  }
+}
+
+function handleMemberInvoiceNameEdit_(e, range) {
+  const invoiceSheet = range.getSheet();
+  const memberSheet = e.source.getSheetByName(CONFIG.MEMBERS);
+  if (!memberSheet) return;
+  const masterRows = getPlayerMasterRows_();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  let assignedEmergency = 0;
+  let matchedRoster = 0;
+
+  try {
+    let memberRows = memberSheet.getDataRange().getValues();
+    for (let row = Math.max(2, range.getRow()); row <= range.getLastRow(); row += 1) {
+      // App-generated invoices are maintained by the collector and must not be edited here.
+      if (String(invoiceSheet.getRange(row, 1).getValue() || '').trim()) continue;
+      const nameCell = invoiceSheet.getRange(row, 3);
+      const input = String(nameCell.getDisplayValue() || '').trim();
+      if (!input) continue;
+
+      const rosterMatch = resolveMemberLookup_(masterRows, 'name', input);
+      if (rosterMatch.status === 'matched') {
+        invoiceSheet.getRange(row, 2).setValue(rosterMatch.memberId);
+        nameCell.setValue(rosterMatch.name);
+        nameCell.clearNote();
+        matchedRoster += 1;
+        continue;
+      }
+      if (rosterMatch.status === 'ambiguous') {
+        invoiceSheet.getRange(row, 2).clearContent();
+        nameCell.setNote('選手マスターに同じ名前が複数あります。選手マスターで確認してください。');
+        continue;
+      }
+
+      const emergency = resolveEmergencyMemberId_(memberRows.slice(1), input);
+      if (emergency.status === 'ambiguous') {
+        invoiceSheet.getRange(row, 2).clearContent();
+        nameCell.setNote('同じ名前の緊急参戦者が複数登録されています。会計メンバー一覧を確認してください。');
+        continue;
+      }
+      if (emergency.status === 'new') {
+        emergency.memberId = reserveEmergencyMemberId_(memberRows.slice(1), PropertiesService.getScriptProperties());
+        ensureMemberSnapshot_(e.source, emergency.memberId, emergency.name, '');
+        memberRows.push([emergency.memberId, emergency.name]);
+        assignedEmergency += 1;
+      }
+      invoiceSheet.getRange(row, 2).setValue(emergency.memberId);
+      nameCell.setValue(emergency.name);
+      nameCell.setNote(emergency.status === 'new'
+        ? '緊急参戦者として仮登録しました。会計IDは継続利用でき、背番号は未設定です。'
+        : '緊急参戦者の既存会計IDを再利用しました。');
+    }
+  } finally {
+    lock.releaseLock();
+  }
+
+  if (assignedEmergency) {
+    e.source.toast('緊急参戦者に専用会計IDを付けました。', '仮登録', 5);
+  } else if (matchedRoster) {
+    e.source.toast('選手マスターの会計IDを反映しました。', 'メンバー照合', 3);
   }
 }
 

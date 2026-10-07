@@ -1,23 +1,17 @@
 # Progress
 
-Status: 背番号・名前による集金アプリの参加者登録を実装中
+Status: Simpsons会計統合・緊急参戦者IDの実装中
 Last updated: 2026-10-07
 
-## Fee collector accounting integration (active)
+## Active fee-collector work
 
-- Active branch: `codex/fee-collector-roster-picker`, based on `origin/main`. Added participant search and registration by jersey number or player name; internal master IDs are used only by the app after selection. The server enforces open-game status and duplicate prevention, then reconciles member invoice and match accounting. Targeted tests pass (38); full-suite verification and push remain.
-
-- Active follow-up branch: `codex/fee-member-autofill`, based on pushed integration branch `codex/fee-collector-accounting-integration` (PR #10).
-- App source now targets `Simpsons会計` (`1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ`) and preserves its six accounting tabs. Operational tabs `集金_試合`, `集金_参加者`, and `集金_受領履歴` were added with headers matching the Apps Script schema.
-- The target spreadsheet timezone is verified as `Asia/Tokyo`. Dashboard formulas now cover through row 1000. The finance member tab has a `背番号` column and is populated with 40 player-master records (`M001`–`M040`, names, and jersey numbers); the six original tabs remain present.
-- The legacy spreadsheet (`1yVT9_c1RVdnosvZlN3r2bse6B3NtJo9JvKDggqDI61E`) remains untouched. Read-only inspection found zero populated game, participant, or receipt rows to migrate.
-- Source implements idempotent legacy migration, per-match charges from `試合会計!J`, receipt/transaction/invoice/match-accounting projections, cancellation reversal, and retained lock-based duplicate prevention.
-- Verification so far: `node --test tests/fee-collector-logic.test.mjs` (31 passed); Apps Script source parse passed; `git diff --check` passed. Live sheet headers, roster rows, timezone, and dashboard formulas were read back.
-- The user's clarification was that people are known by jersey number or name. Finance IDs are therefore internal only; source roster IDs `001`–`050` map deterministically to `M001`–`M050`, and the finance member directory receives the player-master names and jersey numbers. User-facing screens continue to show names and jersey numbers.
-- The follow-up adds an installable edit trigger so manually entering member ID, name, or jersey number on `メンバー` fills the other two using the player master. Ambiguous and missing matches are surfaced rather than guessed. The trigger requires one-time authorization/installation by the Apps Script owner.
-- The live `メンバー!H2:H1000` range is formatted as text so entering a jersey such as `00` preserves its leading zeros.
-- Verification: `node --test tests/*.test.mjs` passed (48); Apps Script source parse and `git diff --check` passed. Live `メンバー!H2:H1000` formatting was read back as text. PR #10 (`codex/fee-collector-accounting-integration` → `main`) remains open and is the dependency; this follow-up will be a stacked PR against that branch. The deployed app remains version 8 until the integration is merged and the trigger is installed.
-- Current delivery: commit `4314412` is pushed on `codex/fee-member-autofill`; [PR #11](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/11) is open against PR #10's branch. The deployed app remains version 8 and the edit trigger is not installed. After both PRs merge, deploy the source and run `installMemberLookupTrigger` once as the Apps Script owner; then verify name/jersey entry without recording a payment. Keep the legacy ledger as a backup.
+- Active branch: `codex/fee-collector-roster-picker` (local branch based on `origin/main`; one local commit and worktree changes are present). The current work includes the roster picker, accounting name lookup, and emergency participant IDs.
+- The new name selector is on the live `メンバー請求` table's name column, populated from the 40 player-master names; manual text entry is also accepted. The accidental name selector on `メンバー` was removed and that column restored to text.
+- Source behavior: editing the name in a blank invoice row resolves roster members to their `M` ID. An unregistered emergency name gets a stable `E001`-style ID, is added to `メンバー` without a jersey, and reuses that ID on later invoices with the same name. A locked sequence counter prevents reusing IDs if a row is removed. App-generated rows with an invoice ID are protected from this edit handler.
+- Current local verification: `node --test tests/*.test.mjs` — 55 passed; `git diff --check` passed. The live spreadsheet accepted and displayed an emergency free-text test; the test value was cleared afterward. The new `E`-ID script behavior still needs to be published to the Apps Script project and exercised with a disposable invoice row.
+- The active edit trigger is extended through the existing `handleMemberRosterEdit` handler; if it is already installed, no duplicate trigger is needed. Confirm the trigger is installed and the current source is deployed/saved before relying on emergency IDs in the live sheet.
+- `git fetch origin` could not update `.git/FETCH_HEAD` because this environment denies writes under `.git`. The local branch remains `codex/fee-collector-roster-picker...origin/main [ahead 1]`; commit/push and PR status still need completion from an environment with repository write access.
+- The `Simpsons会計` spreadsheet (`1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ`) retains its six original finance tabs and operational tabs. The legacy ledger remains untouched as backup; it contained no populated rows during prior migration inspection. Spreadsheet timezone is `Asia/Tokyo`.
 
 ## Completed
 

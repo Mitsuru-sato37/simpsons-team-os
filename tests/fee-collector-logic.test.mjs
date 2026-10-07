@@ -15,6 +15,8 @@ const {
   resolveGameCharge_,
   resolveParticipantCharge_,
   toFeeMemberId_,
+  resolveEmergencyMemberId_,
+  reserveEmergencyMemberId_,
   resolveMemberLookup_,
   resolveMasterPlayer_,
   searchMasterPlayers_,
@@ -92,6 +94,65 @@ function simulateTriggerInstall(existingTrigger) {
   };
   vm.runInNewContext(`${logicSource}\n${codeGs}`, context);
   return { result: context.installMemberLookupTrigger(), created, formats };
+}
+
+function simulateInvoiceNameEdit(invoiceName, memberRows, masterRows, invoiceIds = ['', '']) {
+  const makeSheet = (name, initialRows) => {
+    const values = initialRows.map((row) => [...row]);
+    const notes = new Map();
+    const ensure = (row, column) => {
+      while (values.length < row) values.push([]);
+      while (values[row - 1].length < column) values[row - 1].push('');
+    };
+    return {
+      values,
+      getName: () => name,
+      getLastRow: () => values.length,
+      getDataRange: () => ({ getValues: () => values.map((row) => [...row]) }),
+      getRange(row, column, rowCount = 1, columnCount = 1) {
+        return {
+          getValue: () => values[row - 1]?.[column - 1] || '',
+          getDisplayValue: () => String(values[row - 1]?.[column - 1] || ''),
+          setValue(value) { ensure(row, column); values[row - 1][column - 1] = value; },
+          clearContent() { ensure(row, column); values[row - 1][column - 1] = ''; },
+          setValues(rows) {
+            rows.forEach((line, r) => line.forEach((value, c) => {
+              ensure(row + r, column + c);
+              values[row + r - 1][column + c - 1] = value;
+            }));
+          },
+          clearNote() { notes.delete(`${row}:${column}`); },
+          setNote(value) { notes.set(`${row}:${column}`, value); },
+        };
+      },
+    };
+  };
+  const invoices = makeSheet('メンバー請求', [
+    ['請求ID', 'メンバーID', '名前'],
+    [invoiceIds[0], '', invoiceName],
+    [invoiceIds[1], '', invoiceName],
+  ]);
+  const members = makeSheet('メンバー', [['メンバーID', '名前'], ...memberRows]);
+  const source = {
+    getId: () => '1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ',
+    getSheetByName: (name) => name === 'メンバー請求' ? invoices : members,
+    toast() {},
+  };
+  const propertyValues = new Map();
+  const context = {
+    SpreadsheetApp: { openById: () => ({ getSheetByName: () => ({ getDataRange: () => ({ getValues: () => masterRows }) }) }) },
+    PropertiesService: { getScriptProperties: () => ({
+      getProperty: (key) => propertyValues.get(key) || null,
+      setProperty: (key, value) => propertyValues.set(key, value),
+    }) },
+    LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
+  };
+  vm.runInNewContext(`${logicSource}\n${codeGs}`, context);
+  [2, 3].forEach((row) => context.handleMemberRosterEdit({
+    source,
+    range: { getSheet: () => invoices, getColumn: () => 3, getNumColumns: () => 1, getRow: () => row, getLastRow: () => row },
+  }));
+  return { invoices, members };
 }
 
 const games = [
@@ -285,6 +346,9 @@ test('member lookup fills the finance identity from a unique master name or jers
   assert.deepEqual(JSON.parse(JSON.stringify(resolveMemberLookup_(roster, 'name', '渡部 琉斗'))), {
     status: 'matched', playerId: '001', memberId: 'M001', name: '渡部 琉斗', jerseyNumber: '23',
   });
+  assert.deepEqual(JSON.parse(JSON.stringify(resolveMemberLookup_(roster, 'name', '渡部琉斗'))), {
+    status: 'matched', playerId: '001', memberId: 'M001', name: '渡部 琉斗', jerseyNumber: '23',
+  });
   assert.deepEqual(JSON.parse(JSON.stringify(resolveMemberLookup_(roster, 'jerseyNumber', '4'))), {
     status: 'matched', playerId: '002', memberId: 'M002', name: '渡邉 匠', jerseyNumber: '4',
   });
@@ -334,6 +398,56 @@ test('editing a name or jersey number fills all three finance identity fields fr
   assert.equal(byJersey.cells.get('2:1'), 'M002');
   assert.equal(byJersey.cells.get('2:2'), '河野 聖人');
   assert.equal(byJersey.cells.get('2:8'), '00');
+});
+
+test('manual emergency names stay visible without inventing an ID or jersey number', () => {
+  const result = simulateMemberEdit(2, '緊急参戦者', [['001', '23', '渡部 琉斗']]);
+  assert.equal(result.cells.get('2:2'), '緊急参戦者');
+  assert.equal(result.cells.get('2:1'), '');
+  assert.equal(result.cells.get('2:8'), '');
+  assert.match(result.notes.get('2:2'), /緊急参戦/);
+});
+
+test('emergency members receive a stable E ID and the next unused E ID', () => {
+  const existing = [
+    ['M001', '渡部 琉斗'],
+    ['E001', '緊急参戦者'],
+    ['E003', '別の緊急参戦者'],
+  ];
+  assert.deepEqual(JSON.parse(JSON.stringify(resolveEmergencyMemberId_(existing, '緊急参戦者'))), {
+    status: 'matched', memberId: 'E001', name: '緊急参戦者',
+  });
+  assert.deepEqual(JSON.parse(JSON.stringify(resolveEmergencyMemberId_(existing, '新しい緊急参戦者'))), {
+    status: 'new', memberId: 'E004', name: '新しい緊急参戦者',
+  });
+});
+
+test('emergency ID allocation never reuses IDs recorded by the persistent counter', () => {
+  const state = { next: '5' };
+  const properties = {
+    getProperty: () => state.next,
+    setProperty: (_key, value) => { state.next = value; },
+  };
+  assert.equal(reserveEmergencyMemberId_([['E001', '以前の臨時参加者']], properties), 'E005');
+  assert.equal(state.next, '6');
+});
+
+test('typing a new emergency name in an empty invoice row creates one reusable member ID', () => {
+  const result = simulateInvoiceNameEdit('緊急参戦者', [['M001', '渡部 琉斗']], [
+    ['選手ID', '背番号', '氏名'], ['001', '23', '渡部 琉斗'],
+  ]);
+  assert.equal(result.invoices.values[1][1], 'E001');
+  assert.equal(result.invoices.values[2][1], 'E001');
+  assert.ok(result.members.values.some((row) => row[0] === 'E001' && row[1] === '緊急参戦者'));
+});
+
+test('choosing a roster name fills its M ID but never overwrites an app-generated invoice', () => {
+  const result = simulateInvoiceNameEdit('渡部 琉斗', [['M001', '渡部 琉斗']], [
+    ['選手ID', '背番号', '氏名'], ['001', '23', '渡部 琉斗'],
+  ], ['APP-GENERATED', '']);
+  assert.equal(result.invoices.values[1][1], '');
+  assert.equal(result.invoices.values[2][1], 'M001');
+  assert.equal(result.members.values.some((row) => String(row[0]).startsWith('E')), false);
 });
 
 test('fee invoice key is stable for the same game and player', () => {

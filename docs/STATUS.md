@@ -1,6 +1,6 @@
 # Status
 
-Status: Active cross-PC handoff entry point; participant picker follow-up in progress
+Status: Active cross-PC handoff entry point; fee-collector accounting integration and emergency member IDs in progress
 Last updated: 2026-10-07
 
 This file is the stable handoff entry point. Detailed project context and progress remain authoritative in `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md`.
@@ -9,21 +9,21 @@ This file is the stable handoff entry point. Detailed project context and progre
 
 - Repository initialized for cross-PC Codex development.
 - Durable Simpsons / ラキポタ context is recorded.
-- The existing Google Apps Script fee collector in `fee-collector/` is merged into `main`; the accounting integration and member auto-fill are proposed in stacked PRs #10 and #11.
-- [PR #10](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/10) contains the fee-collector accounting integration and targets `main`. [PR #11](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/11), commit `4314412` on `codex/fee-member-autofill`, adds automatic player-master completion of ID/name/jersey number in the accounting member tab and is based on PR #10. The app remains undeployed at version 8 until both changes are reviewed/merged and the installable trigger is authorized.
-- The collector now integrates with the native Google Sheets player master `1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4` for jersey numbers and names.
-- The deployed Apps Script web app remains at version 8 until this integration is completed and deployed. Its touch-device sizing, execute-as-owner behavior, and URL-based access are unchanged. The public GitHub Pages entry at `https://mitsuru-sato37.github.io/simpsons-team-os/` declares the adopted 180×180 Apple touch icon. The current fee collector still uses the previous ledger and fixed payment behavior until a new deployment is verified.
-- The live fee collector exposes `台帳を開く`, which opens the connected ledger spreadsheet in a new tab. This was confirmed from the GitHub Pages entry on 2026-10-07.
+- The active local branch is `codex/fee-collector-roster-picker` based on `origin/main`. It contains participant selection, accounting integration, roster lookup, and the new emergency member-ID change; changes remain uncommitted in this worktree.
+- The target `Simpsons会計` spreadsheet retains its six accounting tabs plus the fee-collector operational tabs. The live `メンバー請求` name column has a 40-name roster dropdown and accepts free text; the accidental dropdown on `メンバー` was restored to text.
+- Local source resolves known names to existing `M` IDs and assigns emergency names persistent `E001`-style IDs in blank invoice rows. It adds emergency members without jersey numbers, reuses IDs by name, and does not alter app-generated invoices. The handler extension still needs to be saved to the live Apps Script project and verified there.
+- Local verification: `node --test tests/*.test.mjs` passed (55 tests); `git diff --check` passed. `git fetch origin` failed because this environment cannot write `.git/FETCH_HEAD`; commit/push and PR creation remain pending in an environment with Git write access.
+- The deployed Apps Script web app remains at version 8 until the source changes are published and a new deployment is verified. The old ledger remains a backup and the spreadsheet timezone is `Asia/Tokyo`.
 
 ## Active branch
 
 Update this field at the end of each meaningful development session.
 
-`codex/fee-collector-roster-picker` (in progress; based on origin/main)
+`codex/fee-collector-roster-picker` (in progress; based on origin/main; local worktree changes)
 
 ## Next
 
-Review and merge the participant picker branch, update the Apps Script deployment, then smoke-check jersey/name search and registration on a real open game. The current sheet has no test games; do not write a sample transaction. The legacy ledger remains a backup.
+Save/publish the updated Apps Script source, verify the existing installable edit trigger with a disposable emergency name and confirm its E ID in both `メンバー請求` and `メンバー`. Then complete review, commit, push, and create/update the PR once `.git` write access is available. The working test fixture is marked `TEST-DEMO-20261007`; no payment was recorded. The legacy ledger remains a backup.
 
 ## Required handoff update
 
