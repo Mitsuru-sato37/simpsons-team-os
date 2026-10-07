@@ -1,9 +1,18 @@
 # Progress
 
-Status: Simpsons会計統合に続く、選手マスターからのメンバー欄自動補完を実装中
+Status: ローカル動画解析MVPを実装、実MP4の通し検証待ち
 Last updated: 2026-10-07
 
-## Fee collector accounting integration (active)
+## Active video-analysis work (2026-10-07)
+
+- Active branch: `codex/video-inning-mvp`, based on synchronized `main`. Fee-collector PR #13 remains separate and open.
+- Added `video_analysis/`: FFprobe metadata, FFmpeg low-resolution JPEG stream sampling, OpenCV HSV feature extraction, persistent-change coarse detection, 1-second candidate refinement, local Tkinter review/feedback UI, and JSON records with video identity, analysis timestamp, settings, logic version, candidate scores/evidence, verdict, correction, and comment. Added `start-video-analysis.cmd`. Original videos are read only; outputs are under ignored `.local/video-analysis/`.
+- Reused the user's existing HSV ranges and evaluated the detector on the existing `GX010430_analysis.csv` (340 pre-extracted rows). Coarse candidates: 11:00 (44), 25:00 (90), 34:50 (40), 39:40 (53), 43:20 (78). These are unverified hypotheses, and scores are not probabilities.
+- Verification: 11 Python unit tests and 48 existing Node tests passed; Python source compilation and `git diff --check` passed. Tests cover persistent changes, brief color flashes, camera motion alone, low-ratio uniform shifts, time parsing, JPEG stream boundaries, detail refinement, unique result files, and feedback persistence/range checks. Full MP4 extraction and UI operation remain unverified: this task environment has a bundled Python without OpenCV and does not find the user-installed `py`, `ffmpeg`, or `ffprobe` on PATH. The direct `git fetch origin` and `git pull --ff-only` succeeded at session start; `git-status.cmd` could not write `.git/FETCH_HEAD` during its prune fetch under the sandbox.
+- Next: run `GX010430.mp4` through `start-video-analysis.cmd` on the configured PC, inspect each candidate in the video, save verdicts/corrections, then tune thresholds and pause/formation signals against those labels. Avoid claiming second-level timing until verified. Chat invocation and splitting are outside Phase 1.
+- Blocker/external dependency: an accessible Python with OpenCV/NumPy and FFmpeg/FFprobe on the PC executing analysis. The 11.7 GB source file remains outside Git.
+
+## Fee collector accounting integration (historical main snapshot)
 
 - Active follow-up branch: `codex/fee-member-autofill`, based on pushed integration branch `codex/fee-collector-accounting-integration` (PR #10).
 - App source now targets `Simpsons会計` (`1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ`) and preserves its six accounting tabs. Operational tabs `集金_試合`, `集金_参加者`, and `集金_受領履歴` were added with headers matching the Apps Script schema.

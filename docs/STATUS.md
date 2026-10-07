@@ -1,29 +1,29 @@
 # Status
 
-Status: Active cross-PC handoff entry point; member identity auto-fill follow-up in progress
+Status: Local video-analysis MVP on a feature branch; real MP4 run pending
 Last updated: 2026-10-07
 
 This file is the stable handoff entry point. Detailed project context and progress remain authoritative in `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md`.
 
 ## Current state
 
+- Video-analysis work is on `codex/video-inning-mvp`, based on `main`. Its separate desktop module samples local MP4s, lists inning-change candidates, and stores feedback locally. The actual MP4 run is pending because this task environment does not expose the user's Python/OpenCV/FFmpeg installation on PATH.
 - Repository initialized for cross-PC Codex development.
 - Durable Simpsons / ラキポタ context is recorded.
-- The existing Google Apps Script fee collector in `fee-collector/` is merged into `main`; the accounting integration and member auto-fill are proposed in stacked PRs #10 and #11.
-- [PR #10](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/10) contains the fee-collector accounting integration and targets `main`. [PR #11](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/11), commit `4314412` on `codex/fee-member-autofill`, adds automatic player-master completion of ID/name/jersey number in the accounting member tab and is based on PR #10. The app remains undeployed at version 8 until both changes are reviewed/merged and the installable trigger is authorized.
+- The fee collector continues on the separate `codex/fee-collector-roster-picker` branch, with PR #13 open. This video branch is based on `main` and does not include that branch's source changes.
 - The collector now integrates with the native Google Sheets player master `1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4` for jersey numbers and names.
-- The deployed Apps Script web app remains at version 8 until this integration is completed and deployed. Its touch-device sizing, execute-as-owner behavior, and URL-based access are unchanged. The public GitHub Pages entry at `https://mitsuru-sato37.github.io/simpsons-team-os/` declares the adopted 180×180 Apple touch icon. The current fee collector still uses the previous ledger and fixed payment behavior until a new deployment is verified.
+- The Apps Script deployment described by the separate fee-collector handoff is version 11. Its live state is outside this video task.
 - The live fee collector exposes `台帳を開く`, which opens the connected ledger spreadsheet in a new tab. This was confirmed from the GitHub Pages entry on 2026-10-07.
 
 ## Active branch
 
 Update this field at the end of each meaningful development session.
 
-`codex/fee-member-autofill` (in progress; based on PR #10)
+`codex/video-inning-mvp` (video-analysis work). Fee-collector work continues separately on `codex/fee-collector-roster-picker` with PR #13 open.
 
 ## Next
 
-Review/merge PR #10 and stacked PR #11, then deploy the Apps Script, run `installMemberLookupTrigger` once as owner, and smoke-check name/jersey lookup without recording a payment. The legacy ledger remains a backup. Other follow-ups: the player photo library inbox is empty, and the official logo file still needs confirmation. The home-screen icon task is complete and confirmed on iPhone.
+Run the video MVP on the configured PC using `GX010430.mp4`, review and save candidate feedback, then tune detection. The separate fee-collector next task is to review PR #13.
 
 ## Required handoff update
 

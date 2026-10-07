@@ -83,6 +83,13 @@ The current feature does not include roster-image recognition, automatic partici
 - Strong evidence for confirmation is a readable jersey number/name, trusted metadata, or explicit user confirmation. Position, equipment, catcher gear, sequence, neighboring images, and apparent scene continuity can only narrow candidates. No face recognition or automatic identity verification is used.
 - Photos remain in place. The catalog stores Drive file IDs, locations, classification, candidates/reasons, tags, and history. A dry-run preview precedes catalog writes. The Codex workflow maps the Drive list/fetch/update and player-master range connectors into the service provider; read-back verifies catalog replacement. Cloud use depends on those same connectors being available and authorized in the cloud task.
 
+## Local video analysis MVP
+
+- User-requested Phase 1 scope: find inning-change candidates in large local GoPro MP4s, show heuristic scores, and capture correct/incorrect feedback with a corrected time and reason. Never upload the original video or overwrite it.
+- Keep this module independent of `fee-collector/` and Instagram workflows. The repository currently has no shared Team OS chat UI; the MVP uses a Windows local desktop interface. Chat invocation and video splitting are later phases.
+- Analysis is coarse-to-fine: 10-second samples across the video, then 1-second samples around candidates. Current colors derive from the user's existing HSV experiment. Do not treat scores as calibrated probabilities or fabricate exact inning labels.
+- Store per-analysis local JSON with video identity, time, settings, logic version, candidate evidence, and feedback. Do not commit videos or local result files.
+
 ## Scope boundary
 
 Do not assume that this repository must become an Instagram auto-posting tool, a social media analytics service, a full team-management application, an image-generation pipeline, or a public website. Implement only the next explicitly assigned task and update this context when durable decisions are made.
