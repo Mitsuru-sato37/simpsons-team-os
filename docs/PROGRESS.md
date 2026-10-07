@@ -1,21 +1,30 @@
 # Progress
 
-Status: Simpsons会計統合に続く、選手マスターからのメンバー欄自動補完を実装中
+Status: Simpsons会計統合・メンバー自動補完の実装とライブ反映が完了
 Last updated: 2026-10-07
 
-## Fee collector accounting integration (active)
+## Live rollout (2026-10-07)
 
-- Active follow-up branch: `codex/fee-member-autofill`, based on pushed integration branch `codex/fee-collector-accounting-integration` (PR #10).
+- PR #10 and PR #11 were merged into `main`; the authoritative source now targets `Simpsons会計` and preserves the original six accounting tabs alongside the three fee-collector operational tabs.
+- The owner ran `installMemberLookupTrigger` successfully. Apps Script lists one spreadsheet edit trigger for `handleMemberRosterEdit`.
+- Updated the existing Apps Script web app deployment to version 9. The deployment ID and URL are unchanged; execution remains as the owner and access remains anyone with the URL.
+- Opened the deployed web app successfully. It displayed zero games. Read-only inspection confirmed the legacy `試合`, `参加者`, and `受領履歴` tabs contain only headers (the participant tab has empty preformatted/formula rows), so there were no records to migrate. The legacy spreadsheet was not modified or deleted.
+- The target `Simpsons会計` spreadsheet reports timezone `Asia/Tokyo`; no timezone change was needed. Its six existing finance tabs and three operational tabs are present, with schema headers verified. The player master ID is configured in Apps Script.
+- Did not record a payment, cancellation, or completed game. Did not modify live member or accounting rows. Trigger execution succeeded and the installed trigger is visible; real roster auto-fill still needs a non-disruptive spot-check on an existing row.
+- Current handoff branch: `codex/fee-collector-live-rollout`. Verification: `node --test tests/*.test.mjs` (48 passed), `git diff --check` clean, plus live Apps Script and spreadsheet checks described above.
+
+## Fee collector accounting integration (completed)
+
+- PRs #10 and #11 are merged into `main`; the deployed implementation is version 9.
 - App source now targets `Simpsons会計` (`1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ`) and preserves its six accounting tabs. Operational tabs `集金_試合`, `集金_参加者`, and `集金_受領履歴` were added with headers matching the Apps Script schema.
 - The target spreadsheet timezone is verified as `Asia/Tokyo`. Dashboard formulas now cover through row 1000. The finance member tab has a `背番号` column and is populated with 40 player-master records (`M001`–`M040`, names, and jersey numbers); the six original tabs remain present.
 - The legacy spreadsheet (`1yVT9_c1RVdnosvZlN3r2bse6B3NtJo9JvKDggqDI61E`) remains untouched. Read-only inspection found zero populated game, participant, or receipt rows to migrate.
 - Source implements idempotent legacy migration, per-match charges from `試合会計!J`, receipt/transaction/invoice/match-accounting projections, cancellation reversal, and retained lock-based duplicate prevention.
-- Verification so far: `node --test tests/fee-collector-logic.test.mjs` (31 passed); Apps Script source parse passed; `git diff --check` passed. Live sheet headers, roster rows, timezone, and dashboard formulas were read back.
+- Verification: `node --test tests/fee-collector-logic.test.mjs` (31 passed before merge), `node --test tests/*.test.mjs` (48 passed after merge), Apps Script source parsed and `installMemberLookupTrigger` completed, and `git diff --check` passed. Live sheet headers, roster rows, timezone, and dashboard formulas were read back.
 - The user's clarification was that people are known by jersey number or name. Finance IDs are therefore internal only; source roster IDs `001`–`050` map deterministically to `M001`–`M050`, and the finance member directory receives the player-master names and jersey numbers. User-facing screens continue to show names and jersey numbers.
 - The follow-up adds an installable edit trigger so manually entering member ID, name, or jersey number on `メンバー` fills the other two using the player master. Ambiguous and missing matches are surfaced rather than guessed. The trigger requires one-time authorization/installation by the Apps Script owner.
 - The live `メンバー!H2:H1000` range is formatted as text so entering a jersey such as `00` preserves its leading zeros.
-- Verification: `node --test tests/*.test.mjs` passed (48); Apps Script source parse and `git diff --check` passed. Live `メンバー!H2:H1000` formatting was read back as text. PR #10 (`codex/fee-collector-accounting-integration` → `main`) remains open and is the dependency; this follow-up will be a stacked PR against that branch. The deployed app remains version 8 until the integration is merged and the trigger is installed.
-- Current delivery: commit `4314412` is pushed on `codex/fee-member-autofill`; [PR #11](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/11) is open against PR #10's branch. The deployed app remains version 8 and the edit trigger is not installed. After both PRs merge, deploy the source and run `installMemberLookupTrigger` once as the Apps Script owner; then verify name/jersey entry without recording a payment. Keep the legacy ledger as a backup.
+- The live `メンバー!H2:H1000` range is formatted as text so entering a jersey such as `00` preserves its leading zeros. A non-disruptive live lookup spot-check remains to be done before recording operational data; do not alter a real member's identity solely for testing.
 
 ## Completed
 
