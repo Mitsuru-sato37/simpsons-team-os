@@ -466,7 +466,11 @@ function handleMemberInvoiceNameEdit_(e, range) {
       if (String(invoiceSheet.getRange(row, 1).getValue() || '').trim()) continue;
       const nameCell = invoiceSheet.getRange(row, 3);
       const input = String(nameCell.getDisplayValue() || '').trim();
-      if (!input) continue;
+      if (!input) {
+        invoiceSheet.getRange(row, 2).clearContent();
+        nameCell.clearNote();
+        continue;
+      }
 
       const rosterMatch = resolveMemberLookup_(masterRows, 'name', input);
       if (rosterMatch.status === 'matched') {

@@ -96,7 +96,7 @@ function simulateTriggerInstall(existingTrigger) {
   return { result: context.installMemberLookupTrigger(), created, formats };
 }
 
-function simulateInvoiceNameEdit(invoiceName, memberRows, masterRows, invoiceIds = ['', '']) {
+function simulateInvoiceNameEdit(invoiceName, memberRows, masterRows, invoiceIds = ['', ''], invoiceNames = [invoiceName, invoiceName], invoiceMemberIds = ['', '']) {
   const makeSheet = (name, initialRows) => {
     const values = initialRows.map((row) => [...row]);
     const notes = new Map();
@@ -129,8 +129,8 @@ function simulateInvoiceNameEdit(invoiceName, memberRows, masterRows, invoiceIds
   };
   const invoices = makeSheet('メンバー請求', [
     ['請求ID', 'メンバーID', '名前'],
-    [invoiceIds[0], '', invoiceName],
-    [invoiceIds[1], '', invoiceName],
+    [invoiceIds[0], invoiceMemberIds[0], invoiceNames[0]],
+    [invoiceIds[1], invoiceMemberIds[1], invoiceNames[1]],
   ]);
   const members = makeSheet('メンバー', [['メンバーID', '名前'], ...memberRows]);
   const source = {
@@ -448,6 +448,13 @@ test('choosing a roster name fills its M ID but never overwrites an app-generate
   assert.equal(result.invoices.values[1][1], '');
   assert.equal(result.invoices.values[2][1], 'M001');
   assert.equal(result.members.values.some((row) => String(row[0]).startsWith('E')), false);
+});
+
+test('clearing a manual invoice name also clears its old member ID', () => {
+  const result = simulateInvoiceNameEdit('', [['M001', '渡部 琉斗']], [
+    ['選手ID', '背番号', '氏名'], ['001', '23', '渡部 琉斗'],
+  ], ['', ''], ['', ''], ['', 'M001']);
+  assert.equal(result.invoices.values[2][1], '');
 });
 
 test('fee invoice key is stable for the same game and player', () => {
