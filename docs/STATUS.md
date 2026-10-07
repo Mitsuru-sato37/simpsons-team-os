@@ -14,6 +14,7 @@ This file is the stable handoff entry point. Detailed project context and progre
 - Local source resolves roster names to existing `M` IDs and assigns emergency names persistent `E001`-style IDs in blank invoice rows. It adds emergency members without jersey numbers, reuses IDs by name, and does not alter app-generated invoices. The live Apps Script source was synchronized, and a live edit confirmed `渡部 琉斗` mapped to `M001` and a free-typed emergency name mapped to `E002` in both tables. Both disposable rows were cleared; no payment was made.
 - Local verification: `node --test tests/*.test.mjs` passed (56 tests); `git diff --check` passed. Direct fetch was blocked by `.git` sandbox restrictions, but push and PR creation succeeded through approved GitHub access.
 - The existing `handleMemberRosterEdit` installable trigger remains in place; no duplicate trigger was installed. The existing deployment is version 10 at the same deployment ID and URL. The old ledger remains a backup and the spreadsheet timezone is `Asia/Tokyo`.
+- The 2026-10-07 read-only audit found a duplicate demo invoice ID with different member IDs, one orphaned relative to the sole display-test participant. The current app fixture has no per-person charge and correctly blocks collection. No receipt/transaction rows or formula errors were found; the invoice was left unchanged pending cleanup direction.
 
 ## Active branch
 
@@ -23,7 +24,7 @@ Update this field at the end of each meaningful development session.
 
 ## Next
 
-The Apps Script sync and version 10 deployment are complete. Google Sheet live testing confirmed roster-name lookup and emergency E-ID creation; the temporary rows are cleared. `E001` and `E002` were consumed by disposable tests, so the next emergency ID will be `E003` by design. The pre-existing fixture remains marked `TEST-DEMO-20261007`; no payment was recorded. Next: review and merge PR #13, then verify the live web app's game list and normal receipt workflow without entering a payment. The legacy ledger remains a backup.
+The Apps Script sync and version 10 deployment are complete. Google Sheet live testing confirmed roster-name lookup and emergency E-ID creation; the temporary rows are cleared. `E001` and `E002` were consumed by disposable tests, so the next emergency ID will be `E003` by design. The read-only audit found only the display-test game, no configured per-person charge, and a duplicate demo invoice row. No payment or sheet cleanup was performed. Next: review and merge PR #13, then resolve the duplicate/test fixture and register the first real game/fee before collection. The legacy ledger remains a backup.
 
 ## Required handoff update
 

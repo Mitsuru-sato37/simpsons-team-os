@@ -20,6 +20,14 @@ Last updated: 2026-10-07
 - `clasp deployments` confirms the existing web deployment at version 10; the spreadsheet metadata confirms `Asia/Tokyo`. No real payment was entered.
 - Next: review and merge PR #13, then check the live web app's game list and receipt flow without entering a payment. Branch `codex/fee-collector-roster-picker`; push any intended docs changes before handoff.
 
+## Read-only operational audit (2026-10-07)
+
+- `node --test tests/*.test.mjs`: 56 passed. Live finance and player-master sheets both have 40 roster rows; all 40 `M` member IDs match master names and jersey numbers, including jersey `00`. No duplicate master IDs, jersey numbers, names, or finance member IDs were found. Accounting timezone is `Asia/Tokyo`.
+- The deployed app loads and displays the current one-game fixture. That game and its participant are explicitly labeled as display-test data; its per-person collection amount is blank, so the app correctly shows `請求額未設定` and offers no collection action. No real game or receipt is currently available to validate live payment/cancellation end to end.
+- `メンバー請求` contains the same `FEE-TEST-DEMO-20261007-P001` invoice ID on two rows with different member IDs; one row does not match the only participant (`P001`). This is a stale/inconsistent demo invoice row; there are no receipt rows or transaction rows, and no payment total is currently affected. It was left untouched pending an explicit cleanup decision.
+- Dashboard, transaction, and invoice formula ranges returned no formula errors. The live app remains configured to execute as owner and allow anyone with the URL, as previously approved; it has no sign-in gate.
+- No spreadsheet rows were changed during this audit. Before real collection, remove or correct the display-test game and duplicate invoice, register a real game/participant, and set that game's `実徴収額/人`.
+
 ## Completed
 
 - 2026-10-07: Added a `台帳を開く` link to the fee collector source. The app obtains the URL from the spreadsheet it actually uses, including Script Properties overrides, and opens it in a separate tab. Updated the existing Apps Script web app deployment to version 8, keeping the deployment ID, URL, execute-as-owner setting, and access setting unchanged. Verified from the GitHub Pages entry that the link appears and opens `Simpsons_集金台帳_試作版` in a new tab; no payment action or sheet edit was performed. The app showed no registered games during this verification.
@@ -113,7 +121,7 @@ Current branch: `codex/fee-collector-roster-picker` (pushed; PR #13 open).
 
 Completed in this handoff: synchronized local fee-collector source to the existing Apps Script project; updated the existing deployment to version 10; retained its ID, URL, access, and installed edit trigger; enabled a free-typing name field with roster dropdown suggestions; and live-tested roster and emergency ID lookup. The temporary test rows were cleared. No payment was recorded. The legacy ledger remains a backup.
 
-Next task: review and merge PR #13. Then inspect the live fee-collector's game list and exercise the normal collection workflow without recording a payment. Separate photo-library work remains: after the user adds photos to `99_未仕分け`, preview candidates and review before writing confirmed metadata. No photos have been classified or moved.
+Next task: review and merge PR #13. Before production collection, resolve the test-only game and duplicate invoice noted in the audit, then register a real game and fee. Separate photo-library work remains: after the user adds photos to `99_未仕分け`, preview candidates and review before writing confirmed metadata. No photos have been classified or moved.
 
 - 2026-10-06 correction: verified the current `99_未仕分け` folder is a direct child of the active `03_選手写真` folder. Do not use any `00` folder or archive as the photo intake source. Updated the Instagram operating route and project context to preserve that boundary.
 - 2026-10-06: User supplied the `99_アーカイブ` folder URL and explicitly prohibited using anything in it as a reference. Read only its metadata (not its contents) to confirm the folder identity. Added its ID to the exclusion list and a runtime allowlist so photo intake can list only the configured inbox; no archive files were opened.
