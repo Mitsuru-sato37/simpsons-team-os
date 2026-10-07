@@ -5,7 +5,7 @@ Last updated: 2026-10-07
 
 ## Active fee-collector work
 
-- Active branch: `codex/fee-collector-roster-picker`, with three commits pushed above `origin/main`; [PR #13](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/13) is open and mergeable. The branch includes the roster picker, accounting name lookup, and emergency participant IDs.
+- Active branch: `codex/fee-collector-roster-picker`, with four commits pushed above `origin/main`; [PR #13](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/13) is open and mergeable. The branch includes the roster picker, accounting name lookup, and emergency participant IDs.
 - The new name selector is on the live `メンバー請求` table's name column, populated from the 40 player-master names; manual text entry is also accepted. The accidental name selector on `メンバー` was removed and that column restored to text.
 - Source behavior: editing the name in a blank invoice row resolves roster members to their `M` ID. An unregistered emergency name gets a stable `E001`-style ID, is added to `メンバー` without a jersey, and reuses that ID on later invoices with the same name. A locked sequence counter prevents reusing IDs if a row is removed. App-generated rows with an invoice ID are protected from this edit handler.
 - Current local verification: `node --test tests/*.test.mjs` — 56 passed; `git diff --check` passed. A review found stale IDs could remain if a manual invoice name was cleared; this was fixed and covered by a regression test. The live spreadsheet accepted and displayed an emergency free-text test; the test value was cleared afterward. The new `E`-ID script behavior still needs to be published to the Apps Script project and exercised with a disposable invoice row.

@@ -9,7 +9,7 @@ This file is the stable handoff entry point. Detailed project context and progre
 
 - Repository initialized for cross-PC Codex development.
 - Durable Simpsons / ラキポタ context is recorded.
-- The active branch is `codex/fee-collector-roster-picker` based on `origin/main`, with three commits pushed. [PR #13](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/13) is open and mergeable. It contains participant selection, accounting integration, roster lookup, and emergency member IDs.
+- The active branch is `codex/fee-collector-roster-picker` based on `origin/main`, with four commits pushed. [PR #13](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/13) is open and mergeable. It contains participant selection, accounting integration, roster lookup, and emergency member IDs.
 - The target `Simpsons会計` spreadsheet retains its six accounting tabs plus the fee-collector operational tabs. The live `メンバー請求` name column has a 40-name roster dropdown and accepts free text; the accidental dropdown on `メンバー` was restored to text.
 - Local source resolves known names to existing `M` IDs and assigns emergency names persistent `E001`-style IDs in blank invoice rows. It adds emergency members without jersey numbers, reuses IDs by name, and does not alter app-generated invoices. The handler extension still needs to be saved to the live Apps Script project and verified there.
 - Local verification: `node --test tests/*.test.mjs` passed (56 tests); `git diff --check` passed. Direct fetch was blocked by `.git` sandbox restrictions, but push and PR creation succeeded through approved GitHub access.
@@ -19,11 +19,11 @@ This file is the stable handoff entry point. Detailed project context and progre
 
 Update this field at the end of each meaningful development session.
 
-`codex/fee-collector-roster-picker` (pushed; PR #13 open; documentation handoff update pending)
+`codex/fee-collector-roster-picker` (pushed; PR #13 open)
 
 ## Next
 
-After the documentation handoff update is pushed to PR #13, save/publish the updated Apps Script source and verify the existing installable edit trigger with a disposable emergency name. Confirm its E ID appears in both `メンバー請求` and `メンバー`, then clear the test row. The web app deployment is still version 8. The working fixture is marked `TEST-DEMO-20261007`; no payment was recorded. The legacy ledger remains a backup.
+Save/publish the updated Apps Script source and verify the existing installable edit trigger with a disposable emergency name. Confirm its E ID appears in both `メンバー請求` and `メンバー`, then clear the test row. The web app deployment is still version 8. The working fixture is marked `TEST-DEMO-20261007`; no payment was recorded. The legacy ledger remains a backup.
 
 ## Required handoff update
 
