@@ -15,7 +15,7 @@ Last updated: 2026-10-07
 - The follow-up adds an installable edit trigger so manually entering member ID, name, or jersey number on `メンバー` fills the other two using the player master. Ambiguous and missing matches are surfaced rather than guessed. The trigger requires one-time authorization/installation by the Apps Script owner.
 - The live `メンバー!H2:H1000` range is formatted as text so entering a jersey such as `00` preserves its leading zeros.
 - Verification: `node --test tests/*.test.mjs` passed (48); Apps Script source parse and `git diff --check` passed. Live `メンバー!H2:H1000` formatting was read back as text. PR #10 (`codex/fee-collector-accounting-integration` → `main`) remains open and is the dependency; this follow-up will be a stacked PR against that branch. The deployed app remains version 8 until the integration is merged and the trigger is installed.
-- Next: commit/push `codex/fee-member-autofill` and open a PR against PR #10's branch. Keep the legacy ledger as a backup.
+- Current delivery: commit `4314412` is pushed on `codex/fee-member-autofill`; [PR #11](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/11) is open against PR #10's branch. The deployed app remains version 8 and the edit trigger is not installed. After both PRs merge, deploy the source and run `installMemberLookupTrigger` once as the Apps Script owner; then verify name/jersey entry without recording a payment. Keep the legacy ledger as a backup.
 
 ## Completed
 
