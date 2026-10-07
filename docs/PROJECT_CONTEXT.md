@@ -36,17 +36,21 @@ Known preferences:
 The repository's first operational feature is the Google Apps Script fee collector in `fee-collector/`.
 
 - Source repository: `Mitsuru-sato37/simpsons-team-os`
-- Active branch: `codex/player-master-integration`
-- Spreadsheet: `Simpsons_集金台帳_試作版`
-- Spreadsheet ID: `1yVT9_c1RVdnosvZlN3r2bse6B3NtJo9JvKDggqDI61E`
-- Required tabs: `試合`, `参加者`, `受領履歴`
+- Active branch: `codex/fee-collector-accounting-integration` (integration work in progress)
+- Primary accounting spreadsheet: `Simpsons会計`
+- Primary spreadsheet ID: `1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ`
+- Existing accounting tabs retained: `ダッシュボード`, `取引台帳`, `試合会計`, `メンバー請求`, `会費管理`, `メンバー`
+- Fee collector operational tabs: `集金_試合`, `集金_参加者`, `集金_受領履歴`
+- Legacy backup spreadsheet: `Simpsons_集金台帳_試作版` (`1yVT9_c1RVdnosvZlN3r2bse6B3NtJo9JvKDggqDI61E`); migration reads from it and leaves it intact.
+- Accounting spreadsheet timezone: `Asia/Tokyo`
 - Player master: `Simpsons_選手マスター` (native Google Spreadsheet)
 - Player master spreadsheet ID: `1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4`
 - Player master sheet: `選手マスター`; source columns are `選手ID`, `背番号`, and `氏名`.
 - Participant rows may retain legacy `P001`-style IDs; the app normalizes them against the master ID and displays the master `背番号` and `氏名`.
-- Payment channels are cash, PayPay, and bank transfer; the default fee is 300 yen.
-- Each unpaid player is presented with a cash button for the full outstanding balance (for example, `現金500円`), `PayPay確認`, and `銀行振込確認`; PayPay and bank-transfer confirmations remain capped at the default 300 yen per action. The receipt records the accepted amount, method, server timestamp, and receipt ID.
-- For each game, attendance is currently registered as rows in `参加者` using `試合ID` and `選手ID`; the player name is resolved from the master for display. The web app does not yet provide a roster picker or attendee-registration UI.
+- Payment channels are cash, PayPay, and bank transfer. The app reads the per-game charge from `試合会計` column J (`実徴収額/人`) and blocks collection when it is unset; there is no fixed 300-yen app default.
+- For each game, attendance is registered in `集金_参加者` using `試合ID` and `選手ID`; the app continues resolving names and jersey numbers from the player master. The web app does not yet provide a roster picker or attendee-registration UI.
+- A successful receipt updates `メンバー請求`, `取引台帳`, and `試合会計`; dashboard formulas aggregate those records. Cancellation keeps the receipt and marks linked accounting entries cancelled.
+- Finance `メンバーID` values are internal keys. The app maps roster IDs `001`–`050` to `M001`–`M050`, while synchronizing player-master names and jersey numbers into the finance member directory. People are identified operationally by name/jersey number, not by finance IDs.
 - Receipts are append-only records. Cancellation changes the status to `取消` and never deletes the row.
 - Completing a game selects the next open game in sheet order; manual selection remains available for past and future games.
 - Completed and cancelled games remain selectable for review, but cannot be marked complete again from either the UI or the server action.
@@ -55,6 +59,7 @@ The repository's first operational feature is the Google Apps Script fee collect
 The current feature does not include roster-image recognition, automatic participant registration, or user authentication. The Apps Script deployment is intentionally accessible to anyone who has its URL and executes as the owner; it is not discoverable by public directory listing.
 
 - The fee collector uses the user-approved 180×180 Simpsons home-screen icon at `fee-collector/apple-touch-icon.png`. The Apps Script web app executes as the owner and is accessible to anyone with its URL. Since Apps Script HTML Service runs inside nested iframes, iPhone Home Screen installation uses the public GitHub Pages entry at `https://mitsuru-sato37.github.io/simpsons-team-os/`, which declares the icon in the top-level document and embeds the unchanged Apps Script app. The original app's `Index.html` also retains its inner-frame icon reference.
+- The fee collector provides a `台帳を開く` link to the spreadsheet currently connected to the Apps Script project; the URL comes from the active spreadsheet configuration rather than a hard-coded screen URL.
 ## Instagram production module
 
 - Instagram image production is available as a Codex workflow in `instagram/` and is independent of the fee-collection app (集金機能とは独立) in `fee-collector/`.

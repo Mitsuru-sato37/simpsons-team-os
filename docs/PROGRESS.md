@@ -1,9 +1,22 @@
 # Progress
 
-Status: player photo asset management has been added to the Instagram module; shared Drive catalog initialized, original photos untouched
-Last updated: 2026-10-06
+Status: Simpsons会計への集金統合を実装中。選手IDと会計メンバーIDの内部対応を実装中
+Last updated: 2026-10-07
+
+## Fee collector accounting integration (active)
+
+- Branch: `codex/fee-collector-accounting-integration`, based on the existing fee collector branch.
+- App source now targets `Simpsons会計` (`1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ`) and preserves its six accounting tabs. Operational tabs `集金_試合`, `集金_参加者`, and `集金_受領履歴` were added with headers matching the Apps Script schema.
+- The target spreadsheet timezone is verified as `Asia/Tokyo`. Dashboard formulas now cover through row 1000. The finance member tab has a `背番号` column and is populated with 40 player-master records (`M001`–`M040`, names, and jersey numbers); the six original tabs remain present.
+- The legacy spreadsheet (`1yVT9_c1RVdnosvZlN3r2bse6B3NtJo9JvKDggqDI61E`) remains untouched. Read-only inspection found zero populated game, participant, or receipt rows to migrate.
+- Source implements idempotent legacy migration, per-match charges from `試合会計!J`, receipt/transaction/invoice/match-accounting projections, cancellation reversal, and retained lock-based duplicate prevention.
+- Verification so far: `node --test tests/fee-collector-logic.test.mjs` (31 passed); Apps Script source parse passed; `git diff --check` passed. Live sheet headers, roster rows, timezone, and dashboard formulas were read back.
+- The user's clarification was that people are known by jersey number or name. Finance IDs are therefore internal only; source roster IDs `001`–`050` map deterministically to `M001`–`M050`, and the finance member directory receives the player-master names and jersey numbers. User-facing screens continue to show names and jersey numbers.
+- Current delivery: commit `89bd49d` is pushed on `codex/fee-collector-accounting-integration`; PR #10 targets `main` and is attached to the task. The Apps Script deployment has not been changed and remains version 8. Next step after PR review/merge is deploying and smoke-checking the new app without recording a real payment. Keep the old ledger as a backup.
 
 ## Completed
+
+- 2026-10-07: Added a `台帳を開く` link to the fee collector source. The app obtains the URL from the spreadsheet it actually uses, including Script Properties overrides, and opens it in a separate tab. Updated the existing Apps Script web app deployment to version 8, keeping the deployment ID, URL, execute-as-owner setting, and access setting unchanged. Verified from the GitHub Pages entry that the link appears and opens `Simpsons_集金台帳_試作版` in a new tab; no payment action or sheet edit was performed. The app showed no registered games during this verification.
 
 - 2026-10-06: Inspected Simpsons Drive photo folders. Confirmed `03_選手写真`, `99_未仕分け`, `01_試合写真`, and player-specific folders. User clarified that `99_未仕分け` is currently empty; it is the intake location for photos added later. Existing photos are not being bulk-imported.
 - 2026-10-06: Added `instagram/photo-library/` with an ID-based asset schema, source contract, Drive JSON catalog repository, atomic local JSON repository, and domain service for dry-run previews, safe classification, user confirmation history, deduplication, review queues, summaries, and player/match queries. FEATURE PLAYER lookup returns confirmed photos only.
@@ -48,6 +61,8 @@ Last updated: 2026-10-06
 - 2026-10-06: Restricted the GitHub Pages deployment workflow to `main`. Manual dispatches from feature branches now skip deployment, avoiding failures from the `github-pages` environment protection rules. The post-merge deployment from `main` succeeded.
 ## Verification
 
+- 2026-10-07: Source diff check passed before commit. Live version 8 was opened through the public GitHub Pages entry; the link was visible and opened the correct ledger in another tab. No automated tests were run.
+
 - Initial `git-status.cmd` / `git fetch origin` was blocked by access denied on `.git/FETCH_HEAD`. Local repository was clean on `main` at `origin/main`; `codex/player-photo-library` was created after narrowly scoped approval for Git metadata write.
 - Drive folder inspection and empty catalog content/parent were verified read-only. No tests were added or run because the request did not ask for testing or verification. Implementation checks are still outstanding.
 - `git diff --check` completed without whitespace errors (Git reported only existing LF-to-CRLF normalization notices).
@@ -88,14 +103,15 @@ Last updated: 2026-10-06
 
 ## Handoff
 
-Current branch: `main`.
+Current branch: `codex/fee-collector-ledger-link`.
 
-Completed in this handoff: photo-library implementation and operating instructions were merged from `codex/player-photo-library` into `main` by fast-forward at `2ce4b32`. The current Codex host can use it when its Google Drive connector is available and authorized; a separate cloud task must also have that connector and access. No photos have been classified or moved.
+Completed in this handoff: added the connected spreadsheet link to the fee collector source, updated the existing Apps Script deployment to version 8, and verified the live link opens the ledger in a separate tab. At verification the app showed no registered games, which may need investigation if unexpected. The photo-library implementation and operating instructions are also present at `2ce4b32`; no photos have been classified or moved.
 
-Next task: after the user adds photos to `99_未仕分け`, run a preview, review candidates/unknowns with the user, and only then write confirmed metadata to the Drive catalog. Separate follow-ups remain: confirm the official logo image in the Feature Player Drive folder and align the Drive SNS guide if it remains canonical; fee-collector iPhone verification is also outstanding.
+Next task: if the empty game list in the live fee collector is unexpected, inspect its configured ledger connection and current game data without recording a payment. After the user adds photos to `99_未仕分け`, run a preview and review candidates/unknowns before writing confirmed metadata to the Drive catalog. Separate follow-ups remain: confirm the official logo image in the Feature Player Drive folder and align the Drive SNS guide if it remains canonical.
 
 - 2026-10-06 correction: verified the current `99_未仕分け` folder is a direct child of the active `03_選手写真` folder. Do not use any `00` folder or archive as the photo intake source. Updated the Instagram operating route and project context to preserve that boundary.
 - 2026-10-06: User supplied the `99_アーカイブ` folder URL and explicitly prohibited using anything in it as a reference. Read only its metadata (not its contents) to confirm the folder identity. Added its ID to the exclusion list and a runtime allowlist so photo intake can list only the configured inbox; no archive files were opened.
 - 2026-10-07: Fast-forward merged `codex/player-photo-library` into `main`; `git fetch origin` completed before merge and `git diff --check` had no whitespace errors. Automated tests were not run for this merge request.
+- 2026-10-07: Fee-collector spreadsheet-link implementation is on `codex/fee-collector-ledger-link`; deployment version 8 and live-link navigation were verified.
 
 The merged `main` branch must be pushed before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.

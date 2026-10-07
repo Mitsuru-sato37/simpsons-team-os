@@ -14,6 +14,13 @@ function normalizeMasterPlayerId_(playerId) {
   return String(playerId || '').trim().replace(/^P/i, '').padStart(3, '0');
 }
 
+function toFeeMemberId_(playerId) {
+  const normalized = normalizeMasterPlayerId_(playerId);
+  if (!/^\d{3}$/.test(normalized)) return null;
+  const numericId = Number(normalized);
+  return numericId >= 1 && numericId <= 50 ? 'M' + normalized : null;
+}
+
 function isPaymentMethodAllowed_(method) {
   return ['現金', 'PayPay', '銀行振込'].includes(String(method || ''));
 }
@@ -64,4 +71,84 @@ function projectReceipts_(rows, selectedGameId) {
     });
 
   return { active, cancelled, byPlayer };
+}
+
+function resolveGameCharge_(charge) {
+  if (charge === null || charge === undefined || String(charge).trim() === '') return null;
+  const amount = Number(charge);
+  return Number.isFinite(amount) && amount > 0 ? amount : null;
+}
+
+function resolveParticipantCharge_(matchCharge, historicalCharge) {
+  return resolveGameCharge_(matchCharge) || resolveGameCharge_(historicalCharge);
+}
+
+function buildFeeInvoiceId_(gameId, playerId) {
+  return 'FEE-' + encodeURIComponent(String(gameId || '').trim()) + '-' +
+    encodeURIComponent(String(playerId || '').trim());
+}
+
+function projectReceiptAccounting_(rows, selectedGameId) {
+  const projected = projectReceipts_(rows, selectedGameId);
+  const uniqueById = (receipts) => {
+    const seen = new Set();
+    return receipts.filter((receipt) => {
+      if (seen.has(receipt.id)) return false;
+      seen.add(receipt.id);
+      return true;
+    });
+  };
+  const active = uniqueById(projected.active);
+  const cancelled = uniqueById(projected.cancelled);
+  const activeTotalByPlayer = {};
+  active.forEach((receipt) => {
+    activeTotalByPlayer[receipt.playerId] =
+      (activeTotalByPlayer[receipt.playerId] || 0) + receipt.amount;
+  });
+  return { active, cancelled, activeTotalByPlayer };
+}
+
+function legacyMigrationKey_(kind, row) {
+  if (!Array.isArray(row)) return '';
+  if (kind === 'game') return row[0] ? 'game:' + String(row[0]) : '';
+  if (kind === 'participant') {
+    return row[0] && row[1] ? 'participant:' + JSON.stringify([String(row[0]), String(row[1])]) : '';
+  }
+  if (kind === 'receipt') return row[0] ? 'receipt:' + String(row[0]) : '';
+  throw new Error('Unknown legacy row kind: ' + kind);
+}
+
+function filterLegacyRows_(kind, sourceRows, existingRows) {
+  const known = new Set((existingRows || []).map((row) => legacyMigrationKey_(kind, row)).filter(Boolean));
+  const result = [];
+  (sourceRows || []).forEach((row) => {
+    const key = legacyMigrationKey_(kind, row);
+    if (!key || known.has(key)) return;
+    known.add(key);
+    result.push(row);
+  });
+  return result;
+}
+
+function projectGames_(accountingRows, operationalRows) {
+  const operationsById = {};
+  (operationalRows || []).slice(1).forEach((row) => {
+    if (row[0]) operationsById[String(row[0])] = row;
+  });
+  return (accountingRows || []).slice(1)
+    .filter((row) => row[0])
+    .map((row) => {
+      const operational = operationsById[String(row[0])] || [];
+      return {
+        id: String(row[0]),
+        date: String(row[1] || ''),
+        opponent: String(row[2] || ''),
+        location: String(row[3] || ''),
+        meetingTime: String(operational[4] || ''),
+        startTime: String(operational[5] || ''),
+        groundFee: Number(operational[6] || 0),
+        status: String(operational[7] || '予定'),
+        memo: String(operational[8] || ''),
+      };
+    });
 }
