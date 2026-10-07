@@ -73,6 +73,24 @@ h2 { margin-bottom: 0; font-size: 20px; }
 .participant-picker label { display:block; margin: 0 0 8px; color:var(--muted); font-weight:700; }
 .participant-picker input { width:100%; min-height:52px; border:1px solid var(--line); border-radius:14px; padding:12px 14px; font:inherit; }
 .picker-message { color:var(--muted); margin-top:10px; }
+.emergency-entry { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.emergency-entry-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.emergency-entry-row input { min-width: 0; }
+.roster-import-panel { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.roster-import-panel label { display: block; margin: 12px 0 7px; color: var(--muted); font-weight: 700; }
+.roster-import-panel textarea { width: 100%; min-height: 120px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; font: inherit; font-size: 16px; resize: vertical; }
+.roster-control { width: 100%; min-height: 52px; margin-top: 10px; }
+.roster-preview-card { padding: 12px 0; border-top: 1px solid var(--line); }
+.roster-preview-card:first-child { border-top: 0; }
+.roster-summary { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 12px 0; color: var(--muted); }
+.roster-summary strong { color: var(--text); }
+.unresolved-roster-row { margin-top: 10px; padding: 12px; border: 1px solid #ead590; border-radius: 12px; background: #fffaf0; }
+.emergency-check { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.emergency-check input { width: 20px; height: 20px; }
+.roster-warning { color: var(--danger); font-weight: 700; }
+.roster-ready { color: var(--success); font-weight: 700; }
+.absent-section { margin-top: 12px; }
+.attendance-action { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: white; color: var(--danger); font-weight: 700; }
 .search-results { display:grid; gap:8px; margin-top:10px; }
 .search-result { min-height:50px; text-align:left; border:1px solid var(--line); border-radius:12px; background:#fff; padding:10px 14px; font:inherit; font-weight:700; color:var(--text); }
 .search-result:disabled { opacity:.55; }
@@ -301,6 +319,10 @@ dialog::backdrop { background: rgba(24, 16, 32, .55); }
   .game-panel label, .summary-label { font-size: 14px; }
   .game-panel select { min-height: 54px; font-size: 17px; }
   .game-meta { font-size: 16px; }
+  .roster-control { min-height: 56px; font-size: 16px; }
+  .emergency-entry-row { grid-template-columns: 1fr; }
+  .emergency-entry-row .secondary-button { min-height: 52px; }
+  .attendance-action { min-height: 48px; }
   .summary-card { min-height: 100px; padding: 16px; }
   .summary-value { font-size: 26px; }
   .player-card { padding: 16px; }

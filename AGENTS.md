@@ -48,6 +48,8 @@ Before stopping a meaningful development session, update `docs/PROGRESS.md` with
 
 ## Instagram production routes
 
+- For fee-collector attendance import from a lineup/scorebook image, return copy-ready `背番号<TAB>氏名` rows with uncertainty marked. The user pastes into `fee-collector/` and confirms the app preview; never write attendance directly to Google Sheets. Follow `fee-collector/README.md` for the operating flow. Keep this separate from Instagram asset creation.
+
 - For a player-photo asset request (for example, `選手写真整理`, `未仕分けを確認して`, `匠の写真を出して`, or `FEATURE PLAYER用の写真候補`), read `instagram/AGENTS.md` using the `photo-library` route. Use the official player master IDs and shared `MatchContext.matchId`; do not connect this module to `fee-collector/`.
 - For a pre-game lineup request (for example, `試合前投稿作成` or `STARTING LINEUP`), read and follow `instagram/AGENTS.md` using the `starting-lineup` route.
 - For a post-game asset request (for example, `試合後投稿作成`, `GAME RESULT`, `GAME STATS`, or `FEATURE PLAYER`), read and follow `instagram/AGENTS.md` using the `post-game` route. Produce only the requested asset or combination.

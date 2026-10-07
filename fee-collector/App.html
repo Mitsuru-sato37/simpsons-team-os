@@ -4,6 +4,8 @@ const state = {
   selectedGameId: null,
   lastReceipt: null,
   toastTimer: null,
+  rosterPreview: null,
+  emergencyLineNumbers: new Set(),
 };
 
 const els = {};
@@ -16,6 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
     playerSearchResults: document.getElementById('playerSearchResults'),
     participantPicker: document.getElementById('participantPicker'),
     participantPickerMessage: document.getElementById('participantPickerMessage'),
+    emergencyName: document.getElementById('emergencyName'),
+    addEmergencyButton: document.getElementById('addEmergencyButton'),
+    rosterText: document.getElementById('rosterText'),
+    previewRosterButton: document.getElementById('previewRosterButton'),
+    rosterPreview: document.getElementById('rosterPreview'),
+    absentSection: document.getElementById('absentSection'),
+    absentList: document.getElementById('absentList'),
     summary: document.getElementById('summary'),
     unpaidList: document.getElementById('unpaidList'),
     unpaidCount: document.getElementById('unpaidCount'),
@@ -37,7 +46,11 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmCompleteButton: document.getElementById('confirmCompleteButton'),
   });
 
-  els.gameSelect.addEventListener('change', () => load(els.gameSelect.value));
+  els.gameSelect.addEventListener('change', () => {
+    state.rosterPreview = null;
+    state.emergencyLineNumbers.clear();
+    load(els.gameSelect.value);
+  });
   let searchTimer;
   els.playerSearch.addEventListener('input', () => {
     clearTimeout(searchTimer);
@@ -57,6 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
   els.completeGameButton.addEventListener('click', () => els.completeDialog.showModal());
   els.cancelCompleteButton.addEventListener('click', () => els.completeDialog.close());
   els.confirmCompleteButton.addEventListener('click', completeSelectedGame);
+  els.previewRosterButton.addEventListener('click', requestRosterPreview);
+  els.addEmergencyButton.addEventListener('click', addEmergencyParticipant);
 
   load(null);
 });
@@ -65,6 +80,10 @@ function load(gameId) {
   setLoading(true);
   google.script.run
     .withSuccessHandler((data) => {
+      if (state.selectedGameId && data.selectedGame && state.selectedGameId !== data.selectedGame.id) {
+        state.rosterPreview = null;
+        state.emergencyLineNumbers.clear();
+      }
       state.data = data;
       state.selectedGameId = data.selectedGame ? data.selectedGame.id : null;
       els.ledgerLink.href = data.ledgerUrl;
@@ -80,6 +99,8 @@ function render() {
   renderGames();
   renderSummary();
   renderParticipants();
+  renderAbsentParticipants();
+  renderRosterPreview();
   renderReceived();
   renderCancelled();
   renderParticipantPicker();
@@ -131,6 +152,148 @@ function addParticipant(playerId, button) {
     .addParticipant({ gameId: state.selectedGameId, playerId });
 }
 
+function addEmergencyParticipant() {
+  const name = els.emergencyName.value.trim();
+  if (!name || !state.selectedGameId) return;
+  els.addEmergencyButton.disabled = true;
+  google.script.run
+    .withSuccessHandler((result) => {
+      state.data = result.state;
+      state.selectedGameId = result.state.selectedGame ? result.state.selectedGame.id : null;
+      els.emergencyName.value = '';
+      render();
+      els.addEmergencyButton.disabled = false;
+      showToast('緊急参加者を追加しました。');
+    })
+    .withFailureHandler((error) => { els.addEmergencyButton.disabled = false; handleError(error); })
+    .addEmergencyParticipant({ gameId: state.selectedGameId, name });
+}
+
+function requestRosterPreview() {
+  const rosterText = els.rosterText.value;
+  if (!state.selectedGameId || !rosterText.trim()) {
+    showToast('参加者リストを貼り付けてください。');
+    return;
+  }
+  els.previewRosterButton.disabled = true;
+  els.rosterPreview.innerHTML = '<p class="picker-message">選手マスターと照合しています…</p>';
+  google.script.run
+    .withSuccessHandler((preview) => {
+      state.rosterPreview = preview;
+      els.previewRosterButton.disabled = false;
+      renderRosterPreview();
+    })
+    .withFailureHandler((error) => {
+      els.previewRosterButton.disabled = false;
+      els.rosterPreview.innerHTML = '';
+      handleError(error);
+    })
+    .previewRosterImport({
+      gameId: state.selectedGameId,
+      rosterText,
+      emergencyLineNumbers: [...state.emergencyLineNumbers],
+    });
+}
+
+function renderRosterPreview() {
+  const preview = state.rosterPreview;
+  if (!preview) {
+    els.rosterPreview.innerHTML = '';
+    return;
+  }
+  const attendees = preview.attendees || [];
+  const attendeeRows = attendees.map((player) =>
+    '<li>' + escapeHtml((player.jerseyNumber ? '#' + player.jerseyNumber + ' ' : '') + player.name +
+      (player.emergency ? '（緊急参加者）' : '')) + '</li>'
+  ).join('');
+  const unresolvedRows = (preview.unresolved || []).map((row) => {
+    const canSelectEmergency = row.status === 'not_found' && row.name;
+    const label = row.lineNumber + '行目: ' + (row.name || row.jerseyNumber || '文字を読み取れません');
+    return '<li class="unresolved-roster-row">' +
+      '<span>' + escapeHtml(label + ' — ' + rosterStatusLabel(row.status)) + '</span>' +
+      (canSelectEmergency
+        ? '<label class="emergency-check"><input type="checkbox" data-emergency-line="' + Number(row.lineNumber) + '"' +
+          (state.emergencyLineNumbers.has(Number(row.lineNumber)) ? ' checked' : '') +
+          '> 緊急参加者として登録</label>'
+        : '') + '</li>';
+  }).join('');
+  const absenceRows = (preview.absences || []).map((player) =>
+    '<li>' + escapeHtml(player.name) + (player.blocked ? ' — 受領済みのため欠席にできません' : ' — 欠席予定') + '</li>'
+  ).join('');
+  const canConfirm = preview.readyToConfirm && ((preview.additions || []).length || (preview.absences || []).length);
+  els.rosterPreview.innerHTML =
+    '<div class="roster-preview-card">' +
+      '<h3>' + escapeHtml(preview.game ? preview.game.date + ' ' + preview.game.opponent : '対象試合') + ' の確認内容</h3>' +
+      '<p>参加者候補 ' + attendees.length + '人 ・ 追加 ' + (preview.additions || []).length + '人 ・ 欠席 ' + (preview.absences || []).length + '人</p>' +
+      (attendeeRows ? '<strong>照合できた参加者</strong><ul>' + attendeeRows + '</ul>' : '') +
+      (absenceRows ? '<strong>現在の参加者との差</strong><ul>' + absenceRows + '</ul>' : '') +
+      (unresolvedRows ? '<strong>確認が必要な行</strong><ul>' + unresolvedRows + '</ul>' : '') +
+      (preview.readyToConfirm
+        ? '<p class="roster-ready">この内容を確認して反映できます。</p>'
+        : '<p class="roster-warning">確認が必要な行、または受領済みの欠席があります。修正して再確認してください。</p>') +
+      '<button id="confirmRosterButton" class="primary-button roster-control" type="button"' +
+        (canConfirm ? '' : ' disabled') + '>この内容で参加者を反映</button>' +
+    '</div>';
+  els.rosterPreview.querySelectorAll('[data-emergency-line]').forEach((checkbox) => {
+    checkbox.addEventListener('change', () => {
+      const lineNumber = Number(checkbox.dataset.emergencyLine);
+      if (checkbox.checked) state.emergencyLineNumbers.add(lineNumber);
+      else state.emergencyLineNumbers.delete(lineNumber);
+      requestRosterPreview();
+    });
+  });
+  const confirmButton = document.getElementById('confirmRosterButton');
+  confirmButton.addEventListener('click', () => confirmRosterImport(confirmButton));
+}
+
+function rosterStatusLabel(status) {
+  return ({
+    not_found: '選手マスターに一致しません',
+    ambiguous: '複数の選手に一致します',
+    conflict: '背番号と名前が一致しません',
+    uncertain: '画像の読み取りが不確かです',
+    duplicate: '同じ選手が重複しています',
+  })[status] || '確認してください';
+}
+
+function confirmRosterImport(button) {
+  const preview = state.rosterPreview;
+  if (!preview || !preview.readyToConfirm || !state.selectedGameId) return;
+  button.disabled = true;
+  google.script.run
+    .withSuccessHandler((result) => {
+      state.data = result.state;
+      state.selectedGameId = result.state.selectedGame ? result.state.selectedGame.id : null;
+      state.rosterPreview = null;
+      state.emergencyLineNumbers.clear();
+      els.rosterText.value = '';
+      render();
+      showToast(result.alreadyApplied ? 'この参加者リストは反映済みです。' : '参加者と会計を更新しました。');
+    })
+    .withFailureHandler((error) => { button.disabled = false; handleError(error); })
+    .applyConfirmedRoster({
+      gameId: state.selectedGameId,
+      rosterText: els.rosterText.value,
+      emergencyLineNumbers: [...state.emergencyLineNumbers],
+      previewFingerprint: preview.previewFingerprint,
+    });
+}
+
+function setParticipantAttendance(playerId, attending, button) {
+  button.disabled = true;
+  const update = google.script.run
+    .withSuccessHandler((data) => {
+      state.data = data;
+      state.selectedGameId = data.selectedGame ? data.selectedGame.id : null;
+      state.rosterPreview = null;
+      render();
+      showToast(attending ? '参加に戻しました。' : '欠席にしました。');
+    })
+    .withFailureHandler((error) => { button.disabled = false; handleError(error); });
+  if (attending) update.restoreParticipantAttendance({ gameId: state.selectedGameId, playerId });
+  else update.markParticipantAbsent({ gameId: state.selectedGameId, playerId });
+}
+
 function renderGames() {
   const { games, selectedGame } = state.data;
   els.gameSelect.innerHTML = games
@@ -175,6 +338,7 @@ function summaryCard(label, value, className = '') {
 
 function renderParticipants() {
   const unpaid = state.data.participants.filter((player) => !player.paid);
+  const canEditAttendance = state.data.selectedGame && !['完了', '中止'].includes(state.data.selectedGame.status);
   els.unpaidCount.textContent = unpaid.length;
 
   if (!unpaid.length) {
@@ -196,6 +360,9 @@ function renderParticipants() {
           '<button class="paypay-button" data-action="pay" data-method="PayPay" data-player="' + escapeHtml(player.playerId) + '">PayPay確認</button>' +
           '<button class="bank-button" data-action="pay" data-method="銀行振込" data-player="' + escapeHtml(player.playerId) + '">銀行振込確認</button>' +
         '</div>') +
+        (canEditAttendance
+          ? '<button class="attendance-action" data-action="absent" data-player="' + escapeHtml(player.playerId) + '">欠席にする</button>'
+          : '') +
       '</article>';
     })
     .join('');
@@ -204,6 +371,25 @@ function renderParticipants() {
     button.addEventListener('click', () => {
       recordPayment(button.dataset.player, button.dataset.method, button);
     });
+  });
+  els.unpaidList.querySelectorAll('[data-action="absent"]').forEach((button) => {
+    button.addEventListener('click', () => setParticipantAttendance(button.dataset.player, false, button));
+  });
+}
+
+function renderAbsentParticipants() {
+  const absent = state.data.absentParticipants || [];
+  const canRestore = state.data.selectedGame && !['完了', '中止'].includes(state.data.selectedGame.status);
+  els.absentSection.hidden = !absent.length;
+  els.absentList.innerHTML = absent.map((player) =>
+    '<article class="player-card"><div class="player-top"><div class="player-name">' +
+      escapeHtml((player.jerseyNumber ? '#' + player.jerseyNumber + ' ' : '') + player.name) +
+      '</div>' + (canRestore
+        ? '<button class="attendance-action" data-action="restore" data-player="' + escapeHtml(player.playerId) + '">参加に戻す</button>'
+        : '') + '</div></article>'
+  ).join('');
+  els.absentList.querySelectorAll('[data-action="restore"]').forEach((button) => {
+    button.addEventListener('click', () => setParticipantAttendance(button.dataset.player, true, button));
   });
 }
 

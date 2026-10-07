@@ -26,6 +26,181 @@ function searchMasterPlayers_(rows, query) {
   return matches.slice(0, 10);
 }
 
+function parseRosterPaste_(text) {
+  return String(text || '').split(/\r?\n/).map((line, index) => {
+    let value = line.trim();
+    if (!value) return null;
+    const uncertain = /^\?\s*/.test(value);
+    value = value.replace(/^\?\s*/, '');
+    const match = value.match(/^#?\s*(\d{1,2}|##)(?:\s+(.+))?$/);
+    if (match) {
+      return {
+        lineNumber: index + 1,
+        jerseyNumber: match[1],
+        name: String(match[2] || '').trim(),
+        uncertain,
+      };
+    }
+    return { lineNumber: index + 1, jerseyNumber: '', name: value, uncertain };
+  }).filter(Boolean);
+}
+
+function normalizeRosterIdentity_(value) {
+  return String(value === null || value === undefined ? '' : value)
+    .trim().replace(/\s+/g, '').toLocaleLowerCase();
+}
+
+function matchRosterCandidate_(candidate, masterRows, memberRows) {
+  const jerseyNumber = String(candidate && candidate.jerseyNumber || '').trim();
+  const name = String(candidate && candidate.name || '').trim();
+  const nameKey = normalizeRosterIdentity_(name);
+  const masterData = (masterRows || []).slice(
+    masterRows && masterRows[0] && String(masterRows[0][0]) === '選手ID' ? 1 : 0
+  );
+  const memberData = (memberRows || []).slice(
+    memberRows && memberRows[0] && String(memberRows[0][0]) === 'メンバーID' ? 1 : 0
+  );
+  const players = masterData.filter((row) => row[0] && (row[1] || row[2] || row[3]))
+    .map((row) => ({
+      playerId: String(row[0]),
+      jerseyNumber: String(row[1] || '').trim(),
+      name: String(row[2] || '').trim(),
+      aliases: [String(row[2] || ''), String(row[3] || '')].map(normalizeRosterIdentity_).filter(Boolean),
+    }));
+  const emergencyMembers = memberData.filter((row) =>
+    /^E\d{3,}$/.test(String(row[0] || '')) && normalizeRosterIdentity_(row[1])
+  ).map((row) => ({
+    playerId: String(row[0]),
+    jerseyNumber: '',
+    name: String(row[1] || '').trim(),
+    aliases: [normalizeRosterIdentity_(row[1])],
+    emergency: true,
+  }));
+  const jerseyMatches = jerseyNumber ? players.filter((player) => player.jerseyNumber === jerseyNumber) : [];
+  let nameMatches = nameKey ? players.filter((player) => player.aliases.some((alias) =>
+    alias === nameKey || (nameKey.length >= 2 && alias.includes(nameKey))
+  )) : [];
+  if (!jerseyNumber && nameKey) {
+    nameMatches = nameMatches.concat(emergencyMembers.filter((member) => member.aliases.includes(nameKey)));
+  }
+  let matched = null;
+  let status = 'not_found';
+
+  if (jerseyNumber && nameKey) {
+    if (jerseyMatches.length > 1 || nameMatches.length > 1) status = 'ambiguous';
+    else if (jerseyMatches.length === 1 && nameMatches.length === 1) {
+      status = jerseyMatches[0].playerId === nameMatches[0].playerId ? 'matched' : 'conflict';
+      matched = status === 'matched' ? jerseyMatches[0] : null;
+    } else if (jerseyMatches.length || nameMatches.length) status = 'conflict';
+  } else {
+    const matches = jerseyNumber ? jerseyMatches : nameMatches;
+    if (matches.length > 1) status = 'ambiguous';
+    else if (matches.length === 1) {
+      status = 'matched';
+      matched = matches[0];
+    }
+  }
+
+  if (candidate && candidate.uncertain && status === 'matched') status = 'uncertain';
+  if (!matched || status !== 'matched') {
+    return {
+      status,
+      jerseyNumber,
+      name,
+      candidates: status === 'conflict'
+        ? [...new Map([...jerseyMatches, ...nameMatches].map((player) => [player.playerId, player])).values()]
+        : [...new Map([...jerseyMatches, ...nameMatches].map((player) => [player.playerId, player])).values()],
+    };
+  }
+  return {
+    status: 'matched',
+    playerId: matched.playerId,
+    jerseyNumber: matched.jerseyNumber,
+    name: matched.name,
+    ...(matched.emergency ? { emergency: true } : {}),
+  };
+}
+
+function buildRosterPreview_(game, extractedRows, masterRows, currentParticipants, receipts, memberRows, emergencyLineNumbers) {
+  const validGame = game && game.id && isOpenGame_(game);
+  const memberData = (memberRows || []).slice(
+    memberRows && memberRows[0] && String(memberRows[0][0]) === 'メンバーID' ? 1 : 0
+  );
+  const current = (currentParticipants || []).filter((row) =>
+    String(row[0]) === String(game && game.id) && String(row[4]) === '対象'
+  );
+  const activeReceipts = (receipts || []).filter((row) =>
+    String(row[1]) === String(game && game.id) && String(row[7]) === '有効'
+  );
+  const matched = [];
+  const unresolved = [];
+  const seenPlayers = new Set();
+  const emergencyLines = new Set((emergencyLineNumbers || []).map(Number));
+
+  (extractedRows || []).forEach((candidate) => {
+    let result = matchRosterCandidate_(candidate, masterRows, memberRows);
+    if (result.status === 'not_found' && emergencyLines.has(Number(candidate.lineNumber)) &&
+        candidate.name && !candidate.uncertain) {
+      result = {
+        status: 'matched', playerId: '', jerseyNumber: '', name: String(candidate.name).trim(),
+        emergency: true, needsEmergencyId: true,
+      };
+    }
+    if (result.status !== 'matched') {
+      unresolved.push({ ...candidate, status: result.status, candidates: result.candidates || [] });
+      return;
+    }
+    const seenKey = result.playerId || 'name:' + normalizeRosterIdentity_(result.name);
+    if (seenPlayers.has(seenKey)) {
+      unresolved.push({ ...candidate, status: 'duplicate', candidates: [result] });
+      return;
+    }
+    seenPlayers.add(seenKey);
+    matched.push(result);
+  });
+
+  const currentById = new Map(current.map((row) => [String(row[1]), row]));
+  const proposedIds = new Set(matched.map((player) => player.playerId).filter(Boolean));
+  const additions = matched.filter((player) => !player.playerId || !currentById.has(player.playerId)).map((player) => ({
+    playerId: player.playerId,
+    jerseyNumber: player.jerseyNumber,
+    name: player.name,
+    ...(player.emergency ? { emergency: true } : {}),
+  }));
+  const activeReceiptIds = new Set(activeReceipts.map((row) => String(row[2])));
+  const absences = current.filter((row) => !proposedIds.has(String(row[1]))).map((row) => ({
+    playerId: String(row[1]),
+    name: String(row[2] || ''),
+    blocked: activeReceiptIds.has(String(row[1])),
+  }));
+  const snapshot = [
+    String(game && game.id || ''),
+    String(game && game.status || ''),
+    current.map((row) => [String(row[1]), String(row[4])]).sort((a, b) => a[0].localeCompare(b[0])),
+    activeReceipts.map((row) => [String(row[0]), String(row[2]), String(row[7])]).sort((a, b) => a[0].localeCompare(b[0])),
+    (memberData || []).filter((row) => /^E\d{3,}$/.test(String(row[0] || '')))
+      .map((row) => [String(row[0]), normalizeRosterIdentity_(row[1])]).sort((a, b) => a[0].localeCompare(b[0])),
+    [...emergencyLines].sort((a, b) => a - b),
+  ];
+  const blockedAbsences = absences.filter((item) => item.blocked);
+  return {
+    gameId: String(game && game.id || ''),
+    attendees: matched.map((player) => ({
+      playerId: player.playerId,
+      jerseyNumber: player.jerseyNumber,
+      name: player.name,
+      ...(player.emergency ? { emergency: true } : {}),
+    })),
+    additions,
+    absences,
+    unresolved,
+    emergencyLineNumbers: [...emergencyLines].sort((a, b) => a - b),
+    previewFingerprint: JSON.stringify(snapshot),
+    readyToConfirm: Boolean(validGame) && (extractedRows || []).length > 0 &&
+      unresolved.length === 0 && blockedAbsences.length === 0,
+  };
+}
+
 function normalizeMasterPlayerId_(playerId) {
   return String(playerId || '').trim().replace(/^P/i, '').padStart(3, '0');
 }

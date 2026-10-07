@@ -53,6 +53,209 @@ function searchPlayers(query) {
   return searchMasterPlayers_(getPlayerMasterRows_(), query);
 }
 
+function previewRosterImport(payload) {
+  if (!payload || !payload.gameId) throw new Error('対象試合を選択してください。');
+  const ss = getSpreadsheet_();
+  return buildRosterImportPreview_(ss, payload.gameId, payload.rosterText, payload.emergencyLineNumbers || []);
+}
+
+function buildRosterImportPreview_(ss, gameId, rosterText, emergencyLineNumbers) {
+  const accounting = ss.getSheetByName(CONFIG.ACCOUNTING_GAMES);
+  const operations = ss.getSheetByName(CONFIG.SHEET_GAMES);
+  const participants = ss.getSheetByName(CONFIG.SHEET_PARTICIPANTS);
+  const receipts = ss.getSheetByName(CONFIG.SHEET_RECEIPTS);
+  const members = ss.getSheetByName(CONFIG.MEMBERS);
+  if (!accounting || !operations || !participants || !receipts || !members) {
+    throw new Error('集金に必要なシートがありません。管理者へ連絡してください。');
+  }
+  const accountingRows = accounting.getDataRange().getValues();
+  const games = projectGames_(accountingRows, operations.getDataRange().getValues(), CONFIG.BASE_PER_PERSON_CHARGE);
+  const game = games.find((item) => String(item.id) === String(gameId));
+  if (!game) throw new Error('試合が見つかりません。');
+  if (!isOpenGame_(game)) throw new Error('完了または中止した試合の参加者は変更できません。');
+  const participantRows = participants.getDataRange().getValues().slice(1);
+  const receiptRows = receipts.getDataRange().getValues().slice(1);
+  const memberRows = members.getDataRange().getValues();
+  return {
+    ...buildRosterPreview_(game, parseRosterPaste_(rosterText), getPlayerMasterRows_(),
+      participantRows, receiptRows, memberRows, emergencyLineNumbers),
+    game: { id: game.id, date: game.date, opponent: game.opponent, location: game.location },
+  };
+}
+
+function applyConfirmedRoster(payload) {
+  if (!payload || !payload.gameId || !payload.previewFingerprint) {
+    throw new Error('参加者リストを確認してから確定してください。');
+  }
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss = getSpreadsheet_();
+    ensureFeeCollectorSchema_(ss);
+    const preview = buildRosterImportPreview_(ss, payload.gameId, payload.rosterText, payload.emergencyLineNumbers || []);
+    if (!preview.readyToConfirm) {
+      if (preview.absences.some((item) => item.blocked)) {
+        throw new Error('受領済みの選手は欠席にできません。先に受領取消を行ってください。');
+      }
+      throw new Error('未確定の選手があります。名前・背番号を確認してください。');
+    }
+    if (preview.previewFingerprint !== String(payload.previewFingerprint)) {
+      if (!preview.additions.length && !preview.absences.length) {
+        return { ok: true, alreadyApplied: true, gameId: String(payload.gameId), added: 0, absent: 0 };
+      }
+      throw new Error('プレビュー後に参加者または受領状況が変わりました。最新の内容を確認し直してください。');
+    }
+
+    const memberRows = ss.getSheetByName(CONFIG.MEMBERS).getDataRange().getValues();
+    const participantSheet = ss.getSheetByName(CONFIG.SHEET_PARTICIPANTS);
+    preview.absences.forEach((item) => {
+      const rowNumber = findParticipantRowNumber_(ss, payload.gameId, item.playerId);
+      if (!rowNumber) throw new Error('参加者行が見つかりません。最新の内容を確認してください。');
+      const currentMemo = String(participantSheet.getRange(rowNumber, 9).getValue() || '');
+      participantSheet.getRange(rowNumber, 4, 1, 6).setValues([[0, '欠席', 0, 0, 0,
+        currentMemo ? currentMemo + ' / 出欠確認で欠席' : '出欠確認で欠席']]);
+    });
+
+    preview.additions.forEach((item) => {
+      let playerId = String(item.playerId || '');
+      if (item.emergency && !playerId) {
+        const emergency = resolveEmergencyMemberId_(memberRows, item.name);
+        if (emergency.status === 'ambiguous') throw new Error('緊急参戦者名が重複しています。メンバー一覧を確認してください。');
+        playerId = emergency.status === 'matched'
+          ? emergency.memberId
+          : reserveEmergencyMemberId_(memberRows.slice(1), PropertiesService.getScriptProperties());
+        ensureMemberSnapshot_(ss, playerId, item.name, '');
+        memberRows.push([playerId, item.name]);
+      }
+      if (!playerId) throw new Error('参加者IDを確認できません。');
+      const charge = getGameCharge_(ss, payload.gameId);
+      const received = getActiveReceiptTotal_(ss, payload.gameId, playerId);
+      const existingRow = findParticipantRowNumber_(ss, payload.gameId, playerId);
+      const existingMemo = existingRow ? String(participantSheet.getRange(existingRow, 9).getValue() || '') : '';
+      const values = [[charge || 0, '対象', charge || 0, received, Math.max((charge || 0) - received, 0),
+        existingMemo ? existingMemo + ' / 出欠確認で参加' : '出欠確認で参加']];
+      if (existingRow) participantSheet.getRange(existingRow, 4, 1, 6).setValues(values);
+      else participantSheet.appendRow([payload.gameId, playerId, item.name, charge || 0, '対象', charge || 0,
+        received, Math.max((charge || 0) - received, 0), '画像名簿から登録']);
+    });
+
+    const affectedIds = new Set([
+      ...preview.absences.map((item) => item.playerId),
+      ...preview.additions.map((item) => item.playerId || resolveEmergencyMemberId_(memberRows, item.name).memberId),
+    ]);
+    affectedIds.forEach((playerId) => reconcileMemberInvoice_(ss, payload.gameId, playerId));
+    reconcileMatchAccounting_(ss, payload.gameId);
+    SpreadsheetApp.flush();
+    return {
+      ok: true,
+      gameId: String(payload.gameId),
+      added: preview.additions.length,
+      absent: preview.absences.length,
+      state: buildState_(getGames_(), String(payload.gameId)),
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function addEmergencyParticipant(payload) {
+  if (!payload || !payload.gameId || !String(payload.name || '').trim()) {
+    throw new Error('試合と参加者名を入力してください。');
+  }
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss = getSpreadsheet_();
+    ensureFeeCollectorSchema_(ss);
+    const game = getGames_().find((item) => String(item.id) === String(payload.gameId));
+    if (!game) throw new Error('試合が見つかりません。');
+    if (!isOpenGame_(game)) throw new Error('完了または中止した試合には参加者を追加できません。');
+    const name = String(payload.name).trim();
+    const rosterMatch = matchRosterCandidate_({ jerseyNumber: '', name }, getPlayerMasterRows_());
+    if (rosterMatch.status === 'matched') throw new Error('選手マスター登録者です。背番号か名前で検索して追加してください。');
+    if (rosterMatch.status === 'ambiguous') throw new Error('選手マスターの名前が特定できません。背番号で検索してください。');
+    const memberSheet = ss.getSheetByName(CONFIG.MEMBERS);
+    const memberRows = memberSheet.getDataRange().getValues();
+    const emergency = resolveEmergencyMemberId_(memberRows, name);
+    if (emergency.status === 'ambiguous') throw new Error('同じ名前の緊急参戦者が複数います。');
+    const playerId = emergency.status === 'matched'
+      ? emergency.memberId
+      : reserveEmergencyMemberId_(memberRows.slice(1), PropertiesService.getScriptProperties());
+    ensureMemberSnapshot_(ss, playerId, name, '');
+    const existingRow = findParticipantRowNumber_(ss, game.id, playerId);
+    if (existingRow && String(ss.getSheetByName(CONFIG.SHEET_PARTICIPANTS).getRange(existingRow, 5).getValue()) === '対象') {
+      throw new Error('この緊急参戦者はすでに登録されています。');
+    }
+    const charge = getGameCharge_(ss, game.id) || 0;
+    const received = getActiveReceiptTotal_(ss, game.id, playerId);
+    const participantSheet = ss.getSheetByName(CONFIG.SHEET_PARTICIPANTS);
+    const currentMemo = existingRow ? String(participantSheet.getRange(existingRow, 9).getValue() || '') : '';
+    if (existingRow) {
+      participantSheet.getRange(existingRow, 4, 1, 6).setValues([[
+        charge, '対象', charge, received, Math.max(charge - received, 0),
+        currentMemo ? currentMemo + ' / 緊急参戦で再登録' : '緊急参戦で再登録',
+      ]]);
+    } else {
+      participantSheet.appendRow([game.id, playerId, name, charge, '対象', charge, received,
+        Math.max(charge - received, 0), '緊急参戦で登録']);
+    }
+    reconcileMemberInvoice_(ss, game.id, playerId);
+    reconcileMatchAccounting_(ss, game.id);
+    SpreadsheetApp.flush();
+    return { ok: true, playerId, state: buildState_(getGames_(), game.id) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function markParticipantAbsent(payload) {
+  return setParticipantAttendance_(payload, false);
+}
+
+function restoreParticipantAttendance(payload) {
+  return setParticipantAttendance_(payload, true);
+}
+
+function setParticipantAttendance_(payload, attending) {
+  if (!payload || !payload.gameId || !payload.playerId) throw new Error('試合と参加者を指定してください。');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss = getSpreadsheet_();
+    ensureFeeCollectorSchema_(ss);
+    const game = getGames_().find((item) => String(item.id) === String(payload.gameId));
+    if (!game || !isOpenGame_(game)) throw new Error('完了または中止した試合の参加者は変更できません。');
+    const rowNumber = findParticipantRowNumber_(ss, game.id, payload.playerId);
+    if (!rowNumber) throw new Error('参加者が見つかりません。');
+    const sheet = ss.getSheetByName(CONFIG.SHEET_PARTICIPANTS);
+    const row = sheet.getRange(rowNumber, 1, 1, 9).getValues()[0];
+    if (!attending && getActiveReceipts_(ss, game.id, payload.playerId).length) {
+      throw new Error('受領済みの選手は欠席にできません。先に受領取消を行ってください。');
+    }
+    const charge = attending ? (getGameCharge_(ss, game.id) || 0) : 0;
+    const received = attending ? getActiveReceiptTotal_(ss, game.id, payload.playerId) : 0;
+    const memo = String(row[8] || '');
+    sheet.getRange(rowNumber, 4, 1, 6).setValues([[
+      charge, attending ? '対象' : '欠席', charge, received, Math.max(charge - received, 0),
+      memo ? memo + (attending ? ' / 出席へ復帰' : ' / 当日欠席') : (attending ? '出席へ復帰' : '当日欠席'),
+    ]]);
+    reconcileMemberInvoice_(ss, game.id, payload.playerId);
+    reconcileMatchAccounting_(ss, game.id);
+    SpreadsheetApp.flush();
+    return buildState_(getGames_(), game.id);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function findParticipantRowNumber_(ss, gameId, playerId) {
+  const rows = ss.getSheetByName(CONFIG.SHEET_PARTICIPANTS).getDataRange().getValues();
+  for (let index = 1; index < rows.length; index += 1) {
+    if (String(rows[index][0]) === String(gameId) && String(rows[index][1]) === String(playerId)) return index + 1;
+  }
+  return 0;
+}
+
 function addParticipant(payload) {
   if (!payload || !payload.gameId || !payload.playerId) throw new Error('試合と選手を指定してください。');
   const lock = LockService.getScriptLock();
@@ -588,10 +791,20 @@ function reconcileMemberInvoice_(ss, gameId, playerId) {
   const master = resolveMasterPlayer_(getPlayerMasterRows_(), playerId);
   const name = master ? master.name : String(row[2] || '');
   const jerseyNumber = master ? master.jerseyNumber : '';
-  const memberId = toFeeMemberId_(playerId);
-  const charge = getParticipantCharge_(ss, row);
+  const memberId = resolveFinanceMemberId_(ss, playerId);
+  const attending = String(row[4]) === '対象';
+  const charge = attending ? getParticipantCharge_(ss, row) : 0;
   upsertMemberInvoice_(ss, gameId, playerId, memberId, name, jerseyNumber, charge,
-    getActiveReceiptTotal_(ss, gameId, playerId));
+    attending ? getActiveReceiptTotal_(ss, gameId, playerId) : 0);
+}
+
+function resolveFinanceMemberId_(ss, playerId) {
+  const rosterMemberId = toFeeMemberId_(playerId);
+  if (rosterMemberId) return rosterMemberId;
+  const emergencyId = String(playerId || '').trim();
+  return /^E\d{3,}$/.test(emergencyId) && findDataRow_(ss.getSheetByName(CONFIG.MEMBERS), 1, emergencyId)
+    ? emergencyId
+    : null;
 }
 
 function findParticipantRow_(ss, gameId, playerId) {
@@ -747,6 +960,7 @@ function buildState_(games, gameId) {
       selectedGame: null,
       ledgerUrl: ss.getUrl(),
       participants: [],
+      absentParticipants: [],
       received: [],
       cancelled: [],
       summary: { participants: 0, expected: 0, received: 0, outstanding: 0 },
@@ -804,6 +1018,17 @@ function buildState_(games, gameId) {
       };
     });
 
+  const absentParticipants = participantRows
+    .filter((row) => String(row[0]) === selected.id && String(row[4]) === '欠席')
+    .map((row) => {
+      const masterPlayer = resolveMasterPlayer_(masterRows, row[1]);
+      return {
+        playerId: String(row[1]),
+        name: masterPlayer ? masterPlayer.name : String(row[2] || ''),
+        jerseyNumber: masterPlayer ? masterPlayer.jerseyNumber : '',
+      };
+    });
+
   participants.sort((a, b) => {
     if (a.paid !== b.paid) return a.paid ? 1 : -1;
     return a.name.localeCompare(b.name, 'ja');
@@ -825,6 +1050,7 @@ function buildState_(games, gameId) {
     selectedGame: selected,
     ledgerUrl: ss.getUrl(),
     participants,
+    absentParticipants,
     received: activeReceipts.sort((a, b) =>
       b.receivedAt.localeCompare(a.receivedAt)
     ),

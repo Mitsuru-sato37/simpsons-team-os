@@ -22,6 +22,10 @@ const {
   searchMasterPlayers_,
   buildFeeInvoiceId_,
   filterLegacyRows_,
+  parseRosterPaste_,
+  normalizeRosterIdentity_,
+  matchRosterCandidate_,
+  buildRosterPreview_,
 } = logicContext;
 const codeGs = readFileSync(new URL('../fee-collector/Code.gs', import.meta.url), 'utf8');
 const indexHtml = readFileSync(new URL('../fee-collector/Index.html', import.meta.url), 'utf8');
@@ -94,6 +98,86 @@ function simulateTriggerInstall(existingTrigger) {
   };
   vm.runInNewContext(`${logicSource}\n${codeGs}`, context);
   return { result: context.installMemberLookupTrigger(), created, formats };
+}
+
+function createRosterSheet(rows) {
+  const values = rows.map((row) => [...row]);
+  const formulas = new Map();
+  const ensure = (row, column) => {
+    while (values.length < row) values.push([]);
+    while (values[row - 1].length < column) values[row - 1].push('');
+  };
+  return {
+    values,
+    getLastRow: () => values.length,
+    getMaxRows: () => 1000,
+    getDataRange: () => ({ getValues: () => values.map((row) => [...row]) }),
+    appendRow(row) { values.push([...row]); },
+    getRange(row, column, rowCount = 1, columnCount = 1) {
+      return {
+        getValues() {
+          return Array.from({ length: rowCount }, (_, rowOffset) =>
+            Array.from({ length: columnCount }, (_, colOffset) =>
+              values[row + rowOffset - 1]?.[column + colOffset - 1] ?? ''
+            )
+          );
+        },
+        getValue() { return values[row - 1]?.[column - 1] ?? ''; },
+        getDisplayValue() { return String(values[row - 1]?.[column - 1] ?? ''); },
+        getFormula() { return formulas.get(`${row}:${column}`) || ''; },
+        setValue(value) { ensure(row, column); values[row - 1][column - 1] = value; },
+        setValues(rowsToSet) {
+          rowsToSet.forEach((line, rowOffset) => line.forEach((value, colOffset) => {
+            ensure(row + rowOffset, column + colOffset);
+            values[row + rowOffset - 1][column + colOffset - 1] = value;
+          }));
+        },
+        setFormula(value) { formulas.set(`${row}:${column}`, value); },
+      };
+    },
+  };
+}
+
+function createRosterApiFixture({ participants, receipts, members } = {}) {
+  const make = (headers, rows = []) => createRosterSheet([headers, ...rows]);
+  const sheets = new Map([
+    ['試合会計', make(['試合ID', '日付', '対戦相手', '場所', '費用', 'その他', '合計', '人数', '徴収額', '実徴収額/人'], [
+      ['G1', '2026/10/07', 'Opponent', 'Venue', 0, 0, 0, 0, 0, 300],
+    ])],
+    ['集金_試合', make(['試合ID', '日付', '対戦相手', '場所', '集合時刻', '試合時刻', 'グラウンド費', '状態', 'メモ'], [
+      ['G1', '2026/10/07', 'Opponent', 'Venue', '', '', 0, '予定', ''],
+    ])],
+    ['集金_参加者', make(['試合ID', '選手ID', '選手名', '参加費', '対象', '請求額', '受領額', '残額', 'メモ'], participants || [])],
+    ['集金_受領履歴', make(['受領ID', '試合ID', '選手ID', '選手名', '受領日時', '金額', '支払方法', '状態', 'メモ'], receipts || [])],
+    ['メンバー', make(['メンバーID', '名前', '区分', '会費', '入金額', '未払い額', '状態', '背番号'], members || [])],
+    ['メンバー請求', make(['請求ID', 'メンバーID', '名前', '種類', '関連ID', '請求日', '請求額', '入金額（請求管理用）', '未払い額', '状態', '最終入金日'])],
+    ['取引台帳', make(['取引ID', '日付', '種別', 'カテゴリ', '内容', '金額', '口座', '対象者', '関連ID', '方法', '集計額', '状態', 'メモ'])],
+  ]);
+  const target = {
+    getSheetByName: (name) => sheets.get(name) || null,
+    getUrl: () => 'https://docs.google.com/spreadsheets/d/accounting/edit',
+    setSpreadsheetTimeZone() {},
+  };
+  const masterSheet = make(['選手ID', '背番号', '氏名', '表示名'], [
+    ['001', '23', '渡部 琉斗', '渡部琉斗'],
+    ['002', '4', '渡邉 匠', '渡邉'],
+  ]);
+  const master = { getSheetByName: (name) => name === '選手マスター' ? masterSheet : null };
+  const properties = new Map();
+  const context = {
+    SpreadsheetApp: {
+      openById: (id) => id === '1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4' ? master : target,
+      flush() {},
+    },
+    LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
+    PropertiesService: { getScriptProperties: () => ({
+      getProperty: (key) => properties.get(key) || null,
+      setProperty: (key, value) => properties.set(key, value),
+    }) },
+    Utilities: { formatDate: (date) => String(date), getUuid: () => 'uuid-test' },
+  };
+  vm.runInNewContext(`${logicSource}\n${codeGs}`, context);
+  return { context, sheets, masterSheet };
 }
 
 function simulateInvoiceNameEdit(invoiceName, memberRows, masterRows, invoiceIds = ['', ''], invoiceNames = [invoiceName, invoiceName], invoiceMemberIds = ['', '']) {
@@ -540,4 +624,278 @@ test('games listed in 試合会計 appear in the collector with operational stat
 
   assert.deepEqual(games.map((game) => [game.id, game.status]), [['G1', '完了'], ['G2', '予定']]);
   assert.equal(games[1].location, '球場B');
+});
+
+test('copy-ready roster lines preserve jersey, full name, and uncertainty', () => {
+  assert.equal(typeof parseRosterPaste_, 'function');
+  assert.deepEqual(JSON.parse(JSON.stringify(parseRosterPaste_('#23 渡部 琉斗\n00\t河野 聖人\n? 4 渡邉 匠'))), [
+    { lineNumber: 1, jerseyNumber: '23', name: '渡部 琉斗', uncertain: false },
+    { lineNumber: 2, jerseyNumber: '00', name: '河野 聖人', uncertain: false },
+    { lineNumber: 3, jerseyNumber: '4', name: '渡邉 匠', uncertain: true },
+  ]);
+});
+
+test('roster identity normalization ignores whitespace', () => {
+  assert.equal(typeof normalizeRosterIdentity_, 'function');
+  assert.equal(normalizeRosterIdentity_(' 渡部　琉斗 '), '渡部琉斗');
+});
+
+test('roster candidate matches by both jersey and full name', () => {
+  assert.equal(typeof matchRosterCandidate_, 'function');
+  const result = matchRosterCandidate_({ jerseyNumber: '23', name: '渡部琉斗' }, [
+    ['選手ID', '背番号', '氏名', '表示名'],
+    ['001', '23', '渡部 琉斗', '渡部琉斗'],
+    ['023', '4', '渡邉 匠', '渡邉'],
+  ]);
+  assert.deepEqual(JSON.parse(JSON.stringify(result)), {
+    status: 'matched', playerId: '001', jerseyNumber: '23', name: '渡部 琉斗',
+  });
+});
+
+test('conflicting name and jersey stays unresolved', () => {
+  assert.equal(typeof matchRosterCandidate_, 'function');
+  const result = matchRosterCandidate_({ jerseyNumber: '4', name: '渡部琉斗' }, [
+    ['選手ID', '背番号', '氏名', '表示名'],
+    ['001', '23', '渡部 琉斗', '渡部琉斗'],
+    ['002', '4', '渡邉 匠', '渡邉'],
+  ]);
+  assert.equal(result.status, 'conflict');
+});
+
+test('ambiguous roster names and duplicate master jerseys are not guessed', () => {
+  assert.equal(typeof matchRosterCandidate_, 'function');
+  const duplicateNames = matchRosterCandidate_({ jerseyNumber: '', name: '渡部' }, [
+    ['選手ID', '背番号', '氏名'], ['001', '23', '渡部 琉斗'], ['017', '13', '渡部 瑶士'],
+  ]);
+  assert.equal(duplicateNames.status, 'ambiguous');
+  const duplicateJerseys = matchRosterCandidate_({ jerseyNumber: '23', name: '' }, [
+    ['選手ID', '背番号', '氏名'], ['001', '23', '渡部 琉斗'], ['041', '23', '別の選手'],
+  ]);
+  assert.equal(duplicateJerseys.status, 'ambiguous');
+});
+
+test('roster preview proposes additions and absences for the selected game', () => {
+  assert.equal(typeof buildRosterPreview_, 'function');
+  const preview = buildRosterPreview_(
+    { id: 'G1', status: '予定' },
+    [{ jerseyNumber: '4', name: '渡邉 匠', uncertain: false }],
+    [['選手ID', '背番号', '氏名'], ['001', '23', '渡部 琉斗'], ['002', '4', '渡邉 匠']],
+    [['G1', '001', '渡部 琉斗', 300, '対象', 300, 0, 300, '']],
+    []
+  );
+  assert.deepEqual(JSON.parse(JSON.stringify(preview.additions)), [
+    { playerId: '002', jerseyNumber: '4', name: '渡邉 匠' },
+  ]);
+  assert.deepEqual(JSON.parse(JSON.stringify(preview.absences)), [
+    { playerId: '001', name: '渡部 琉斗', blocked: false },
+  ]);
+  assert.equal(preview.readyToConfirm, true);
+});
+
+test('roster preview blocks absent players who have an active receipt and does not mutate inputs', () => {
+  assert.equal(typeof buildRosterPreview_, 'function');
+  const participants = [['G1', '001', '渡部 琉斗', 300, '対象', 300, 300, 0, '']];
+  const receipts = [['R1', 'G1', '001', '渡部 琉斗', '2026/10/07', 300, '現金', '有効', '']];
+  const before = JSON.stringify([participants, receipts]);
+  const preview = buildRosterPreview_(
+    { id: 'G1', status: '予定' }, [],
+    [['選手ID', '背番号', '氏名'], ['001', '23', '渡部 琉斗']], participants, receipts
+  );
+  assert.deepEqual(JSON.parse(JSON.stringify(preview.absences)), [
+    { playerId: '001', name: '渡部 琉斗', blocked: true },
+  ]);
+  assert.equal(preview.readyToConfirm, false);
+  assert.equal(JSON.stringify([participants, receipts]), before);
+});
+
+test('roster import resolves an existing emergency member by name without a jersey', () => {
+  const result = matchRosterCandidate_({ jerseyNumber: '', name: '緊急参加者' }, [
+    ['選手ID', '背番号', '氏名'], ['001', '23', '渡部 琉斗'],
+  ], [
+    ['メンバーID', '名前'], ['E003', '緊急 参加者'],
+  ]);
+  assert.deepEqual(JSON.parse(JSON.stringify(result)), {
+    status: 'matched', playerId: 'E003', jerseyNumber: '', name: '緊急 参加者', emergency: true,
+  });
+});
+
+test('roster import accepts player master data rows without a header row', () => {
+  const result = matchRosterCandidate_({ jerseyNumber: '23', name: '渡部琉斗' }, [
+    ['001', '23', '渡部 琉斗', '渡部琉斗'],
+  ]);
+  assert.equal(result.status, 'matched');
+  assert.equal(result.playerId, '001');
+});
+
+test('empty pasted roster cannot confirm an absence proposal', () => {
+  const preview = buildRosterPreview_(
+    { id: 'G1', status: '予定' }, [], [['選手ID', '背番号', '氏名']],
+    [['G1', '001', '渡部 琉斗', 300, '対象', 300, 0, 300, '']], [],
+    [['メンバーID', '名前']]
+  );
+  assert.equal(preview.readyToConfirm, false);
+});
+
+test('roster preview includes an unmatched name only after explicit emergency selection', () => {
+  const args = [
+    { id: 'G1', status: '予定' },
+    [{ lineNumber: 1, jerseyNumber: '', name: '臨時参加者', uncertain: false }],
+    [['選手ID', '背番号', '氏名']], [], [], [['メンバーID', '名前']],
+  ];
+  const unresolved = buildRosterPreview_(...args);
+  const confirmedAsEmergency = buildRosterPreview_(...args, [1]);
+  assert.equal(unresolved.readyToConfirm, false);
+  assert.equal(confirmedAsEmergency.readyToConfirm, true);
+  assert.deepEqual(JSON.parse(JSON.stringify(confirmedAsEmergency.additions)), [
+    { playerId: '', jerseyNumber: '', name: '臨時参加者', emergency: true },
+  ]);
+});
+
+test('server roster preview matches the player master and does not write any sheet', () => {
+  const { context, sheets } = createRosterApiFixture();
+  assert.equal(typeof context.previewRosterImport, 'function');
+  const before = JSON.stringify([...sheets].map(([name, sheet]) => [name, sheet.values]));
+  const preview = context.previewRosterImport({ gameId: 'G1', rosterText: '23 渡部 琉斗' });
+  assert.equal(preview.readyToConfirm, true);
+  assert.equal(preview.additions[0].playerId, '001');
+  assert.equal(JSON.stringify([...sheets].map(([name, sheet]) => [name, sheet.values])), before);
+});
+
+test('server rejects a roster preview for an unknown game', () => {
+  const { context } = createRosterApiFixture();
+  assert.equal(typeof context.previewRosterImport, 'function');
+  assert.throws(() => context.previewRosterImport({ gameId: 'UNKNOWN', rosterText: '23 渡部 琉斗' }), /試合が見つかりません/);
+});
+
+test('confirmed roster writes are idempotent and reconcile one member invoice', () => {
+  const { context, sheets } = createRosterApiFixture();
+  assert.equal(typeof context.previewRosterImport, 'function');
+  assert.equal(typeof context.applyConfirmedRoster, 'function');
+  const payload = { gameId: 'G1', rosterText: '23 渡部 琉斗' };
+  const preview = context.previewRosterImport(payload);
+  const confirmation = { ...payload, previewFingerprint: preview.previewFingerprint };
+  const first = context.applyConfirmedRoster(confirmation);
+  const second = context.applyConfirmedRoster(confirmation);
+  const participantRows = sheets.get('集金_参加者').values.slice(1);
+  const invoiceRows = sheets.get('メンバー請求').values.slice(1).filter((row) => row[0]);
+  assert.equal(first.ok, true);
+  assert.equal(second.alreadyApplied, true);
+  assert.equal(participantRows.length, 1);
+  assert.equal(participantRows[0][1], '001');
+  assert.equal(invoiceRows.length, 1);
+  assert.equal(invoiceRows[0][1], 'M001');
+});
+
+test('confirmed roster cannot mark a player absent when an active receipt exists', () => {
+  const { context, sheets } = createRosterApiFixture({
+    participants: [['G1', '001', '渡部 琉斗', 300, '対象', 300, 300, 0, '']],
+    receipts: [['R1', 'G1', '001', '渡部 琉斗', '2026/10/07', 300, '現金', '有効', '']],
+  });
+  assert.equal(typeof context.previewRosterImport, 'function');
+  const payload = { gameId: 'G1', rosterText: '' };
+  const preview = context.previewRosterImport(payload);
+  assert.equal(preview.readyToConfirm, false);
+  assert.equal(preview.absences[0].blocked, true);
+  assert.throws(() => context.applyConfirmedRoster({ ...payload, previewFingerprint: preview.previewFingerprint }), /受領済み/);
+  assert.equal(sheets.get('集金_参加者').values[1][4], '対象');
+  assert.equal(sheets.get('集金_受領履歴').values[1][7], '有効');
+});
+
+test('emergency app participant receives a persistent E ID without a master player row', () => {
+  const { context, sheets, masterSheet } = createRosterApiFixture();
+  assert.equal(typeof context.addEmergencyParticipant, 'function');
+  const result = context.addEmergencyParticipant({ gameId: 'G1', name: '臨時参加者' });
+  assert.equal(result.playerId, 'E001');
+  assert.equal(sheets.get('集金_参加者').values[1][1], 'E001');
+  assert.equal(sheets.get('メンバー').values[1][0], 'E001');
+  assert.equal(masterSheet.values.some((row) => row[2] === '臨時参加者'), false);
+});
+
+test('emergency participant invoice keeps its E finance ID and stored name', () => {
+  const { context, sheets } = createRosterApiFixture({
+    participants: [['G1', 'E003', '緊急 参加者', 300, '対象', 300, 0, 300, '']],
+    members: [['E003', '緊急 参加者', '', '', '', '', '', '']],
+  });
+  context.reconcileMemberInvoice_(context.getSpreadsheet_(), 'G1', 'E003');
+  const invoice = sheets.get('メンバー請求').values[1];
+  assert.equal(invoice[1], 'E003');
+  assert.equal(invoice[2], '緊急 参加者');
+  assert.equal(invoice[6], 300);
+});
+
+test('absent participant invoice is retained with a zero balance due', () => {
+  const { context, sheets } = createRosterApiFixture({
+    participants: [['G1', '001', '渡部 琉斗', 0, '欠席', 0, 0, 0, '当日欠席']],
+  });
+  context.reconcileMemberInvoice_(context.getSpreadsheet_(), 'G1', '001');
+  const invoice = sheets.get('メンバー請求').values[1];
+  assert.equal(invoice[1], 'M001');
+  assert.equal(invoice[6], 0);
+});
+
+test('stale roster confirmation is rejected without changing the newer participant state', () => {
+  const { context, sheets } = createRosterApiFixture();
+  const payload = { gameId: 'G1', rosterText: '23 渡部 琉斗' };
+  const preview = context.previewRosterImport(payload);
+  sheets.get('集金_参加者').values.push(['G1', '002', '渡邉 匠', 300, '対象', 300, 0, 300, '別端末で追加']);
+  assert.throws(() => context.applyConfirmedRoster({ ...payload, previewFingerprint: preview.previewFingerprint }), /変わりました/);
+  assert.equal(sheets.get('集金_参加者').values[1][4], '対象');
+});
+
+test('cancelled receipt history remains when its participant is marked absent', () => {
+  const { context, sheets } = createRosterApiFixture({
+    participants: [['G1', '001', '渡部 琉斗', 300, '対象', 300, 0, 300, '']],
+    receipts: [['R1', 'G1', '001', '渡部 琉斗', '2026/10/07', 300, '現金', '取消', '取消済み']],
+  });
+  const payload = { gameId: 'G1', rosterText: '4 渡邉 匠' };
+  const preview = context.previewRosterImport(payload);
+  assert.equal(preview.readyToConfirm, true);
+  context.applyConfirmedRoster({ ...payload, previewFingerprint: preview.previewFingerprint });
+  assert.equal(sheets.get('集金_受領履歴').values[1][0], 'R1');
+  assert.equal(sheets.get('集金_受領履歴').values[1][7], '取消');
+  assert.equal(sheets.get('集金_参加者').values[1][4], '欠席');
+});
+
+test('attendance actions mark absent and restore a participant through server reconciliation', () => {
+  const { context } = createRosterApiFixture({
+    participants: [['G1', '001', '渡部 琉斗', 300, '対象', 300, 0, 300, '']],
+  });
+  const absentState = context.markParticipantAbsent({ gameId: 'G1', playerId: '001' });
+  assert.equal(absentState.participants.length, 0);
+  assert.deepEqual(JSON.parse(JSON.stringify(absentState.absentParticipants)), [
+    { playerId: '001', name: '渡部 琉斗', jerseyNumber: '23' },
+  ]);
+  const restoredState = context.restoreParticipantAttendance({ gameId: 'G1', playerId: '001' });
+  assert.equal(restoredState.participants.length, 1);
+  assert.equal(restoredState.participants[0].charge, 300);
+});
+
+test('emergency entry refuses a name already in the player master', () => {
+  const { context, sheets } = createRosterApiFixture();
+  assert.throws(() => context.addEmergencyParticipant({ gameId: 'G1', name: '渡部 琉斗' }), /選手マスター/);
+  assert.equal(sheets.get('集金_参加者').values.length, 1);
+});
+
+test('phone app provides paste, preview, and explicit roster confirmation controls', () => {
+  assert.match(indexHtml, /id="rosterText"/);
+  assert.match(indexHtml, /id="previewRosterButton"/);
+  assert.match(indexHtml, /id="rosterPreview"/);
+  assert.match(appHtml, /\.previewRosterImport\(/);
+  assert.match(appHtml, /\.applyConfirmedRoster\(/);
+});
+
+test('phone app exposes separate emergency name entry and server allocation', () => {
+  assert.match(indexHtml, /id="emergencyName"/);
+  assert.match(appHtml, /\.addEmergencyParticipant\(/);
+});
+
+test('phone app can mark unpaid participants absent and restore them', () => {
+  assert.match(indexHtml, /id="absentList"/);
+  assert.match(appHtml, /\.markParticipantAbsent\(/);
+  assert.match(appHtml, /\.restoreParticipantAttendance\(/);
+});
+
+test('roster review controls remain large enough for phone use', () => {
+  assert.match(stylesHtml, /\.roster-control[\s\S]*?min-height:\s*52px/);
+  assert.match(stylesHtml, /\.attendance-action[\s\S]*?min-height:\s*44px/);
 });
