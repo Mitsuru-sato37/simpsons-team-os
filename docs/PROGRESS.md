@@ -1,18 +1,18 @@
 # Progress
 
-Status: Phone/cloud roster-intake design drafted; awaiting user review (no implementation started)
+Status: Phone/cloud roster-intake design approved; implementation plan awaiting user review (no implementation started)
 Last updated: 2026-10-07
 
 ## Current handoff — mobile/cloud roster intake
 
 - Active branch: `codex/fee-collector-cloud-roster`, based on `codex/fee-collector-roster-picker` (PR #13 remains open).
-- User approved the direction: use a phone to provide a lineup or scorebook image, match known players against the player master, review uncertain identities, and write attendance only after confirmation. Handle last-minute additions and absences from the phone app.
-- Design draft: `docs/superpowers/specs/2026-10-07-fee-collector-mobile-cloud-roster-design.md`. No application code or tests have been changed. Review the design with the user first; after approval, write a concrete implementation plan and wait for its approval before implementation.
+- User approved the design: use a phone to provide a lineup or scorebook image, match known players against the player master, review uncertain identities, and write attendance only after confirmation. Handle last-minute additions and absences from the phone app.
+- Implementation plan: `docs/superpowers/plans/2026-10-07-fee-collector-mobile-cloud-roster.md`. No application code or product tests have been changed. Wait for the user's plan review before implementation.
 - Required capability check before implementation: confirm the cloud task can receive/read the supplied image, access the player master and Simpsons会計 through connected tools, and call a safe, idempotent attendance-write path. Do not fall back to local-PC files or add a paid OCR/cloud service.
 - Emergency participants need stable, server-assigned finance `E###` identities without creating fake player-master records. The app must also safely handle absence/removal and block removal when an active receipt exists.
 - Live Simpsons会計 match, participant, and invoice records were cleared at the user's explicit request on 2026-10-07. Finance tabs, headers/formulas, member roster, and player master remain. No current game is registered; no payment was entered. The old ledger stays as backup.
-- Verification performed for this design-only change: documentation review and `git diff --check` (no product tests run).
-- Next: commit/push the design and handoff documents, ask the user to review the design, then proceed to implementation planning only after approval.
+- Verification performed for the plan-only change: plan/spec coverage review and `git diff --check` (no product tests run).
+- Next: commit/push the implementation plan and handoff documents, then implement only after the user approves the plan and the cloud/write capability gate passes.
 
 ## Active fee-collector work
 
