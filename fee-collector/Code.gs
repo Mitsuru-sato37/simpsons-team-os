@@ -199,6 +199,77 @@ function getSpreadsheet_() {
   return SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
 }
 
+function installMemberLookupTrigger() {
+  const ss = getSpreadsheet_();
+  const membersSheet = ss.getSheetByName(CONFIG.MEMBERS);
+  membersSheet.getRange(2, 8, membersSheet.getMaxRows() - 1, 1).setNumberFormat('@');
+  const installed = ScriptApp.getProjectTriggers().some((trigger) =>
+    trigger.getHandlerFunction() === 'handleMemberRosterEdit' &&
+    trigger.getTriggerSourceId() === CONFIG.SPREADSHEET_ID
+  );
+  if (installed) return 'メンバー照合トリガーは設定済みです。';
+
+  ScriptApp.newTrigger('handleMemberRosterEdit')
+    .forSpreadsheet(ss)
+    .onEdit()
+    .create();
+  return 'メンバー照合トリガーを設定しました。';
+}
+
+function handleMemberRosterEdit(e) {
+  if (!e || !e.range || !e.source || e.source.getId() !== CONFIG.SPREADSHEET_ID) return;
+  const range = e.range;
+  const sheet = range.getSheet();
+  const column = range.getColumn();
+  if (sheet.getName() !== CONFIG.MEMBERS || range.getNumColumns() !== 1 ||
+      ![1, 2, 8].includes(column) || range.getLastRow() < 2) return;
+
+  const field = column === 1 ? 'memberId' : column === 2 ? 'name' : 'jerseyNumber';
+  const masterRows = getPlayerMasterRows_();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  let notFound = 0;
+  let ambiguous = 0;
+  let matched = 0;
+
+  try {
+    for (let row = Math.max(2, range.getRow()); row <= range.getLastRow(); row += 1) {
+      const editedCell = sheet.getRange(row, column);
+      const input = String(editedCell.getDisplayValue() || '').trim();
+      if (!input) continue;
+
+      const result = resolveMemberLookup_(masterRows, field, input);
+      if (result.status === 'matched') {
+        sheet.getRange(row, 1, 1, 2).setValues([[result.memberId, result.name]]);
+        sheet.getRange(row, 8).setValue(result.jerseyNumber);
+        editedCell.clearNote();
+        matched += 1;
+        continue;
+      }
+
+      if (column !== 1) sheet.getRange(row, 1).clearContent();
+      if (column !== 2) sheet.getRange(row, 2).clearContent();
+      if (column !== 8) sheet.getRange(row, 8).clearContent();
+      editedCell.setNote(result.status === 'ambiguous'
+        ? '同じ値に一致する選手が複数います。背番号など別の値で検索してください。'
+        : '選手マスターに一致する選手がありません。入力値を確認してください。');
+      if (result.status === 'ambiguous') ambiguous += 1;
+      else notFound += 1;
+    }
+  } finally {
+    lock.releaseLock();
+  }
+
+  if (ambiguous || notFound) {
+    const message = ambiguous
+      ? '同じ値に一致する選手が複数います。背番号など別の値で入力してください。'
+      : '選手マスターに一致しません。入力値を確認してください。';
+    e.source.toast(message, 'メンバー照合', 5);
+  } else if (matched) {
+    e.source.toast('名前・背番号・メンバーIDを選手マスターから反映しました。', 'メンバー照合', 3);
+  }
+}
+
 function getPlayerMasterRows_() {
   const ss = SpreadsheetApp.openById(CONFIG.PLAYER_MASTER_SPREADSHEET_ID);
   const sheet = ss.getSheetByName(CONFIG.PLAYER_MASTER_SHEET);

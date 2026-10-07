@@ -51,6 +51,7 @@ The repository's first operational feature is the Google Apps Script fee collect
 - For each game, attendance is registered in `集金_参加者` using `試合ID` and `選手ID`; the app continues resolving names and jersey numbers from the player master. The web app does not yet provide a roster picker or attendee-registration UI.
 - A successful receipt updates `メンバー請求`, `取引台帳`, and `試合会計`; dashboard formulas aggregate those records. Cancellation keeps the receipt and marks linked accounting entries cancelled.
 - Finance `メンバーID` values are internal keys. The app maps roster IDs `001`–`050` to `M001`–`M050`, while synchronizing player-master names and jersey numbers into the finance member directory. People are identified operationally by name/jersey number, not by finance IDs.
+- In `メンバー`, manually entering one of the member ID, name, or jersey-number fields completes the other two from the player master. This uses an installable edit trigger because the master is in a separate spreadsheet; the Apps Script owner authorizes and installs the trigger once. Ambiguous or missing matches are not guessed. Jersey numbers are stored as text to preserve values such as `00`.
 - Receipts are append-only records. Cancellation changes the status to `取消` and never deletes the row.
 - Completing a game selects the next open game in sheet order; manual selection remains available for past and future games.
 - Completed and cancelled games remain selectable for review, but cannot be marked complete again from either the UI or the server action.

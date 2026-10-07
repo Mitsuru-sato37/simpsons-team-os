@@ -21,6 +21,35 @@ function toFeeMemberId_(playerId) {
   return numericId >= 1 && numericId <= 50 ? 'M' + normalized : null;
 }
 
+function resolveMemberLookup_(rows, field, value) {
+  const input = String(value === null || value === undefined ? '' : value).trim();
+  if (!input) return { status: 'not_found' };
+
+  let matches;
+  if (field === 'memberId') {
+    const playerId = input.toUpperCase().replace(/^M/, '').replace(/^P/, '');
+    const memberId = toFeeMemberId_(playerId);
+    matches = memberId ? (rows || []).filter((row) => toFeeMemberId_(row[0]) === memberId) : [];
+  } else if (field === 'name') {
+    const nameKey = input.replace(/\s+/g, ' ');
+    matches = (rows || []).filter((row) => String(row[2] || '').trim().replace(/\s+/g, ' ') === nameKey);
+  } else if (field === 'jerseyNumber') {
+    matches = (rows || []).filter((row) => String(row[1] === null || row[1] === undefined ? '' : row[1]).trim() === input);
+  } else {
+    return { status: 'invalid_field' };
+  }
+
+  matches = matches.filter((row) => row[0] && (row[2] || row[1]));
+  if (!matches.length) return { status: 'not_found' };
+  if (matches.length !== 1) return { status: 'ambiguous' };
+
+  const player = resolveMasterPlayer_([matches[0]], matches[0][0]);
+  if (!player) return { status: 'not_found' };
+  const memberId = toFeeMemberId_(player.playerId);
+  if (!memberId) return { status: 'not_found' };
+  return { status: 'matched', playerId: player.playerId, memberId, name: player.name, jerseyNumber: player.jerseyNumber };
+}
+
 function isPaymentMethodAllowed_(method) {
   return ['現金', 'PayPay', '銀行振込'].includes(String(method || ''));
 }
