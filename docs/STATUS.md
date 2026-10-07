@@ -1,6 +1,6 @@
 # Status
 
-Status: Mobile/cloud roster intake implementation plan drafted; awaiting user review
+Status: Implementation plan approved; cloud attendance-write boundary is blocked
 Last updated: 2026-10-07
 
 This file is the stable cross-PC handoff entry point. See `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md` for project context and history.
@@ -12,7 +12,8 @@ This file is the stable cross-PC handoff entry point. See `docs/PROJECT_CONTEXT.
 - The user requested a phone-friendly cloud process: attach a lineup or scorebook image, review player matches and uncertain names, confirm attendance, then handle same-day additions or absences from the phone.
 - The user approved the design in `docs/superpowers/specs/2026-10-07-fee-collector-mobile-cloud-roster-design.md`. The implementation plan is at `docs/superpowers/plans/2026-10-07-fee-collector-mobile-cloud-roster.md`. No implementation or product tests have started; the user must review the plan before code changes.
 - On 2026-10-07, the user authorized clearing all current match, participant, and invoice records in `Simpsons会計`. Those records are now empty; the six finance tabs, operational tabs/headers/formulas, member roster, and player master remain. The legacy ledger is retained as backup.
-- Cloud image/Sheets connector availability and safe write guarantees are not yet verified. Emergency attendee identity must use server-assigned finance IDs without fabricating a player-master record.
+- Read access to both Google Sheets is confirmed. The connected tools do not expose Apps Script execution or an authenticated, lock-aware attendance writer. Direct Sheets writes would bypass locking, E-ID allocation, and invoice/match reconciliation; do not implement the import writer until a safe path is selected.
+- Emergency attendee identity must use server-assigned finance IDs without fabricating a player-master record.
 
 ## Active branch
 
@@ -20,7 +21,7 @@ This file is the stable cross-PC handoff entry point. See `docs/PROJECT_CONTEXT.
 
 ## Next
 
-Commit and push the implementation plan and handoff notes, then ask the user to review the plan. After approval, first verify cloud image/Sheets connector access and the Apps Script attendance-write boundary. If those capabilities or safe writes are unavailable, report the constraint and adjust the approach before changing the application.
+The user approved the plan. Before code changes, resolve the missing safe write path: either provide an authenticated route to the Apps Script attendance operation, or revise the workflow to a user-mediated path inside the existing app. The current sheet state was not modified during the capability check.
 
 ## Handoff requirements
 

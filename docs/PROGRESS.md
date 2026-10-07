@@ -1,6 +1,6 @@
 # Progress
 
-Status: Phone/cloud roster-intake design approved; implementation plan awaiting user review (no implementation started)
+Status: Plan approved; safe cloud attendance writer is blocked (no product code changed)
 Last updated: 2026-10-07
 
 ## Current handoff — mobile/cloud roster intake
@@ -8,11 +8,13 @@ Last updated: 2026-10-07
 - Active branch: `codex/fee-collector-cloud-roster`, based on `codex/fee-collector-roster-picker` (PR #13 remains open).
 - User approved the design: use a phone to provide a lineup or scorebook image, match known players against the player master, review uncertain identities, and write attendance only after confirmation. Handle last-minute additions and absences from the phone app.
 - Implementation plan: `docs/superpowers/plans/2026-10-07-fee-collector-mobile-cloud-roster.md`. No application code or product tests have been changed. Wait for the user's plan review before implementation.
-- Required capability check before implementation: confirm the cloud task can receive/read the supplied image, access the player master and Simpsons会計 through connected tools, and call a safe, idempotent attendance-write path. Do not fall back to local-PC files or add a paid OCR/cloud service.
+- Capability check: connected Google Sheets tools successfully read metadata and bounded ranges from `Simpsons会計` and `Simpsons_選手マスター`; target accounting timezone is `Asia/Tokyo` and the operational tab headers are present. This confirms read access only.
+- Blocking dependency: no Apps Script execution tool or authenticated lock-aware writer callback is exposed to the cloud task. A direct Sheets API write would bypass Apps Script `LockService`, emergency `E###` allocation, and `メンバー請求`/`試合会計` reconciliation. A new anonymous write endpoint would increase the risk of the existing anyone-with-URL deployment. No live cell values were changed.
+- Do not start Tasks 2–4 until the user selects a safe write path. Options to discuss: provide an authenticated route to the Apps Script operation, or revise to a user-mediated flow that confirms and applies attendance only inside the existing app. Do not fall back to local-PC files or add a paid OCR/cloud service.
 - Emergency participants need stable, server-assigned finance `E###` identities without creating fake player-master records. The app must also safely handle absence/removal and block removal when an active receipt exists.
 - Live Simpsons会計 match, participant, and invoice records were cleared at the user's explicit request on 2026-10-07. Finance tabs, headers/formulas, member roster, and player master remain. No current game is registered; no payment was entered. The old ledger stays as backup.
 - Verification performed for the plan-only change: plan/spec coverage review and `git diff --check` (no product tests run).
-- Next: commit/push the implementation plan and handoff documents, then implement only after the user approves the plan and the cloud/write capability gate passes.
+- Next: ask the user which safe write path to use, update the approved plan/spec accordingly, then resume implementation only when the write boundary is clear.
 
 ## Active fee-collector work
 
