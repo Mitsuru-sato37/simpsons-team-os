@@ -12,7 +12,7 @@ Last updated: 2026-10-07
 - Source implements idempotent legacy migration, per-match charges from `試合会計!J`, receipt/transaction/invoice/match-accounting projections, cancellation reversal, and retained lock-based duplicate prevention.
 - Verification so far: `node --test tests/fee-collector-logic.test.mjs` (31 passed); Apps Script source parse passed; `git diff --check` passed. Live sheet headers, roster rows, timezone, and dashboard formulas were read back.
 - The user's clarification was that people are known by jersey number or name. Finance IDs are therefore internal only; source roster IDs `001`–`050` map deterministically to `M001`–`M050`, and the finance member directory receives the player-master names and jersey numbers. User-facing screens continue to show names and jersey numbers.
-- Next: complete final diff/review, commit and push the branch, then open and attach a PR. The Apps Script deployment has not been changed. Keep the old ledger as a backup. The integration is not yet deployed, committed, or pushed.
+- Current delivery: commit `89bd49d` is pushed on `codex/fee-collector-accounting-integration`; PR #10 targets `main` and is attached to the task. The Apps Script deployment has not been changed and remains version 8. Next step after PR review/merge is deploying and smoke-checking the new app without recording a real payment. Keep the old ledger as a backup.
 
 ## Completed
 
