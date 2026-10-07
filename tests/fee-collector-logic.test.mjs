@@ -15,6 +15,7 @@ const {
   resolveGameCharge_,
   resolveParticipantCharge_,
   toFeeMemberId_,
+  resolveMemberLookup_,
   resolveMasterPlayer_,
   buildFeeInvoiceId_,
   filterLegacyRows_,
@@ -29,6 +30,68 @@ const documentation = [
   readFileSync(new URL('../docs/PROGRESS.md', import.meta.url), 'utf8'),
   readFileSync(new URL('../fee-collector/README.md', import.meta.url), 'utf8'),
 ].join('\n');
+
+function simulateMemberEdit(column, value, masterRows) {
+  const cells = new Map([[`${2}:${column}`, String(value)]]);
+  const notes = new Map();
+  const toasts = [];
+  const sheet = {
+    getName: () => 'メンバー',
+    getRange(row, col, rowCount, columnCount) {
+      if (rowCount && columnCount) {
+        return { setValues: (values) => values.forEach((line, rowOffset) => line.forEach((item, colOffset) => {
+          cells.set(`${row + rowOffset}:${col + colOffset}`, item);
+        })) };
+      }
+      const key = `${row}:${col}`;
+      return {
+        getDisplayValue: () => cells.get(key) || '',
+        setValue: (item) => cells.set(key, item),
+        clearContent: () => cells.set(key, ''),
+        clearNote: () => notes.delete(key),
+        setNote: (note) => notes.set(key, note),
+      };
+    },
+  };
+  const source = { getId: () => '1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ', toast: (...args) => toasts.push(args) };
+  const context = {
+    SpreadsheetApp: { openById: () => ({ getSheetByName: () => ({ getDataRange: () => ({ getValues: () => masterRows }) }) }) },
+    LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
+  };
+  vm.runInNewContext(`${logicSource}\n${codeGs}`, context);
+  context.handleMemberRosterEdit({
+    source,
+    range: { getSheet: () => sheet, getColumn: () => column, getNumColumns: () => 1, getRow: () => 2, getLastRow: () => 2 },
+  });
+  return { cells, notes, toasts };
+}
+
+function simulateTriggerInstall(existingTrigger) {
+  const created = [];
+  const formats = [];
+  const ss = {
+    getSheetByName: () => ({
+      getMaxRows: () => 1000,
+      getRange: (...args) => ({ setNumberFormat: (format) => formats.push([args, format]) }),
+    }),
+  };
+  const context = {
+    SpreadsheetApp: { openById: () => ss },
+    ScriptApp: {
+      getProjectTriggers: () => existingTrigger ? [{
+        getHandlerFunction: () => 'handleMemberRosterEdit',
+        getTriggerSourceId: () => '1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ',
+      }] : [],
+      newTrigger: (handler) => ({
+        forSpreadsheet: () => ({
+          onEdit: () => ({ create: () => created.push(handler) }),
+        }),
+      }),
+    },
+  };
+  vm.runInNewContext(`${logicSource}\n${codeGs}`, context);
+  return { result: context.installMemberLookupTrigger(), created, formats };
+}
 
 const games = [
   { id: 'G1', status: '完了' },
@@ -193,6 +256,65 @@ test('finance member snapshots retain the player name and jersey number for huma
   assert.match(codeGs, /sheet\.getRange\(row, 8\)\.setValue\(jerseyNumber\)/);
   assert.match(codeGs, /sheet\.getRange\(row, 3\)\.setValue\(name\)/);
   assert.match(codeGs, /syncPlayerMasterMembers_\(ss\)/);
+});
+
+test('member lookup fills the finance identity from a unique master name or jersey number', () => {
+  const roster = [
+    ['001', '23', '渡部 琉斗'],
+    ['002', '4', '渡邉 匠'],
+  ];
+  assert.deepEqual(JSON.parse(JSON.stringify(resolveMemberLookup_(roster, 'name', '渡部 琉斗'))), {
+    status: 'matched', playerId: '001', memberId: 'M001', name: '渡部 琉斗', jerseyNumber: '23',
+  });
+  assert.deepEqual(JSON.parse(JSON.stringify(resolveMemberLookup_(roster, 'jerseyNumber', '4'))), {
+    status: 'matched', playerId: '002', memberId: 'M002', name: '渡邉 匠', jerseyNumber: '4',
+  });
+  assert.deepEqual(JSON.parse(JSON.stringify(resolveMemberLookup_(roster, 'memberId', 'M002'))), {
+    status: 'matched', playerId: '002', memberId: 'M002', name: '渡邉 匠', jerseyNumber: '4',
+  });
+});
+
+test('member lookup refuses missing or ambiguous names and jersey numbers', () => {
+  const roster = [
+    ['001', '23', '佐藤 太郎'],
+    ['002', '7', '別人'],
+    ['003', '23', '佐藤 太郎'],
+  ];
+  assert.deepEqual(JSON.parse(JSON.stringify(resolveMemberLookup_(roster, 'name', '佐藤 太郎'))), { status: 'ambiguous' });
+  assert.deepEqual(JSON.parse(JSON.stringify(resolveMemberLookup_(roster, 'jerseyNumber', '23'))), { status: 'ambiguous' });
+  assert.deepEqual(JSON.parse(JSON.stringify(resolveMemberLookup_(roster, 'name', '不在'))), { status: 'not_found' });
+});
+
+test('finance member edits use an installed trigger and resolve IDs, names, and jersey numbers', () => {
+  assert.match(codeGs, /function installMemberLookupTrigger\(\)/);
+  assert.match(codeGs, /getRange\(2, 8, membersSheet\.getMaxRows\(\) - 1, 1\)\.setNumberFormat\('@'\)/);
+  assert.match(codeGs, /ScriptApp\.newTrigger\('handleMemberRosterEdit'\)/);
+  assert.match(codeGs, /function handleMemberRosterEdit\(e\)/);
+  assert.match(codeGs, /resolveMemberLookup_\(/);
+});
+
+test('trigger installation is idempotent and preserves jersey numbers as text', () => {
+  const first = simulateTriggerInstall(false);
+  assert.deepEqual(first.created, ['handleMemberRosterEdit']);
+  assert.equal(first.formats[0][1], '@');
+  assert.match(first.result, /設定しました/);
+
+  const existing = simulateTriggerInstall(true);
+  assert.deepEqual(existing.created, []);
+  assert.match(existing.result, /設定済み/);
+});
+
+test('editing a name or jersey number fills all three finance identity fields from the master', () => {
+  const master = [['選手ID', '背番号', '氏名'], ['001', '23', '渡部 琉斗'], ['002', '00', '河野 聖人']];
+  const byName = simulateMemberEdit(2, '渡部 琉斗', master);
+  assert.equal(byName.cells.get('2:1'), 'M001');
+  assert.equal(byName.cells.get('2:2'), '渡部 琉斗');
+  assert.equal(byName.cells.get('2:8'), '23');
+
+  const byJersey = simulateMemberEdit(8, '00', master);
+  assert.equal(byJersey.cells.get('2:1'), 'M002');
+  assert.equal(byJersey.cells.get('2:2'), '河野 聖人');
+  assert.equal(byJersey.cells.get('2:8'), '00');
 });
 
 test('fee invoice key is stable for the same game and player', () => {
