@@ -17,6 +17,7 @@ const {
   toFeeMemberId_,
   resolveMemberLookup_,
   resolveMasterPlayer_,
+  searchMasterPlayers_,
   buildFeeInvoiceId_,
   filterLegacyRows_,
 } = logicContext;
@@ -99,6 +100,24 @@ const games = [
   { id: 'G3', status: '予定' },
   { id: 'G4', status: '中止' },
 ];
+
+test('searches players by jersey number or partial name without exposing internal IDs in labels', () => {
+  const results = searchMasterPlayers_([
+    ['P023', '23', '渡部 琉斗'],
+    ['P004', '4', '佐藤 太郎'],
+  ], '23');
+  assert.equal(results.length, 1);
+  assert.deepEqual({ jerseyNumber: results[0].jerseyNumber, name: results[0].name },
+    { jerseyNumber: '23', name: '渡部 琉斗' });
+  assert.equal(searchMasterPlayers_([['P023', '23', '渡部 琉斗']], '渡部')[0].name, '渡部 琉斗');
+});
+
+test('participant picker is present and submits selected master player to the server', () => {
+  assert.match(indexHtml, /playerSearch/);
+  assert.match(appHtml, /\.searchPlayers\(/);
+  assert.match(appHtml, /\.addParticipant\(/);
+  assert.match(codeGs, /function addParticipant\(/);
+});
 
 test('selects the first open game after the completed game', () => {
   assert.equal(pickNextOpenGame_(games, 'G2').id, 'G3');

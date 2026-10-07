@@ -42,6 +42,36 @@ function getBootstrap(preferredGameId) {
   return buildState_(games, selected ? selected.id : null);
 }
 
+function searchPlayers(query) {
+  return searchMasterPlayers_(getPlayerMasterRows_(), query);
+}
+
+function addParticipant(payload) {
+  if (!payload || !payload.gameId || !payload.playerId) throw new Error('試合と選手を指定してください。');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss = getSpreadsheet_();
+    ensureFeeCollectorSchema_(ss);
+    const game = getGames_().find((item) => item.id === String(payload.gameId));
+    if (!game) throw new Error('試合が見つかりません。');
+    if (!isOpenGame_(game)) throw new Error('完了または中止した試合には参加者を追加できません。');
+    const player = resolveMasterPlayer_(getPlayerMasterRows_(), payload.playerId);
+    if (!player) throw new Error('選手マスターに見つかりません。背番号か名前で検索し直してください。');
+    if (findParticipantRow_(ss, game.id, player.playerId)) throw new Error('この試合にはすでに登録されています。');
+    const charge = getGameCharge_(ss, game.id);
+    ss.getSheetByName(CONFIG.SHEET_PARTICIPANTS).appendRow([
+      game.id, player.playerId, player.name, charge || '', '対象', charge || '', 0, charge || '', 'アプリから登録',
+    ]);
+    reconcileMemberInvoice_(ss, game.id, player.playerId);
+    reconcileMatchAccounting_(ss, game.id);
+    SpreadsheetApp.flush();
+    return buildState_(getGames_(), game.id);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function recordPayment(payload) {
   if (!payload || !payload.gameId || !payload.playerId) {
     throw new Error('試合と選手を指定してください。');

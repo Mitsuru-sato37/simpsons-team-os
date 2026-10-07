@@ -1,9 +1,11 @@
 # Progress
 
-Status: Simpsons会計統合に続く、選手マスターからのメンバー欄自動補完を実装中
+Status: 背番号・名前による集金アプリの参加者登録を実装中
 Last updated: 2026-10-07
 
 ## Fee collector accounting integration (active)
+
+- Active branch: `codex/fee-collector-roster-picker`, based on `origin/main`. Added participant search and registration by jersey number or player name; internal master IDs are used only by the app after selection. The server enforces open-game status and duplicate prevention, then reconciles member invoice and match accounting. Targeted tests pass (38); full-suite verification and push remain.
 
 - Active follow-up branch: `codex/fee-member-autofill`, based on pushed integration branch `codex/fee-collector-accounting-integration` (PR #10).
 - App source now targets `Simpsons会計` (`1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ`) and preserves its six accounting tabs. Operational tabs `集金_試合`, `集金_参加者`, and `集金_受領履歴` were added with headers matching the Apps Script schema.

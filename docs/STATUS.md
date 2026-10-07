@@ -1,6 +1,6 @@
 # Status
 
-Status: Active cross-PC handoff entry point; member identity auto-fill follow-up in progress
+Status: Active cross-PC handoff entry point; participant picker follow-up in progress
 Last updated: 2026-10-07
 
 This file is the stable handoff entry point. Detailed project context and progress remain authoritative in `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md`.
@@ -19,11 +19,11 @@ This file is the stable handoff entry point. Detailed project context and progre
 
 Update this field at the end of each meaningful development session.
 
-`codex/fee-member-autofill` (in progress; based on PR #10)
+`codex/fee-collector-roster-picker` (in progress; based on origin/main)
 
 ## Next
 
-Review/merge PR #10 and stacked PR #11, then deploy the Apps Script, run `installMemberLookupTrigger` once as owner, and smoke-check name/jersey lookup without recording a payment. The legacy ledger remains a backup. Other follow-ups: the player photo library inbox is empty, and the official logo file still needs confirmation. The home-screen icon task is complete and confirmed on iPhone.
+Review and merge the participant picker branch, update the Apps Script deployment, then smoke-check jersey/name search and registration on a real open game. The current sheet has no test games; do not write a sample transaction. The legacy ledger remains a backup.
 
 ## Required handoff update
 

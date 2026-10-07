@@ -10,6 +10,22 @@ function resolveMasterPlayer_(rows, playerId) {
   };
 }
 
+function searchMasterPlayers_(rows, query) {
+  const input = String(query === null || query === undefined ? '' : query).trim().toLocaleLowerCase();
+  if (!input) return [];
+  const candidates = (rows || []).filter((row) => row[0] && (row[1] || row[2])).map((row) => ({
+    playerId: String(row[0]),
+    jerseyNumber: String(row[1] || ''),
+    name: String(row[2] || ''),
+  }));
+  const jerseyMatches = candidates.filter((player) => player.jerseyNumber.trim().toLocaleLowerCase() === input);
+  const matches = jerseyMatches.length ? jerseyMatches : candidates.filter((player) =>
+    player.name.trim().toLocaleLowerCase().includes(input) ||
+    player.jerseyNumber.trim().toLocaleLowerCase().includes(input)
+  );
+  return matches.slice(0, 10);
+}
+
 function normalizeMasterPlayerId_(playerId) {
   return String(playerId || '').trim().replace(/^P/i, '').padStart(3, '0');
 }
