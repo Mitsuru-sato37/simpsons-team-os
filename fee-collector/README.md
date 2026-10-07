@@ -55,7 +55,7 @@ The operational app tabs are `集金_試合`, `集金_参加者`, and `集金_�
 
 ## リポジトリからApps Scriptへ同期
 
-このフォルダの `.clasp.json` は既存の「Simpsons 当日集金」Apps Scriptプロジェクトを指します。同期前に、作業ブランチのソースを確認してください。
+このフォルダの `.clasp.json` は既存の「Simpsons 当日集金」Apps Scriptプロジェクトを指し、`.claspignore` は Apps Script 用の6ソースだけを同期対象にします。同期前に、作業ブランチのソースを確認してください。
 
 1. Node.jsを用意し、このフォルダで `npx @google/clasp login` を実行してGoogleアカウントを認証する。
 2. `npx @google/clasp push` で `.gs` / `.html` / `appsscript.json` を既存プロジェクトへ反映する。
