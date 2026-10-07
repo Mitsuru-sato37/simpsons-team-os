@@ -6,6 +6,7 @@ Last updated: 2026-10-07
 ## Active fee-collector work
 
 - Active branch: `codex/fee-collector-roster-picker`, pushed to GitHub; [PR #13](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/13) is open and mergeable. The branch includes the roster picker, accounting name lookup, and emergency participant IDs.
+- 2026-10-07 follow-up: User approved the ¥300 default and startup optimization. Existing Apps Script deployment was updated to version 11 at the same deployment ID and URL. Source changes are recorded locally; commit/push are still pending.
 - The live `メンバー請求` name column has the 40 player names in a dropdown and accepts unlisted text. A live edit test resolved `渡部 琉斗` to `M001`, and a separate emergency-name test created an `E` ID in both the invoice and member table. Disposable test rows were cleared afterward; no payment was entered. The accidental name selector on `メンバー` remains removed.
 - Source behavior: editing the name in a blank invoice row resolves roster members to their `M` ID. An unregistered emergency name gets a stable `E001`-style ID, is added to `メンバー` without a jersey, and reuses that ID on later invoices with the same name. A locked sequence counter prevents reusing IDs if a row is removed. App-generated rows with an invoice ID are protected from this edit handler.
 - Current local verification before the live sync: `node --test tests/*.test.mjs` — 56 passed; `git diff --check` passed. A stale-ID case after clearing a manual invoice name is covered by a regression test.
@@ -23,12 +24,14 @@ Last updated: 2026-10-07
 ## Read-only operational audit (2026-10-07)
 
 - `node --test tests/*.test.mjs`: 56 passed. Live finance and player-master sheets both have 40 roster rows; all 40 `M` member IDs match master names and jersey numbers, including jersey `00`. No duplicate master IDs, jersey numbers, names, or finance member IDs were found. Accounting timezone is `Asia/Tokyo`.
-- The deployed app loads and displays the current one-game fixture. That game and its participant are explicitly labeled as display-test data; its per-person collection amount is blank, so the app correctly shows `請求額未設定` and offers no collection action. No real game or receipt is currently available to validate live payment/cancellation end to end.
+- The 2026-10-07 audit snapshot predates the 2026-09-26 real game and roster entry described in the latest handoff below.
 - `メンバー請求` contains the same `FEE-TEST-DEMO-20261007-P001` invoice ID on two rows with different member IDs; one row does not match the only participant (`P001`). This is a stale/inconsistent demo invoice row; there are no receipt rows or transaction rows, and no payment total is currently affected. It was left untouched pending an explicit cleanup decision.
 - Dashboard, transaction, and invoice formula ranges returned no formula errors. The live app remains configured to execute as owner and allow anyone with the URL, as previously approved; it has no sign-in gate.
 - No spreadsheet rows were changed during this audit. Before real collection, remove or correct the display-test game and duplicate invoice, register a real game/participant, and set that game's `実徴収額/人`.
 
 ## Completed
+
+- 2026-10-07: User approved setting the default per-person charge to ¥300, with match-specific amounts taking precedence, and removing migration/reconciliation work from normal app startup. Applied ¥300 to the 2026-09-26 Mercuries game (11 participants; expected total ¥3,300; no receipts entered). Source changes make bootstrap read-only apart from one-time filling of blank match charges, add an explicit `initializeFeeCollector` maintenance entry point, and reuse each game's charge instead of rereading all accounting games for every participant. Documentation and existing contract assertions were updated. Syntax and whitespace checks passed; tests were not run. Existing Apps Script deployment was updated to version 11 at the same deployment ID and URL. Live verification showed the 2026-09-26 game with 11 people, ¥300 each, ¥3,300 expected, and no received amount. Commit/push remain pending.
 
 - 2026-10-07: Added a `台帳を開く` link to the fee collector source. The app obtains the URL from the spreadsheet it actually uses, including Script Properties overrides, and opens it in a separate tab. Updated the existing Apps Script web app deployment to version 8, keeping the deployment ID, URL, execute-as-owner setting, and access setting unchanged. Verified from the GitHub Pages entry that the link appears and opens `Simpsons_集金台帳_試作版` in a new tab; no payment action or sheet edit was performed. The app showed no registered games during this verification.
 

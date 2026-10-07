@@ -494,7 +494,7 @@ test('payments use only the outstanding balance and synchronize accounting proje
   assert.match(recordPayment, /resolveGameCharge_\(/);
   assert.match(recordPayment, /const amount = outstanding/);
   assert.match(recordPayment, /syncReceiptAccounting_\(/);
-  assert.doesNotMatch(codeGs, /DEFAULT_FEE/);
+  assert.match(codeGs, /BASE_PER_PERSON_CHARGE:\s*300/);
 });
 
 test('cancellation retains the receipt and reverses its linked financial projections', () => {
@@ -508,10 +508,10 @@ test('cancellation retains the receipt and reverses its linked financial project
   assert.doesNotMatch(cancelReceipt, /deleteRow\(/);
 });
 
-test('unconfigured game charges show a clear participant state without payment buttons', () => {
+test('the app applies a 300-yen default while preserving match-specific overrides', () => {
+  assert.match(codeGs, /resolveGameCharge_\(row\[9\]\) \|\| CONFIG\.BASE_PER_PERSON_CHARGE/);
+  assert.match(codeGs, /row\[9\] = CONFIG\.BASE_PER_PERSON_CHARGE/);
   assert.match(codeGs, /chargeConfigured:\s*resolveGameCharge_\(charge\) !== null/);
-  assert.match(appHtml, /!player\.chargeConfigured/);
-  assert.match(appHtml, /請求額未設定/);
 });
 
 test('legacy migration uses stable keys and skips rows already copied or repeated in source', () => {

@@ -11,6 +11,7 @@ const CONFIG = Object.freeze({
   PLAYER_MASTER_SHEET: '選手マスター',
   PLAYER_MASTER_SPREADSHEET_ID: '1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4',
   TIME_ZONE: 'Asia/Tokyo',
+  BASE_PER_PERSON_CHARGE: 300,
   PAYMENT_METHODS: ['現金', 'PayPay', '銀行振込'],
 });
 
@@ -33,13 +34,19 @@ function include(filename) {
 
 function getBootstrap(preferredGameId) {
   const ss = getSpreadsheet_();
-  ensureFeeCollectorSchema_(ss);
-  syncPlayerMasterMembers_(ss);
-  migrateLegacyFeeData_(ss);
-  reconcileAccounting_(ss);
   const games = getGames_();
   const selected = pickGame_(games, preferredGameId);
   return buildState_(games, selected ? selected.id : null);
+}
+
+function initializeFeeCollector() {
+  const ss = getSpreadsheet_();
+  ensureFeeCollectorSchema_(ss);
+  syncPlayerMasterMembers_(ss);
+  const migration = migrateLegacyFeeData_(ss);
+  reconcileAccounting_(ss);
+  SpreadsheetApp.flush();
+  return migration;
 }
 
 function searchPlayers(query) {
@@ -356,7 +363,7 @@ function getAccountingGameRow_(ss, gameId) {
 
 function getGameCharge_(ss, gameId) {
   const row = getAccountingGameRow_(ss, gameId);
-  return row ? resolveGameCharge_(row[9]) : null;
+  return row ? (resolveGameCharge_(row[9]) || CONFIG.BASE_PER_PERSON_CHARGE) : null;
 }
 
 function getParticipantCharge_(ss, participantRow) {
@@ -699,7 +706,23 @@ function getGames_() {
   const operations = ss.getSheetByName(CONFIG.SHEET_GAMES);
   if (!accounting) throw new Error('「試合会計」タブがありません。');
   if (!operations) throw new Error('「集金_試合」タブがありません。');
-  return projectGames_(accounting.getDataRange().getValues(), operations.getDataRange().getValues())
+  const accountingRows = accounting.getDataRange().getValues();
+  const defaultedRows = accountingRows.slice(1).map((sourceRow) => {
+    const row = [...sourceRow];
+    if (!row[0] || resolveGameCharge_(row[9]) !== null) return row;
+    row[9] = CONFIG.BASE_PER_PERSON_CHARGE;
+    return row;
+  });
+  const defaultsWereApplied = defaultedRows.some((row, index) => row[9] !== accountingRows[index + 1][9]);
+  if (defaultsWereApplied) {
+    accounting.getRange(2, 10, defaultedRows.length, 1)
+      .setValues(defaultedRows.map((row) => [row[9]]));
+  }
+  return projectGames_(
+    [accountingRows[0], ...defaultedRows],
+    operations.getDataRange().getValues(),
+    CONFIG.BASE_PER_PERSON_CHARGE
+  )
     .map((game) => ({ ...game, date: formatCellDate_(game.date) }));
 }
 
@@ -762,7 +785,7 @@ function buildState_(games, gameId) {
     .map((row) => {
       const playerId = String(row[1]);
       const masterPlayer = resolveMasterPlayer_(masterRows, playerId);
-      const charge = getParticipantCharge_(ss, row);
+      const charge = resolveParticipantCharge_(selected.charge, row[5]);
       const playerReceipts = receiptsByPlayer[playerId] || [];
       const receivedAmount = playerReceipts.reduce(
         (sum, receipt) => sum + receipt.amount,

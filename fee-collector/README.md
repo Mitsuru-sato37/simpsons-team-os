@@ -13,6 +13,8 @@ Simpsonsの試合参加費を、試合当日にスマホから受領確認する
 
 The existing accounting tabs (`ダッシュボード`, `取引台帳`, `試合会計`, `メンバー請求`, `会費管理`, `メンバー`) remain the finance source of truth. The app adds `集金_試合`, `集金_参加者`, and `集金_受領履歴` for operational data. A receipt updates the member invoice, transaction ledger, match accounting, and dashboard formulas; cancellation retains the receipt and reverses its active accounting projections. The legacy spreadsheet stays available as a backup.
 
+The default charge is ¥300 per person. A value entered in `試合会計` → `実徴収額/人` overrides that default for the match. A blank match charge is filled with ¥300 the first time the app loads the game.
+
 必要なタブとヘッダー:
 
 | タブ | ヘッダー |
@@ -34,7 +36,7 @@ The operational app tabs are `集金_試合`, `集金_参加者`, and `集金_�
 - 画面右上の `台帳を開く` から、アプリが接続中の集金台帳スプレッドシートを別タブで開ける。
 - 試合完了後は、現在の試合より後の最初の未完了試合へ移動。後続がなければ先頭の未完了試合へ戻る。
 - 過去・未来の試合はプルダウンから手動選択できる。時刻だけでは切り替えない。
-- 未収者を上に固定し、現金・PayPay・銀行振込とも残額全額を記録する。請求額が試合会計に未設定の場合は「請求額未設定」と表示し、受領操作を出さない。
+- 未収者を上に固定し、現金・PayPay・銀行振込とも残額全額を記録する。試合ごとの実徴収額が未設定なら基本額300円を適用し、試合会計の値を設定した場合はそちらを優先する。
 - PayPayと銀行振込は履歴・入金を確認したうえで手動記録する。API連携はしない。
 - 受領後は受領票を表示でき、直後の「取り消す」で取消できる。
 - 同じ試合・同じ選手の二重受領は、Apps Scriptロックと有効受領の再確認で防ぐ。
@@ -50,8 +52,9 @@ The operational app tabs are `集金_試合`, `集金_参加者`, and `集金_�
 2. **拡張機能 → Apps Script** を開く。
 3. このフォルダの `Code.gs`、`Logic.gs`、`Index.html`、`Styles.html`、`App.html`、`appsscript.json` をApps Scriptプロジェクトへ作成する。
 4. スタンドアロンApps Scriptでも、接続先は `Code.gs` の `SPREADSHEET_ID` で指定する。旧台帳IDは移行元として別設定されている。
-5. `installMemberLookupTrigger` を一度実行し、シート編集と選手マスター読取の権限を許可する。インストール型編集トリガーは、作成したアカウントの権限で動作する。
-6. **デプロイ → 新しいデプロイ → ウェブアプリ** から試作アクセスを自分だけにして公開する。
+5. 初回または移行・名簿同期を行うときだけ `initializeFeeCollector` を実行する。日常のアプリ表示では実行しない。
+6. `installMemberLookupTrigger` を一度実行し、シート編集と選手マスター読取の権限を許可する。インストール型編集トリガーは、作成したアカウントの権限で動作する。
+7. **デプロイ → 新しいデプロイ → ウェブアプリ** から試作アクセスを自分だけにして公開する。
 
 ## リポジトリからApps Scriptへ同期
 

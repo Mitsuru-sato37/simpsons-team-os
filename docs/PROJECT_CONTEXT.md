@@ -47,7 +47,7 @@ The repository's first operational feature is the Google Apps Script fee collect
 - Player master spreadsheet ID: `1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4`
 - Player master sheet: `選手マスター`; source columns are `選手ID`, `背番号`, and `氏名`.
 - Participant rows may retain legacy `P001`-style IDs; the app normalizes them against the master ID and displays the master `背番号` and `氏名`.
-- Payment channels are cash, PayPay, and bank transfer. The app reads the per-game charge from `試合会計` column J (`実徴収額/人`) and blocks collection when it is unset; there is no fixed 300-yen app default.
+- Payment channels are cash, PayPay, and bank transfer. The app uses `試合会計` column J (`実徴収額/人`) when set; otherwise it applies the shared default of ¥300 per person and records that default in the match row. A match-specific amount overrides the default.
 - Attendance can be added in the web app by searching the player master with a jersey number or name and selecting the matching player. The app resolves the internal player ID and stores it in `集金_参加者`; users do not need to know or enter IDs. Duplicate players and additions to completed/cancelled games are rejected.
 - A successful receipt updates `メンバー請求`, `取引台帳`, and `試合会計`; dashboard formulas aggregate those records. Cancellation keeps the receipt and marks linked accounting entries cancelled.
 - Finance `メンバーID` values are internal keys. The app maps roster IDs `001`–`050` to `M001`–`M050`, while synchronizing player-master names and jersey numbers into the finance member directory. People are identified operationally by name/jersey number, not by finance IDs.

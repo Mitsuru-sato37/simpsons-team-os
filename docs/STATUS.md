@@ -1,6 +1,6 @@
 # Status
 
-Status: Active cross-PC handoff entry point; fee-collector accounting integration and emergency member IDs deployed and live-tested
+Status: Active cross-PC handoff entry point; fee-collector startup optimization and ¥300 default charge deployed (version 11)
 Last updated: 2026-10-07
 
 This file is the stable handoff entry point. Detailed project context and progress remain authoritative in `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md`.
@@ -14,7 +14,8 @@ This file is the stable handoff entry point. Detailed project context and progre
 - Local source resolves roster names to existing `M` IDs and assigns emergency names persistent `E001`-style IDs in blank invoice rows. It adds emergency members without jersey numbers, reuses IDs by name, and does not alter app-generated invoices. The live Apps Script source was synchronized, and a live edit confirmed `渡部 琉斗` mapped to `M001` and a free-typed emergency name mapped to `E002` in both tables. Both disposable rows were cleared; no payment was made.
 - Local verification: `node --test tests/*.test.mjs` passed (56 tests); `git diff --check` passed. Direct fetch was blocked by `.git` sandbox restrictions, but push and PR creation succeeded through approved GitHub access.
 - The existing `handleMemberRosterEdit` installable trigger remains in place; no duplicate trigger was installed. The existing deployment is version 10 at the same deployment ID and URL. The old ledger remains a backup and the spreadsheet timezone is `Asia/Tokyo`.
-- The 2026-10-07 read-only audit found a duplicate demo invoice ID with different member IDs, one orphaned relative to the sole display-test participant. The current app fixture has no per-person charge and correctly blocks collection. No receipt/transaction rows or formula errors were found; the invoice was left unchanged pending cleanup direction.
+- A real 2026-09-26 game roster has 11 participants. Its per-person charge is now set to ¥300; expected total is ¥3,300. No receipt has been entered.
+- Version 11 removes migration, roster synchronization, and full accounting reconciliation from routine startup. It applies ¥300 to blank match charges and preserves explicit match-specific values. The 2026-09-26 live app view showed 11 participants, ¥3,300 expected, and ¥0 received; no payment was recorded.
 
 ## Active branch
 

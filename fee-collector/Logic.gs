@@ -205,7 +205,7 @@ function filterLegacyRows_(kind, sourceRows, existingRows) {
   return result;
 }
 
-function projectGames_(accountingRows, operationalRows) {
+function projectGames_(accountingRows, operationalRows, defaultCharge) {
   const operationsById = {};
   (operationalRows || []).slice(1).forEach((row) => {
     if (row[0]) operationsById[String(row[0])] = row;
@@ -224,6 +224,7 @@ function projectGames_(accountingRows, operationalRows) {
         groundFee: Number(operational[6] || 0),
         status: String(operational[7] || '予定'),
         memo: String(operational[8] || ''),
+        charge: resolveGameCharge_(row[9]) || resolveGameCharge_(defaultCharge),
       };
     });
 }
