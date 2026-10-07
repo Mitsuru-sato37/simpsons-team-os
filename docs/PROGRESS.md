@@ -1,7 +1,18 @@
 # Progress
 
-Status: player photo asset management has been added to the Instagram module; shared Drive catalog initialized, original photos untouched
-Last updated: 2026-10-06
+Status: Simpsons会計への集金統合を実装中。選手IDと会計メンバーIDの内部対応を実装中
+Last updated: 2026-10-07
+
+## Fee collector accounting integration (active)
+
+- Branch: `codex/fee-collector-accounting-integration`, based on the existing fee collector branch.
+- App source now targets `Simpsons会計` (`1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ`) and preserves its six accounting tabs. Operational tabs `集金_試合`, `集金_参加者`, and `集金_受領履歴` were added with headers matching the Apps Script schema.
+- The target spreadsheet timezone is verified as `Asia/Tokyo`. Dashboard formulas now cover through row 1000. The finance member tab has a `背番号` column and is populated with 40 player-master records (`M001`–`M040`, names, and jersey numbers); the six original tabs remain present.
+- The legacy spreadsheet (`1yVT9_c1RVdnosvZlN3r2bse6B3NtJo9JvKDggqDI61E`) remains untouched. Read-only inspection found zero populated game, participant, or receipt rows to migrate.
+- Source implements idempotent legacy migration, per-match charges from `試合会計!J`, receipt/transaction/invoice/match-accounting projections, cancellation reversal, and retained lock-based duplicate prevention.
+- Verification so far: `node --test tests/fee-collector-logic.test.mjs` (31 passed); Apps Script source parse passed; `git diff --check` passed. Live sheet headers, roster rows, timezone, and dashboard formulas were read back.
+- The user's clarification was that people are known by jersey number or name. Finance IDs are therefore internal only; source roster IDs `001`–`050` map deterministically to `M001`–`M050`, and the finance member directory receives the player-master names and jersey numbers. User-facing screens continue to show names and jersey numbers.
+- Next: complete final diff/review, commit and push the branch, then open and attach a PR. The Apps Script deployment has not been changed. Keep the old ledger as a backup. The integration is not yet deployed, committed, or pushed.
 
 ## Completed
 
