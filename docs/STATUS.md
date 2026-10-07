@@ -1,39 +1,27 @@
 # Status
 
-Status: Active cross-PC handoff entry point; fee-collector startup optimization and ¥300 default charge deployed (version 11)
+Status: Mobile/cloud roster intake design drafted; awaiting user review
 Last updated: 2026-10-07
 
-This file is the stable handoff entry point. Detailed project context and progress remain authoritative in `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md`.
+This file is the stable cross-PC handoff entry point. See `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md` for project context and history.
 
 ## Current state
 
-- Repository initialized for cross-PC Codex development.
-- Durable Simpsons / ラキポタ context is recorded.
-- The active branch is `codex/fee-collector-roster-picker`, pushed to GitHub. [PR #13](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/13) is open and mergeable. It contains participant selection, accounting integration, roster lookup, and emergency member IDs.
-- The target `Simpsons会計` spreadsheet retains its six accounting tabs plus the fee-collector operational tabs. The live `メンバー請求` name column has the 40-name roster dropdown and allows typed names outside the list; the accidental dropdown on `メンバー` was removed.
-- Local source resolves roster names to existing `M` IDs and assigns emergency names persistent `E001`-style IDs in blank invoice rows. It adds emergency members without jersey numbers, reuses IDs by name, and does not alter app-generated invoices. The live Apps Script source was synchronized, and a live edit confirmed `渡部 琉斗` mapped to `M001` and a free-typed emergency name mapped to `E002` in both tables. Both disposable rows were cleared; no payment was made.
-- Local verification: `node --test tests/*.test.mjs` passed (56 tests); `git diff --check` passed. Direct fetch was blocked by `.git` sandbox restrictions, but push and PR creation succeeded through approved GitHub access.
-- The existing `handleMemberRosterEdit` installable trigger remains in place; no duplicate trigger was installed. The existing deployment is version 10 at the same deployment ID and URL. The old ledger remains a backup and the spreadsheet timezone is `Asia/Tokyo`.
-- A real 2026-09-26 game roster has 11 participants. Its per-person charge is now set to ¥300; expected total is ¥3,300. No receipt has been entered.
-- Version 11 removes migration, roster synchronization, and full accounting reconciliation from routine startup. It applies ¥300 to blank match charges and preserves explicit match-specific values. The 2026-09-26 live app view showed 11 participants, ¥3,300 expected, and ¥0 received; no payment was recorded.
+- Active branch: `codex/fee-collector-cloud-roster`, based on `codex/fee-collector-roster-picker` (PR #13 remains open).
+- The fee-collector Apps Script deployment remains version 11 at its existing URL. PR #13 includes roster selection, accounting integration, emergency member IDs, startup optimization, and the ¥300 default.
+- The user requested a phone-friendly cloud process: attach a lineup or scorebook image, review player matches and uncertain names, confirm attendance, then handle same-day additions or absences from the phone.
+- A design draft is at `docs/superpowers/specs/2026-10-07-fee-collector-mobile-cloud-roster-design.md`. No implementation or tests have started. The user must review this design before an implementation plan is written.
+- On 2026-10-07, the user authorized clearing all current match, participant, and invoice records in `Simpsons会計`. Those records are now empty; the six finance tabs, operational tabs/headers/formulas, member roster, and player master remain. The legacy ledger is retained as backup.
+- Cloud image/Sheets connector availability and safe write guarantees are not yet verified. Emergency attendee identity must use server-assigned finance IDs without fabricating a player-master record.
 
 ## Active branch
 
-Update this field at the end of each meaningful development session.
-
-`codex/fee-collector-roster-picker` (pushed; PR #13 open)
+`codex/fee-collector-cloud-roster` (worktree: `C:\Users\佐藤充\.codex\worktrees\fee-collector-cloud-roster\simpsons-team-os`)
 
 ## Next
 
-The Apps Script sync and version 10 deployment are complete. Google Sheet live testing confirmed roster-name lookup and emergency E-ID creation; the temporary rows are cleared. `E001` and `E002` were consumed by disposable tests, so the next emergency ID will be `E003` by design. The read-only audit found only the display-test game, no configured per-person charge, and a duplicate demo invoice row. No payment or sheet cleanup was performed. Next: review and merge PR #13, then resolve the duplicate/test fixture and register the first real game/fee before collection. The legacy ledger remains a backup.
+Commit and push the design draft and handoff notes, then ask the user to review the design. After approval, write an implementation plan and get approval before changing the application. Verify cloud image/Sheets connector access and the Apps Script attendance-write boundary before implementing. If those capabilities or safe writes are unavailable, report the constraint and adjust the design with the user.
 
-## Required handoff update
+## Handoff requirements
 
-Before ending a meaningful session:
-
-1. Update `docs/PROGRESS.md` with active branch, completed work, exact next task, verification, and blockers/dependencies.
-2. Update `docs/PROJECT_CONTEXT.md` if durable requirements changed.
-3. Update this file if the top-level state or active branch changed.
-4. Commit and push all intended changes.
-
-Codex chat history is optional context only; GitHub documentation must be sufficient to resume on another PC.
+Before ending a meaningful development session, update `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md`, commit and push intended changes, and keep this file aligned with the active branch and next task.

@@ -36,7 +36,7 @@ Known preferences:
 The repository's first operational feature is the Google Apps Script fee collector in `fee-collector/`.
 
 - Source repository: `Mitsuru-sato37/simpsons-team-os`
-- Active branch: `codex/fee-collector-roster-picker` (integration and roster-entry follow-up in progress)
+- Active design branch: `codex/fee-collector-cloud-roster`, based on pushed `codex/fee-collector-roster-picker` (PR #13 remains open)
 - Primary accounting spreadsheet: `Simpsons会計`
 - Primary spreadsheet ID: `1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ`
 - Existing accounting tabs retained: `ダッシュボード`, `取引台帳`, `試合会計`, `メンバー請求`, `会費管理`, `メンバー`
@@ -59,6 +59,9 @@ The repository's first operational feature is the Google Apps Script fee collect
 - PayPay is manually confirmed from the PayPay transfer history; there is no API integration.
 
 The current feature does not include roster-image recognition, automatic participant registration, or user authentication. The Apps Script deployment is intentionally accessible to anyone who has its URL and executes as the owner; it is not discoverable by public directory listing.
+
+- 2026-10-07: At the user's request, all current match, participant, and invoice records were cleared from `Simpsons会計` so attendance operations can be redesigned. Finance tabs, operational headers/formulas, member roster, and the player master remain; no game is currently registered in the collector ledger.
+- 2026-10-07: The user approved the direction for mobile/cloud roster intake: attach a lineup or scorebook image from a phone, match participants to the existing player master, review uncertain matches, and write attendance only after confirmation. Last-minute additions and absences should be manageable from the phone app. Draft design: `docs/superpowers/specs/2026-10-07-fee-collector-mobile-cloud-roster-design.md`. Implementation has not started; cloud connector access and safe write guarantees remain to be verified.
 
 - The fee collector uses the user-approved 180×180 Simpsons home-screen icon at `fee-collector/apple-touch-icon.png`. The Apps Script web app executes as the owner and is accessible to anyone with its URL. Since Apps Script HTML Service runs inside nested iframes, iPhone Home Screen installation uses the public GitHub Pages entry at `https://mitsuru-sato37.github.io/simpsons-team-os/`, which declares the icon in the top-level document and embeds the unchanged Apps Script app. The original app's `Index.html` also retains its inner-frame icon reference.
 - The fee collector provides a `台帳を開く` link to the spreadsheet currently connected to the Apps Script project; the URL comes from the active spreadsheet configuration rather than a hard-coded screen URL.
