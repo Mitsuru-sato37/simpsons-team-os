@@ -10,6 +10,22 @@ function resolveMasterPlayer_(rows, playerId) {
   };
 }
 
+function searchMasterPlayers_(rows, query) {
+  const input = String(query === null || query === undefined ? '' : query).trim().toLocaleLowerCase();
+  if (!input) return [];
+  const candidates = (rows || []).filter((row) => row[0] && (row[1] || row[2])).map((row) => ({
+    playerId: String(row[0]),
+    jerseyNumber: String(row[1] || ''),
+    name: String(row[2] || ''),
+  }));
+  const jerseyMatches = candidates.filter((player) => player.jerseyNumber.trim().toLocaleLowerCase() === input);
+  const matches = jerseyMatches.length ? jerseyMatches : candidates.filter((player) =>
+    player.name.trim().toLocaleLowerCase().includes(input) ||
+    player.jerseyNumber.trim().toLocaleLowerCase().includes(input)
+  );
+  return matches.slice(0, 10);
+}
+
 function normalizeMasterPlayerId_(playerId) {
   return String(playerId || '').trim().replace(/^P/i, '').padStart(3, '0');
 }
@@ -19,6 +35,36 @@ function toFeeMemberId_(playerId) {
   if (!/^\d{3}$/.test(normalized)) return null;
   const numericId = Number(normalized);
   return numericId >= 1 && numericId <= 50 ? 'M' + normalized : null;
+}
+
+function resolveEmergencyMemberId_(memberRows, name) {
+  const normalizedName = String(name || '').trim().replace(/\s+/g, '');
+  if (!normalizedName) return { status: 'not_found' };
+
+  const rows = (memberRows || []).filter((row) => /^E\d{3,}$/.test(String(row[0] || '')));
+  const matches = rows.filter((row) => String(row[1] || '').trim().replace(/\s+/g, '') === normalizedName);
+  if (matches.length > 1) return { status: 'ambiguous' };
+  if (matches.length === 1) {
+    return { status: 'matched', memberId: String(matches[0][0]), name: String(matches[0][1]) };
+  }
+
+  const nextNumber = rows.reduce((maximum, row) => {
+    const number = Number(String(row[0]).slice(1));
+    return Number.isFinite(number) ? Math.max(maximum, number) : maximum;
+  }, 0) + 1;
+  return { status: 'new', memberId: 'E' + String(nextNumber).padStart(3, '0'), name: String(name).trim() };
+}
+
+function reserveEmergencyMemberId_(memberRows, propertyStore) {
+  const nextNumberKey = 'emergency-member-next-id';
+  const recorded = Number(propertyStore.getProperty(nextNumberKey) || 1);
+  const nextFromSheet = (memberRows || []).reduce((maximum, row) => {
+    const match = String(row[0] || '').match(/^E(\d{3,})$/);
+    return match ? Math.max(maximum, Number(match[1]) + 1) : maximum;
+  }, 1);
+  const nextNumber = Math.max(Number.isFinite(recorded) ? recorded : 1, nextFromSheet);
+  propertyStore.setProperty(nextNumberKey, String(nextNumber + 1));
+  return 'E' + String(nextNumber).padStart(3, '0');
 }
 
 function resolveMemberLookup_(rows, field, value) {
@@ -31,8 +77,8 @@ function resolveMemberLookup_(rows, field, value) {
     const memberId = toFeeMemberId_(playerId);
     matches = memberId ? (rows || []).filter((row) => toFeeMemberId_(row[0]) === memberId) : [];
   } else if (field === 'name') {
-    const nameKey = input.replace(/\s+/g, ' ');
-    matches = (rows || []).filter((row) => String(row[2] || '').trim().replace(/\s+/g, ' ') === nameKey);
+    const nameKey = input.replace(/\s+/g, '');
+    matches = (rows || []).filter((row) => String(row[2] || '').trim().replace(/\s+/g, '') === nameKey);
   } else if (field === 'jerseyNumber') {
     matches = (rows || []).filter((row) => String(row[1] === null || row[1] === undefined ? '' : row[1]).trim() === input);
   } else {
@@ -159,7 +205,7 @@ function filterLegacyRows_(kind, sourceRows, existingRows) {
   return result;
 }
 
-function projectGames_(accountingRows, operationalRows) {
+function projectGames_(accountingRows, operationalRows, defaultCharge) {
   const operationsById = {};
   (operationalRows || []).slice(1).forEach((row) => {
     if (row[0]) operationsById[String(row[0])] = row;
@@ -178,6 +224,7 @@ function projectGames_(accountingRows, operationalRows) {
         groundFee: Number(operational[6] || 0),
         status: String(operational[7] || '予定'),
         memo: String(operational[8] || ''),
+        charge: resolveGameCharge_(row[9]) || resolveGameCharge_(defaultCharge),
       };
     });
 }

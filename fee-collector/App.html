@@ -12,6 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
   Object.assign(els, {
     gameSelect: document.getElementById('gameSelect'),
     gameMeta: document.getElementById('gameMeta'),
+    playerSearch: document.getElementById('playerSearch'),
+    playerSearchResults: document.getElementById('playerSearchResults'),
+    participantPicker: document.getElementById('participantPicker'),
+    participantPickerMessage: document.getElementById('participantPickerMessage'),
     summary: document.getElementById('summary'),
     unpaidList: document.getElementById('unpaidList'),
     unpaidCount: document.getElementById('unpaidCount'),
@@ -34,6 +38,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   els.gameSelect.addEventListener('change', () => load(els.gameSelect.value));
+  let searchTimer;
+  els.playerSearch.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    els.playerSearchResults.innerHTML = '';
+    const query = els.playerSearch.value.trim();
+    if (!query || !state.selectedGameId) {
+      els.participantPickerMessage.textContent = '背番号か名前を入力して選手を検索してください。';
+      return;
+    }
+    els.participantPickerMessage.textContent = '検索中…';
+    searchTimer = setTimeout(() => searchPlayers(query), 250);
+  });
   els.refreshButton.addEventListener('click', () => load(state.selectedGameId));
   els.receivedToggle.addEventListener('click', toggleReceived);
   els.cancelledToggle.addEventListener('click', toggleCancelled);
@@ -66,6 +82,53 @@ function render() {
   renderParticipants();
   renderReceived();
   renderCancelled();
+  renderParticipantPicker();
+}
+
+function renderParticipantPicker() {
+  const game = state.data.selectedGame;
+  const canAdd = game && game.status !== '完了' && game.status !== '中止';
+  els.playerSearch.disabled = !canAdd;
+  els.participantPickerMessage.textContent = canAdd
+    ? '背番号か名前を入力して選手を検索してください。'
+    : '参加者を追加できる試合が選択されていません。';
+  els.playerSearchResults.innerHTML = '';
+}
+
+function searchPlayers(query) {
+  google.script.run
+    .withSuccessHandler((players) => {
+      if (query !== els.playerSearch.value.trim()) return;
+      if (!players.length) {
+        els.playerSearchResults.innerHTML = '';
+        els.participantPickerMessage.textContent = '該当する選手がいません。背番号か名前を確認してください。';
+        return;
+      }
+      els.participantPickerMessage.textContent = '該当する選手を選んでください。';
+      els.playerSearchResults.innerHTML = players.map((player) =>
+        '<button class="search-result" type="button" data-player-id="' + escapeHtml(player.playerId) + '">' +
+        escapeHtml((player.jerseyNumber ? '#' + player.jerseyNumber + ' ' : '') + player.name) + '　追加</button>'
+      ).join('');
+      els.playerSearchResults.querySelectorAll('[data-player-id]').forEach((button) => {
+        button.addEventListener('click', () => addParticipant(button.dataset.playerId, button));
+      });
+    })
+    .withFailureHandler(handleError)
+    .searchPlayers(query);
+}
+
+function addParticipant(playerId, button) {
+  button.disabled = true;
+  google.script.run
+    .withSuccessHandler((data) => {
+      state.data = data;
+      state.selectedGameId = data.selectedGame ? data.selectedGame.id : null;
+      els.playerSearch.value = '';
+      render();
+      showToast('参加者を追加しました。');
+    })
+    .withFailureHandler((error) => { button.disabled = false; handleError(error); })
+    .addParticipant({ gameId: state.selectedGameId, playerId });
 }
 
 function renderGames() {

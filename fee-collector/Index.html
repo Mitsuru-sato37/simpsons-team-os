@@ -29,6 +29,14 @@
       <button id="completeGameButton" class="text-button" type="button">この試合を完了</button>
     </section>
 
+    <section id="participantPicker" class="section-block participant-picker">
+      <div class="section-heading"><div><p class="eyebrow">ROSTER</p><h2>参加者を追加</h2></div></div>
+      <label for="playerSearch">背番号か名前</label>
+      <input id="playerSearch" type="search" autocomplete="off" placeholder="背番号か名前を入力">
+      <div id="playerSearchResults" class="search-results" aria-live="polite"></div>
+      <div id="participantPickerMessage" class="picker-message">背番号か名前を入力して選手を検索してください。</div>
+    </section>
+
     <section id="summary" class="summary-grid" aria-label="集金状況"></section>
 
     <section class="section-block">

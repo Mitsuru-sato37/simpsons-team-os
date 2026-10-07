@@ -1,6 +1,6 @@
 # Status
 
-Status: Active cross-PC handoff entry point; member identity auto-fill follow-up in progress
+Status: Active cross-PC handoff entry point; fee-collector startup optimization and ¥300 default charge deployed (version 11)
 Last updated: 2026-10-07
 
 This file is the stable handoff entry point. Detailed project context and progress remain authoritative in `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md`.
@@ -9,21 +9,23 @@ This file is the stable handoff entry point. Detailed project context and progre
 
 - Repository initialized for cross-PC Codex development.
 - Durable Simpsons / ラキポタ context is recorded.
-- The existing Google Apps Script fee collector in `fee-collector/` is merged into `main`; the accounting integration and member auto-fill are proposed in stacked PRs #10 and #11.
-- [PR #10](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/10) contains the fee-collector accounting integration and targets `main`. [PR #11](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/11), commit `4314412` on `codex/fee-member-autofill`, adds automatic player-master completion of ID/name/jersey number in the accounting member tab and is based on PR #10. The app remains undeployed at version 8 until both changes are reviewed/merged and the installable trigger is authorized.
-- The collector now integrates with the native Google Sheets player master `1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4` for jersey numbers and names.
-- The deployed Apps Script web app remains at version 8 until this integration is completed and deployed. Its touch-device sizing, execute-as-owner behavior, and URL-based access are unchanged. The public GitHub Pages entry at `https://mitsuru-sato37.github.io/simpsons-team-os/` declares the adopted 180×180 Apple touch icon. The current fee collector still uses the previous ledger and fixed payment behavior until a new deployment is verified.
-- The live fee collector exposes `台帳を開く`, which opens the connected ledger spreadsheet in a new tab. This was confirmed from the GitHub Pages entry on 2026-10-07.
+- The active branch is `codex/fee-collector-roster-picker`, pushed to GitHub. [PR #13](https://github.com/Mitsuru-sato37/simpsons-team-os/pull/13) is open and mergeable. It contains participant selection, accounting integration, roster lookup, and emergency member IDs.
+- The target `Simpsons会計` spreadsheet retains its six accounting tabs plus the fee-collector operational tabs. The live `メンバー請求` name column has the 40-name roster dropdown and allows typed names outside the list; the accidental dropdown on `メンバー` was removed.
+- Local source resolves roster names to existing `M` IDs and assigns emergency names persistent `E001`-style IDs in blank invoice rows. It adds emergency members without jersey numbers, reuses IDs by name, and does not alter app-generated invoices. The live Apps Script source was synchronized, and a live edit confirmed `渡部 琉斗` mapped to `M001` and a free-typed emergency name mapped to `E002` in both tables. Both disposable rows were cleared; no payment was made.
+- Local verification: `node --test tests/*.test.mjs` passed (56 tests); `git diff --check` passed. Direct fetch was blocked by `.git` sandbox restrictions, but push and PR creation succeeded through approved GitHub access.
+- The existing `handleMemberRosterEdit` installable trigger remains in place; no duplicate trigger was installed. The existing deployment is version 10 at the same deployment ID and URL. The old ledger remains a backup and the spreadsheet timezone is `Asia/Tokyo`.
+- A real 2026-09-26 game roster has 11 participants. Its per-person charge is now set to ¥300; expected total is ¥3,300. No receipt has been entered.
+- Version 11 removes migration, roster synchronization, and full accounting reconciliation from routine startup. It applies ¥300 to blank match charges and preserves explicit match-specific values. The 2026-09-26 live app view showed 11 participants, ¥3,300 expected, and ¥0 received; no payment was recorded.
 
 ## Active branch
 
 Update this field at the end of each meaningful development session.
 
-`codex/fee-member-autofill` (in progress; based on PR #10)
+`codex/fee-collector-roster-picker` (pushed; PR #13 open)
 
 ## Next
 
-Review/merge PR #10 and stacked PR #11, then deploy the Apps Script, run `installMemberLookupTrigger` once as owner, and smoke-check name/jersey lookup without recording a payment. The legacy ledger remains a backup. Other follow-ups: the player photo library inbox is empty, and the official logo file still needs confirmation. The home-screen icon task is complete and confirmed on iPhone.
+The Apps Script sync and version 10 deployment are complete. Google Sheet live testing confirmed roster-name lookup and emergency E-ID creation; the temporary rows are cleared. `E001` and `E002` were consumed by disposable tests, so the next emergency ID will be `E003` by design. The read-only audit found only the display-test game, no configured per-person charge, and a duplicate demo invoice row. No payment or sheet cleanup was performed. Next: review and merge PR #13, then resolve the duplicate/test fixture and register the first real game/fee before collection. The legacy ledger remains a backup.
 
 ## Required handoff update
 

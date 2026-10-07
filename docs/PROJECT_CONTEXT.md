@@ -1,7 +1,7 @@
 # Project context
 
 Status: Simpsons運営OSの開発中
-Last updated: 2026-10-06
+Last updated: 2026-10-07
 
 ## Team
 
@@ -36,7 +36,7 @@ Known preferences:
 The repository's first operational feature is the Google Apps Script fee collector in `fee-collector/`.
 
 - Source repository: `Mitsuru-sato37/simpsons-team-os`
-- Active branch: `codex/fee-collector-accounting-integration` (integration work in progress)
+- Active branch: `codex/fee-collector-roster-picker` (integration and roster-entry follow-up in progress)
 - Primary accounting spreadsheet: `Simpsons会計`
 - Primary spreadsheet ID: `1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ`
 - Existing accounting tabs retained: `ダッシュボード`, `取引台帳`, `試合会計`, `メンバー請求`, `会費管理`, `メンバー`
@@ -47,11 +47,12 @@ The repository's first operational feature is the Google Apps Script fee collect
 - Player master spreadsheet ID: `1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4`
 - Player master sheet: `選手マスター`; source columns are `選手ID`, `背番号`, and `氏名`.
 - Participant rows may retain legacy `P001`-style IDs; the app normalizes them against the master ID and displays the master `背番号` and `氏名`.
-- Payment channels are cash, PayPay, and bank transfer. The app reads the per-game charge from `試合会計` column J (`実徴収額/人`) and blocks collection when it is unset; there is no fixed 300-yen app default.
-- For each game, attendance is registered in `集金_参加者` using `試合ID` and `選手ID`; the app continues resolving names and jersey numbers from the player master. The web app does not yet provide a roster picker or attendee-registration UI.
+- Payment channels are cash, PayPay, and bank transfer. The app uses `試合会計` column J (`実徴収額/人`) when set; otherwise it applies the shared default of ¥300 per person and records that default in the match row. A match-specific amount overrides the default.
+- Attendance can be added in the web app by searching the player master with a jersey number or name and selecting the matching player. The app resolves the internal player ID and stores it in `集金_参加者`; users do not need to know or enter IDs. Duplicate players and additions to completed/cancelled games are rejected.
 - A successful receipt updates `メンバー請求`, `取引台帳`, and `試合会計`; dashboard formulas aggregate those records. Cancellation keeps the receipt and marks linked accounting entries cancelled.
 - Finance `メンバーID` values are internal keys. The app maps roster IDs `001`–`050` to `M001`–`M050`, while synchronizing player-master names and jersey numbers into the finance member directory. People are identified operationally by name/jersey number, not by finance IDs.
-- In `メンバー`, manually entering one of the member ID, name, or jersey-number fields completes the other two from the player master. This uses an installable edit trigger because the master is in a separate spreadsheet; the Apps Script owner authorizes and installs the trigger once. Ambiguous or missing matches are not guessed. Jersey numbers are stored as text to preserve values such as `00`.
+- In `メンバー`, manually entering one of the accounting ID, name, or jersey-number fields completes the other two from the player master. Names match with or without embedded spaces. A name absent from the master is retained as a manual emergency entry with ID/jersey left blank; ambiguous matches are never guessed. This uses an installable edit trigger because the master is in a separate spreadsheet; the Apps Script owner authorizes and installs the trigger once. Jersey numbers are stored as text to preserve values such as `00`.
+- In a blank manual row of `メンバー請求`, selecting a roster name fills its `M` ID. Typing an unregistered emergency participant's name creates a permanent `E001`-style finance ID, adds that person to `メンバー` with no jersey number, and reuses the same ID for later invoices with the same name. Apps-generated invoice rows (non-empty `請求ID`) are not changed by this edit handler. Emergency IDs are allocated under a lock and a script-property counter so removed rows do not cause ID reuse.
 - Receipts are append-only records. Cancellation changes the status to `取消` and never deletes the row.
 - Completing a game selects the next open game in sheet order; manual selection remains available for past and future games.
 - Completed and cancelled games remain selectable for review, but cannot be marked complete again from either the UI or the server action.
