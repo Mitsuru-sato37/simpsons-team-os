@@ -1,7 +1,21 @@
 # Progress
 
-Status: Simpsons会計統合・緊急参戦者IDの実装中
-Last updated: 2026-10-07
+Status: App-mediated roster import implementation in progress
+Last updated: 2026-10-08
+
+## Current handoff — mobile/cloud roster intake
+
+- Active branch: `codex/fee-collector-cloud-roster`, based on `codex/fee-collector-roster-picker` (PR #13 remains open).
+- User approved the design and implementation plan, and confirmed the cloud assistant reads the phone image successfully. The agreed implementation flow is assistant-generated jersey/name lines → paste into the phone app → master matching and preview → confirm inside app.
+- Implementation plan: `docs/superpowers/plans/2026-10-07-fee-collector-mobile-cloud-roster.md`. User approved the plan. Local implementation now includes copy/paste parsing, master matching, a read-only preview, confirmation guarded by a script lock and fingerprint recheck, explicit emergency registration, attendance absence/restore actions, and mobile review UI.
+- Capability check: connected Google Sheets tools successfully read metadata and bounded ranges from `Simpsons会計` and `Simpsons_選手マスター`; target accounting timezone is `Asia/Tokyo` and the operational tab headers are present. This confirms read access only.
+- Ruling: The current cloud host has no Apps Script execution connector. Use the existing app's `google.script.run` bridge for preview and apply. Direct Sheets writes and a new external endpoint are excluded because direct writes bypass the app's lock/reconciliation and an anonymous endpoint expands the surface of an anyone-with-URL deployment. This adds a copy/paste step from assistant to app, but keeps the write inside the existing attendance UI and Apps Script lock.
+- Confirmed by source inspection: current app already calls Apps Script functions through `google.script.run`; `Code.gs` owns spreadsheet access, `LockService`, emergency-ID counter, and invoice/match reconciliation. Target spreadsheet metadata/header reads succeeded; no live values were changed.
+- Emergency participants need stable, server-assigned finance `E###` identities without creating fake player-master records. The app must also safely handle absence/removal and block removal when an active receipt exists.
+- Live Simpsons会計 match, participant, and invoice records were cleared at the user's explicit request on 2026-10-07. Finance tabs, headers/formulas, member roster, and player master remain. No current game is registered; no payment was entered. The old ledger stays as backup.
+- Verification: `node --test tests/*.test.mjs` — 82 passed; Apps Script/browser JavaScript parse checks and `git diff --check` passed. Tests use local Apps Script sheet fixtures; no live finance rows or receipts were modified.
+- Source commit: `3b00308` locally; equivalent source tree is on the feature branch at `2fc79bf`. Draft PR #14 targets the fee-collector base branch used by PR #13.
+- Remaining: after PR #13's base changes are integrated, sync this source to the existing Apps Script project and update its deployment while preserving the URL/access. This environment has no `clasp` command or saved clasp OAuth credentials, so no live deployment or sheet mutation was attempted. Keep the PR draft until deployment verification is possible.
 
 ## Active fee-collector work
 

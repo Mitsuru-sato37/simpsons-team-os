@@ -35,6 +35,25 @@
       <input id="playerSearch" type="search" autocomplete="off" placeholder="背番号か名前を入力">
       <div id="playerSearchResults" class="search-results" aria-live="polite"></div>
       <div id="participantPickerMessage" class="picker-message">背番号か名前を入力して選手を検索してください。</div>
+      <div class="emergency-entry">
+        <label for="emergencyName">選手マスターにない緊急参加者</label>
+        <div class="emergency-entry-row">
+          <input id="emergencyName" type="text" autocomplete="off" placeholder="名前を入力">
+          <button id="addEmergencyButton" class="secondary-button" type="button">追加</button>
+        </div>
+        <p class="picker-message">会計IDは自動で付与します。背番号は不要です。</p>
+      </div>
+    </section>
+
+    <section id="rosterImportPanel" class="section-block roster-import-panel">
+      <details id="rosterImportDetails">
+        <summary class="roster-summary"><span><p class="eyebrow">IMAGE ROSTER</p><strong>画像名簿を取り込む</strong></span><span aria-hidden="true">＋</span></summary>
+        <p class="picker-message">AIが画像から読み取った「背番号 名前」の一覧を貼り付けてください。背番号と名前を確認してから反映します。</p>
+        <label for="rosterText">参加者リスト</label>
+        <textarea id="rosterText" class="roster-control" rows="5" placeholder="23 渡部 琉斗&#10;4 渡邉 匠"></textarea>
+        <button id="previewRosterButton" class="secondary-button roster-control" type="button">照合して確認</button>
+        <div id="rosterPreview" aria-live="polite"></div>
+      </details>
     </section>
 
     <section id="summary" class="summary-grid" aria-label="集金状況"></section>
@@ -48,6 +67,11 @@
         <span id="unpaidCount" class="count-badge">0</span>
       </div>
       <div id="unpaidList" class="player-list"></div>
+    </section>
+
+    <section id="absentSection" class="section-block absent-section" hidden>
+      <div class="section-heading"><div><p class="eyebrow">ABSENT</p><h2>欠席</h2></div></div>
+      <div id="absentList" class="player-list"></div>
     </section>
 
     <section class="section-block received-section">
