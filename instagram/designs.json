@@ -74,7 +74,10 @@
   "startingLineup": {
     "driveFolderId": "1JvY9-2BwyxMWuch5KGlumDpyak1AvmDu",
     "canvaDesignId": null,
-    "sourceCurrentlyLocated": false,
+    "sourceCurrentlyLocated": true,
+    "sourceDriveFileId": "1o2bpbp57A6Ye6WHThUceYrtbGEbCmlXG",
+    "sourceFileName": "スターティングラインナップフォーマット①.png",
+    "approvedOutputPath": "instagram/lineups/2026-10-17-hotaru-kiichis.png",
     "requiresConfirmationWhenSourceUnresolved": true
   },
   "outputs": {
