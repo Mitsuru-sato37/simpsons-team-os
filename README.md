@@ -27,7 +27,7 @@ GitHub: `Mitsuru-sato37/simpsons-team-os`
 
 `instagram/` にはCodexがCanvaとGoogle Driveを使って試合画像を作成するルールと、共通の試合データ契約があります。集金アプリとは独立して利用できます。
 
-- 試合前: 「この試合のSTARTING LINEUPを作って」と依頼します。現行の制作元・手順が確認できない場合は、新しいMASTERを作らず確認で止まります。
+- 試合前: 「この試合のSTARTING LINEUPを作って」と依頼します。元画像の参照先と承認済みの2026-10-17版は `instagram/lineups/` に記録しています。新しいMASTERは作りません。
 - 試合後: 「このスコアブックからGAME RESULTを作って」「GAME STATSを作って」など、成果物ごとに依頼できます。GAME RESULTとGAME STATSは指定Canva MASTERを複製して可変項目だけ更新します。FEATURE PLAYERは完成例を参考に試合ごとに構成を変え、選手写真を保ったまま公式ロゴをCanvaで重ねます。
 - 試合の日付、対戦相手、会場、`matchId` など共通情報（MatchContext）の形式は `instagram/match-context.schema.json` を参照します。
 - Codexは制作前に必要な事実とCanva/Driveの参照先を確認します。Canva保存前にプレビューを提示し、Drive保存先が不明なら確認します。

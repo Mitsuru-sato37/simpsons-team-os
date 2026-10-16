@@ -1,9 +1,19 @@
 # Progress
 
-Status: Simpsons会計統合に続く、選手マスターからのメンバー欄自動補完を実装中
-Last updated: 2026-10-07
+Status: 2026-10-17 STARTING LINEUP画像をGitHubへ引き継ぎ中
+Last updated: 2026-10-16
 
-## Fee collector accounting integration (active)
+## STARTING LINEUP (2026-10-16)
+
+- Active branch: `codex/starting-lineup-2026-10-17`, based on `origin/main` at `e644c87`.
+- User approved the 2026-10-17 morning lineup for HOTARU KIICHIS at 道徳公園. The approved PNG is `instagram/lineups/2026-10-17-hotaru-kiichis.png`.
+- The confirmed source is Drive `スターティングラインナップフォーマット①.png` (`1o2bpbp57A6Ye6WHThUceYrtbGEbCmlXG`). The nine DH batters are separate from S.Amano, shown as starting pitcher outside the batting order. The backup-player section was removed. The roster and source are recorded in `instagram/lineups/README.md` and `instagram/designs.json`.
+- The output was produced as a local PNG; it was not saved to Canva or Drive. No Instagram post was published. The next production request should confirm its match facts and lineup against current sources.
+- Verification: `node --test tests/*.test.mjs` passed 48/48; `git diff --check` passed; registry JSON parsed; the repository PNG matches the user-approved local PNG byte-for-byte and is 1024×1536.
+
+## Fee collector accounting integration (historical implementation notes)
+
+PRs #10 and #11 are merged into `main` as of this handoff. The notes below record the earlier implementation state; deployment remains a separate task.
 
 - Active follow-up branch: `codex/fee-member-autofill`, based on pushed integration branch `codex/fee-collector-accounting-integration` (PR #10).
 - App source now targets `Simpsons会計` (`1GFTMkvMaqkAm2QQ61yNdt51_l7UldxaOkBfBO2zHDqQ`) and preserves its six accounting tabs. Operational tabs `集金_試合`, `集金_参加者`, and `集金_受領履歴` were added with headers matching the Apps Script schema.
@@ -95,7 +105,7 @@ Last updated: 2026-10-07
 - After PR #8 merged, the GitHub Pages workflow succeeded on `main` (run 6). Feature-branch workflow runs failed because the `github-pages` environment protection rules reject `codex/*` branches; the workflow trigger is now restricted to `main`.
 ## Remaining scope
 
-- The current STARTING LINEUP Drive folders are empty and no matching Canva design was found; production must stop until the existing source/method is identified.
+- The STARTING LINEUP source PNG is now identified in Drive, but no editable Canva design was found. Use the confirmed source and approved output noted in `instagram/lineups/README.md` for future requests.
 - Canva has no direct export operation in the connected tool inventory. During an actual production request, verify the Canva browser download and Google Drive upload path; report any incomplete Drive save honestly.
 - Resolve the intended completed-output Drive folder for each asset type when none is discoverable.
 - Verify which official logo file is in the Feature Player Drive folder and align the Drive SNS guide after the required file-backed trusted read is available.
@@ -106,15 +116,15 @@ Last updated: 2026-10-07
 
 ## Handoff
 
-Current branch: `codex/fee-collector-ledger-link`.
+Current branch: `codex/starting-lineup-2026-10-17`.
 
-Completed in this handoff: added the connected spreadsheet link to the fee collector source, updated the existing Apps Script deployment to version 8, and verified the live link opens the ledger in a separate tab. At verification the app showed no registered games, which may need investigation if unexpected. The photo-library implementation and operating instructions are also present at `2ce4b32`; no photos have been classified or moved.
+Completed in this handoff: added the user-approved 2026-10-17 lineup PNG and its source, roster, and DH/pitcher layout record. Updated the STARTING LINEUP source registry and operating instructions. Verification results are recorded in the STARTING LINEUP section above.
 
-Next task: if the empty game list in the live fee collector is unexpected, inspect its configured ledger connection and current game data without recording a payment. After the user adds photos to `99_未仕分け`, run a preview and review candidates/unknowns before writing confirmed metadata to the Drive catalog. Separate follow-ups remain: confirm the official logo image in the Feature Player Drive folder and align the Drive SNS guide if it remains canonical.
+Next task: no further work is requested for the 2026-10-17 lineup. For a future lineup, confirm the new match facts and roster, then use the located source PNG and approved layout. Separate fee-collector and player-photo-library follow-ups remain as previously documented.
 
 - 2026-10-06 correction: verified the current `99_未仕分け` folder is a direct child of the active `03_選手写真` folder. Do not use any `00` folder or archive as the photo intake source. Updated the Instagram operating route and project context to preserve that boundary.
 - 2026-10-06: User supplied the `99_アーカイブ` folder URL and explicitly prohibited using anything in it as a reference. Read only its metadata (not its contents) to confirm the folder identity. Added its ID to the exclusion list and a runtime allowlist so photo intake can list only the configured inbox; no archive files were opened.
 - 2026-10-07: Fast-forward merged `codex/player-photo-library` into `main`; `git fetch origin` completed before merge and `git diff --check` had no whitespace errors. Automated tests were not run for this merge request.
 - 2026-10-07: Fee-collector spreadsheet-link implementation is on `codex/fee-collector-ledger-link`; deployment version 8 and live-link navigation were verified.
 
-The merged `main` branch must be pushed before switching PCs. Keep the spreadsheet ID in configuration/documentation only and do not commit deployment secrets.
+Keep spreadsheet IDs in configuration/documentation only and do not commit deployment secrets.

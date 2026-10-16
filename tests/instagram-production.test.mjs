@@ -101,14 +101,15 @@ test('workflow stops on uncertain sources and protects player photos and logos',
   assert.match(workflow, /STARTING LINEUP.*新規MASTERを作らず/s);
 });
 
-test('design registry points to checked Drive references and does not invent STARTING LINEUP source', () => {
+test('design registry points to checked Drive references and the confirmed STARTING LINEUP source', () => {
   assert.equal(existsSync(designsPath), true, 'design registry must exist');
   const designs = JSON.parse(readFileSync(designsPath, 'utf8'));
   assert.equal(designs.guide.driveFileId, '1wx-wUouhFd2-HZxAFxuAy9S-atoBn0A9oEzODPv3V3c');
   assert.equal(designs.gameResult.drive.sampleFileId, '1gtgWq39tAxcbLo7BxzT5JKirB8VwzHpR');
   assert.equal(designs.gameStats.drive.sampleFileId, '1QX_fHNN5PEXIvA-acXS7Jz7GivHLHoJZ');
   assert.equal(designs.featurePlayer.drive.referenceFileId, '1coH8OyXgS44gUrH5lskFbl8eQfblOqFk');
-  assert.equal(designs.startingLineup.sourceCurrentlyLocated, false);
+  assert.equal(designs.startingLineup.sourceCurrentlyLocated, true);
+  assert.equal(designs.startingLineup.sourceDriveFileId, '1o2bpbp57A6Ye6WHThUceYrtbGEbCmlXG');
   assert.equal(designs.startingLineup.canvaDesignId, null);
 });
 

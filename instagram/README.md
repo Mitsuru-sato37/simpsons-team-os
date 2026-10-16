@@ -4,7 +4,7 @@
 
 ## 独立した呼び出し
 
-- `starting-lineup`: 試合前のSTARTING LINEUP制作。現行制作方法を使います。新しいMASTERは作りません。
+- `starting-lineup`: 試合前のSTARTING LINEUP制作。確認済みの元画像と[2026-10-17版の制作記録](lineups/README.md)を参照します。新しいMASTERは作りません。
 - `post-game`: 試合後制作。GAME RESULT、GAME STATS、FEATURE PLAYERを必要なものだけ個別に作れます。
 
 Codexへの依頼例は「この試合のSTARTING LINEUPを作って」「このスコアブックからGAME STATSを作って」です。対象試合の共通情報は [match-context.schema.json](match-context.schema.json) の `MatchContext` に合わせます。日付、対戦相手、会場、matchIdなどの必須情報を確認できなければ、制作に進まず不足点を質問します。
