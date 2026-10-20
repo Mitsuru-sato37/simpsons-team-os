@@ -1,7 +1,7 @@
 # Status
 
-Status: Active cross-PC handoff entry point; 2026-10-17 lineup handoff in progress
-Last updated: 2026-10-16
+Status: Active cross-PC handoff entry point; 2026-10-17 lineup merged, branch retained for handoff
+Last updated: 2026-10-20
 
 This file is the stable handoff entry point. Detailed project context and progress remain authoritative in `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md`.
 
@@ -10,7 +10,7 @@ This file is the stable handoff entry point. Detailed project context and progre
 - Repository initialized for cross-PC Codex development.
 - Durable Simpsons / ラキポタ context is recorded.
 - The existing Google Apps Script fee collector, accounting integration, and member auto-fill are merged into `main` through PRs #10 and #11. This lineup handoff does not deploy the app or install its edit trigger.
-- The 2026-10-17 STARTING LINEUP PNG, source, roster, and DH/pitcher presentation are recorded in `instagram/lineups/`.
+- The 2026-10-17 STARTING LINEUP PNG, source, roster, and DH/pitcher presentation are recorded in `instagram/lineups/` and were merged into `main` in PR #15 on 2026-10-16.
 - The collector now integrates with the native Google Sheets player master `1doROrxTeGioK6rct9tCxNYugl-WIdzxqkDqYWMPypT4` for jersey numbers and names.
 - The last verified Apps Script web app deployment was version 8. This lineup handoff did not check or change its deployment. The public GitHub Pages entry at `https://mitsuru-sato37.github.io/simpsons-team-os/` declares the adopted 180×180 Apple touch icon.
 - The live fee collector exposes `台帳を開く`, which opens the connected ledger spreadsheet in a new tab. This was confirmed from the GitHub Pages entry on 2026-10-07.
@@ -19,7 +19,7 @@ This file is the stable handoff entry point. Detailed project context and progre
 
 Update this field at the end of each meaningful development session.
 
-`codex/starting-lineup-2026-10-17` (based on `origin/main` at `e644c87`)
+`codex/starting-lineup-2026-10-17` (retained for this cross-PC handoff; lineup changes are already in `main`)
 
 ## Next
 

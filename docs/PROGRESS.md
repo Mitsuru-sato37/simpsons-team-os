@@ -1,11 +1,11 @@
 # Progress
 
-Status: 2026-10-17 STARTING LINEUP画像をGitHubへ引き継ぎ中
-Last updated: 2026-10-16
+Status: 2026-10-17 STARTING LINEUP画像はmainにマージ済み。作業ブランチを別PCへ引き継ぎ
+Last updated: 2026-10-20
 
 ## STARTING LINEUP (2026-10-16)
 
-- Active branch: `codex/starting-lineup-2026-10-17`, based on `origin/main` at `e644c87`.
+- Active branch: `codex/starting-lineup-2026-10-17`. The lineup commit `c4c2c17` was merged into `main` by PR #15 (`a77882f`) on 2026-10-16. This branch is retained for cross-PC handoff.
 - User approved the 2026-10-17 morning lineup for HOTARU KIICHIS at 道徳公園. The approved PNG is `instagram/lineups/2026-10-17-hotaru-kiichis.png`.
 - The confirmed source is Drive `スターティングラインナップフォーマット①.png` (`1o2bpbp57A6Ye6WHThUceYrtbGEbCmlXG`). The nine DH batters are separate from S.Amano, shown as starting pitcher outside the batting order. The backup-player section was removed. The roster and source are recorded in `instagram/lineups/README.md` and `instagram/designs.json`.
 - The output was produced as a local PNG; it was not saved to Canva or Drive. No Instagram post was published. The next production request should confirm its match facts and lineup against current sources.
@@ -118,9 +118,11 @@ PRs #10 and #11 are merged into `main` as of this handoff. The notes below recor
 
 Current branch: `codex/starting-lineup-2026-10-17`.
 
-Completed in this handoff: added the user-approved 2026-10-17 lineup PNG and its source, roster, and DH/pitcher layout record. Updated the STARTING LINEUP source registry and operating instructions. Verification results are recorded in the STARTING LINEUP section above.
+Completed in this handoff: confirmed the approved lineup PNG, source registry, roster, and DH/pitcher layout record are on GitHub and merged into `main`; updated the handoff state. Verification results for the lineup are recorded in the STARTING LINEUP section above. No new lineup image or application code was changed in this handoff.
 
 Next task: no further work is requested for the 2026-10-17 lineup. For a future lineup, confirm the new match facts and roster, then use the located source PNG and approved layout. Separate fee-collector and player-photo-library follow-ups remain as previously documented.
+
+Cross-PC recovery: fetch `origin`, switch to `codex/starting-lineup-2026-10-17`, pull with `--ff-only`, then read `AGENTS.md`, `docs/SPEC.md`, and `docs/STATUS.md`. The previous lineup work is also on `main`; do not merge the retained branch again solely for this documentation update. No blocker is known for reading the repository on another PC.
 
 - 2026-10-06 correction: verified the current `99_未仕分け` folder is a direct child of the active `03_選手写真` folder. Do not use any `00` folder or archive as the photo intake source. Updated the Instagram operating route and project context to preserve that boundary.
 - 2026-10-06: User supplied the `99_アーカイブ` folder URL and explicitly prohibited using anything in it as a reference. Read only its metadata (not its contents) to confirm the folder identity. Added its ID to the exclusion list and a runtime allowlist so photo intake can list only the configured inbox; no archive files were opened.
