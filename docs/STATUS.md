@@ -1,13 +1,13 @@
 # Status
 
-Status: Local video-analysis MVP processed GX010430.mp4; candidate review and feedback pending
-Last updated: 2026-10-08
+Status: Video-analysis feedback supports interval labels and manually added missed transitions
+Last updated: 2026-10-21
 
 This file is the stable handoff entry point. Detailed project context and progress remain authoritative in `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md`.
 
 ## Current state
 
-- Video-analysis work is on `codex/video-inning-mvp`, based on `main`. Its desktop module processed the local GX010430.mp4 and saved five candidates. Python/OpenCV and FFmpeg were discovered under the user's profile; the launcher now finds those standard installation paths without a PATH edit. Candidate truth labels remain pending.
+- Video-analysis work is on `codex/video-inning-mvp`, based on `main`. Its desktop module processed the local GX010430.mp4 and saved five candidates. Candidate feedback now stores transition start/end intervals and can add missed transitions manually. Feedback stays local and does not automatically alter detection logic.
 - Repository initialized for cross-PC Codex development.
 - Durable Simpsons / ラキポタ context is recorded.
 - The fee collector continues on the separate `codex/fee-collector-roster-picker` branch, with PR #13 open. This video branch is based on `main` and does not include that branch's source changes.
@@ -23,7 +23,7 @@ Update this field at the end of each meaningful development session.
 
 ## Next
 
-Open the saved GX010430 analysis in the review UI, confirm candidate boundaries and record feedback, then tune detection. The separate fee-collector next task is to review PR #13.
+Use the local review UI to record candidate interval feedback and add manually confirmed missed transitions. Tune detection only after reviewing the saved labels. The separate fee-collector next task is to review PR #13.
 
 ## Required handoff update
 

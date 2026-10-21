@@ -32,6 +32,7 @@ def save_analysis(directory, video, duration, config, candidates, logic_version)
         'config': config,
         'candidates': [{**item, 'feedback': None, 'feedback_history': []}
                        for item in candidates],
+        'missed_transitions': [],
     }
     path = directory / f'{video.stem}-{uuid4().hex[:12]}.json'
     _write(path, record)
@@ -45,7 +46,21 @@ def load_analysis(path):
     return record
 
 
-def save_feedback(path, candidate_index, verdict, correct_second=None, comment=''):
+def _validate_interval(start_second, end_second, duration):
+    if (start_second is None) != (end_second is None):
+        raise ValueError('開始時刻と終了時刻の両方を入力してください')
+    if start_second is None:
+        return
+    if start_second < 0 or end_second < 0:
+        raise ValueError('時刻は 0 秒以上です')
+    if start_second > duration or end_second > duration:
+        raise ValueError('時刻が動画の長さを超えています')
+    if start_second > end_second:
+        raise ValueError('開始時刻は終了時刻より前にしてください')
+
+
+def save_feedback(path, candidate_index, verdict, correct_second=None, comment='',
+                  start_second=None, end_second=None):
     if verdict not in ('correct', 'incorrect'):
         raise ValueError('判定は correct または incorrect を指定してください')
     if correct_second is not None and correct_second < 0:
@@ -54,13 +69,32 @@ def save_feedback(path, candidate_index, verdict, correct_second=None, comment='
     record = load_analysis(path)
     if correct_second is not None and correct_second > record['video']['duration_seconds']:
         raise ValueError('正しい時刻が動画の長さを超えています')
+    _validate_interval(start_second, end_second,
+                       record['video']['duration_seconds'])
     feedback = {
         'verdict': verdict,
         'correct_second': correct_second,
+        'start_second': start_second,
+        'end_second': end_second,
         'comment': comment.strip(),
         'recorded_at': datetime.now(timezone.utc).isoformat(),
     }
     candidate = record['candidates'][candidate_index]
     candidate.setdefault('feedback_history', []).append(feedback)
     candidate['feedback'] = feedback
+    _write(path, record)
+
+
+def save_missed_transition(path, start_second, end_second, comment=''):
+    path = Path(path)
+    record = load_analysis(path)
+    _validate_interval(start_second, end_second,
+                       record['video']['duration_seconds'])
+    transition = {
+        'start_second': start_second,
+        'end_second': end_second,
+        'comment': comment.strip(),
+        'recorded_at': datetime.now(timezone.utc).isoformat(),
+    }
+    record.setdefault('missed_transitions', []).append(transition)
     _write(path, record)

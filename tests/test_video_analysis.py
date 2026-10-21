@@ -5,7 +5,8 @@ from unittest.mock import patch
 from pathlib import Path
 
 from video_analysis.detector import Feature, detect_candidates, format_time, parse_time
-from video_analysis.storage import load_analysis, save_analysis, save_feedback
+from video_analysis.storage import (load_analysis, save_analysis, save_feedback,
+                                    save_missed_transition)
 from video_analysis.extract import find_binary, iter_jpegs
 from video_analysis.pipeline import refine_candidates
 from video_analysis.detector import Candidate
@@ -95,6 +96,42 @@ class StorageTests(unittest.TestCase):
                                    {}, [{'second': 60, 'score': 70}], '1.0')
             with self.assertRaises(ValueError):
                 save_feedback(record, 0, 'incorrect', 121)
+
+    def test_candidate_feedback_records_transition_start_and_end(self):
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / 'game.mp4'
+            video.write_bytes(b'video')
+            record = save_analysis(Path(directory) / 'results', video, 120,
+                                   {}, [{'second': 60, 'score': 70}], '1.0')
+            save_feedback(record, 0, 'correct', start_second=55,
+                          end_second=68, comment='inning change')
+            feedback = load_analysis(record)['candidates'][0]['feedback']
+            self.assertEqual(feedback['start_second'], 55)
+            self.assertEqual(feedback['end_second'], 68)
+            self.assertEqual(feedback['comment'], 'inning change')
+
+    def test_missed_transition_is_recorded_as_interval(self):
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / 'game.mp4'
+            video.write_bytes(b'video')
+            record = save_analysis(Path(directory) / 'results', video, 120,
+                                   {}, [], '1.0')
+            save_missed_transition(record, 72, 84, 'candidate was missed')
+            saved = load_analysis(record)['missed_transitions'][0]
+            self.assertEqual(saved['start_second'], 72)
+            self.assertEqual(saved['end_second'], 84)
+            self.assertEqual(saved['comment'], 'candidate was missed')
+
+    def test_missed_transition_rejects_invalid_interval(self):
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / 'game.mp4'
+            video.write_bytes(b'video')
+            record = save_analysis(Path(directory) / 'results', video, 120,
+                                   {}, [], '1.0')
+            with self.assertRaises(ValueError):
+                save_missed_transition(record, 80, 70)
+            with self.assertRaises(ValueError):
+                save_missed_transition(record, 80, 121)
 
 
 class PipelineTests(unittest.TestCase):
