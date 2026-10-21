@@ -1,13 +1,13 @@
 # Status
 
-Status: Video-analysis feedback supports interval labels and manually added missed transitions
+Status: Video-analysis feedback supports interval labels, missed transitions, and terminal-free launch
 Last updated: 2026-10-21
 
 This file is the stable handoff entry point. Detailed project context and progress remain authoritative in `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md`.
 
 ## Current state
 
-- Video-analysis work is on `codex/video-inning-mvp`, based on `main`. Its desktop module processed the local GX010430.mp4 and saved five candidates. Candidate feedback now stores transition start/end intervals and can add missed transitions manually. Feedback stays local and does not automatically alter detection logic.
+- Video-analysis work is on `codex/video-inning-mvp`, based on `main`. Its desktop module processed the local GX010430.mp4 and saved five candidates. Candidate feedback stores transition start/end intervals and can add missed transitions manually. The branded VBS launcher starts Python without a terminal. Feedback stays local and does not automatically alter detection logic.
 - Repository initialized for cross-PC Codex development.
 - Durable Simpsons / ラキポタ context is recorded.
 - The fee collector continues on the separate `codex/fee-collector-roster-picker` branch, with PR #13 open. This video branch is based on `main` and does not include that branch's source changes.

@@ -7,10 +7,11 @@ Last updated: 2026-10-21
 
 - Active branch: `codex/video-inning-mvp`.
 - Added start/end interval feedback for detected candidates and a manual form to add transitions the detector missed. Both are stored in the per-analysis local JSON; legacy `correct_second` feedback remains readable.
+- Added `Simpsons イニングチェッカー.vbs`, which starts the UI with `pythonw.exe` so it is independent of a terminal window. Updated the existing CMD launcher to delegate to it and renamed the app window.
 - Added validation for incomplete, reversed, negative, and out-of-video intervals. Updated the local video-analysis README and project context.
-- Verification: 15 video-analysis unit tests passed. Full UI visual verification was intentionally not run because the user requested no window or input control while they work. Git fetch was blocked by permission denied for `.git/FETCH_HEAD`.
-- Next: user can reopen the local analyzer and record missed transitions and interval endpoints. Feedback remains local and does not automatically change detector logic.
-- Blocker: current sandbox does not permit writing Git metadata, so commit/push handoff has not been completed.
+- Verification: 16 video-analysis unit tests passed; Python syntax compilation and `git diff --check` passed. The VBS smoke test could not run because CScript returned “Loading your settings failed (Access is denied).” The app was not launched because the user asked us not to control their screen.
+- Next: user can start the app from the branded VBS launcher and record missed transitions and interval endpoints. Feedback remains local and does not automatically change detector logic.
+- Blocker: VBS launch behavior still needs a user-side check because Windows Script Host settings are inaccessible in this environment.
 
 ## Active video-analysis work (2026-10-07)
 

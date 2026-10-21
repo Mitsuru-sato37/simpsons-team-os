@@ -10,10 +10,14 @@ from video_analysis.storage import (load_analysis, save_analysis, save_feedback,
 from video_analysis.extract import find_binary, iter_jpegs
 from video_analysis.pipeline import refine_candidates
 from video_analysis.detector import Candidate
+from video_analysis.app import APP_TITLE
 from io import BytesIO
 
 
 class DetectorTests(unittest.TestCase):
+    def test_application_uses_user_facing_name(self):
+        self.assertEqual(APP_TITLE, 'Simpsons イニングチェッカー')
+
     def test_persistent_change_produces_one_candidate(self):
         frames = []
         for second in range(0, 250, 10):

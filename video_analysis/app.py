@@ -9,11 +9,13 @@ from .detector import format_time, parse_time
 from .pipeline import analyze
 from .storage import load_analysis, save_feedback, save_missed_transition
 
+APP_TITLE = 'Simpsons イニングチェッカー'
+
 
 class VideoAnalysisApp:
     def __init__(self, root):
         self.root = root
-        self.root.title('Simpsons 動画解析')
+        self.root.title(APP_TITLE)
         self.root.geometry('760x760')
         self.events = queue.Queue()
         self.record_path = None
