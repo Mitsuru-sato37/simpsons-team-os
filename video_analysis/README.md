@@ -4,7 +4,7 @@
 
 ## 起動
 
-WindowsでPython（Tkinter、OpenCV、NumPy）とFFmpeg/FFprobeを使用できる状態にしてください。`Simpsons イニングチェッカー.vbs` または `start-video-analysis.cmd` をダブルクリックすると、コンソールを表示せずアプリを起動します。アプリのウィンドウ名は「Simpsons イニングチェッカー」です。Pythonの `pythonw.exe` は `%LOCALAPPDATA%\Python\pythoncore-*` から探します。FFmpegはPATHとWinGetのGyan.FFmpeg配置先から自動で探すので、コマンド入力や環境変数の設定は不要です。
+WindowsでPython（Tkinter、OpenCV、NumPy）とFFmpeg/FFprobeを使用できる状態にしてください。`Simpsons イニングチェッカー.vbs` または `start-video-analysis.cmd` をダブルクリックすると、コンソールを表示せずアプリを起動します。アプリのウィンドウ名は「Simpsons イニングチェッカー」です。Pythonの `pythonw.exe` は `%LOCALAPPDATA%\Python\pythoncore-*` から探します。FFmpegはPATHとWinGetのGyan.FFmpeg配置先から自動で探すので、コマンド入力や環境変数の設定は不要です。起動中にエラーが起きた場合はダイアログが表示され、詳細を `.local/video-analysis/startup-error.log` に保存します。
 
 1. 「動画を選択」からローカルMP4を選び、「解析する」を押します。
 2. 粗解析は全体を10秒間隔・幅640pxで読み、持続的な色の状態変化から候補を選びます。

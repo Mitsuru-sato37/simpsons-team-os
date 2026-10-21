@@ -12,6 +12,7 @@ from video_analysis.pipeline import estimate_transition_interval, refine_candida
 from video_analysis.detector import Candidate
 from video_analysis.app import APP_TITLE, format_candidate_label
 from io import BytesIO
+from unittest.mock import Mock
 
 
 class DetectorTests(unittest.TestCase):
@@ -30,6 +31,22 @@ class DetectorTests(unittest.TestCase):
                 'start_second': 55, 'end_second': 68}},
         })
         self.assertIn('推定 00:55–01:08', label)
+
+    def test_selecting_candidate_prefills_transition_interval(self):
+        from video_analysis.app import VideoAnalysisApp
+        app = VideoAnalysisApp.__new__(VideoAnalysisApp)
+        app.listbox = Mock()
+        app.listbox.curselection.return_value = [0]
+        app.candidates = [{'evidence': {'estimated_interval': {
+            'start_second': 55, 'end_second': 68}}}]
+        app.transition_start = Mock()
+        app.transition_end = Mock()
+        app.comment = Mock()
+
+        app.select_candidate(None)
+
+        app.transition_start.set.assert_called_once_with('00:55')
+        app.transition_end.set.assert_called_once_with('01:08')
 
     def test_persistent_change_produces_one_candidate(self):
         frames = []

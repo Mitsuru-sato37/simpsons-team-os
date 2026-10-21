@@ -1,6 +1,6 @@
 # Progress
 
-Status: 動画解析候補に開始・終了の推定区間を表示
+Status: 動画解析ランチャーの起動診断と候補選択を修正
 Last updated: 2026-10-21
 
 ## Active video-analysis work (2026-10-21)
@@ -10,9 +10,11 @@ Last updated: 2026-10-21
 - Candidate analysis now estimates the visual transition interval from the first sustained departure from the prior stable color state through the sustained arrival at the new state. Candidate rows display the estimate or a manual confirmation, and candidate selection pre-fills the editable interval fields. Logic version is 1.1.
 - Added `Simpsons イニングチェッカー.vbs`, which starts the UI with `pythonw.exe` so it is independent of a terminal window. Updated the existing CMD launcher to delegate to it and renamed the app window.
 - Added validation for incomplete, reversed, negative, and out-of-video intervals. Updated the local video-analysis README and project context.
-- Verification: 19 video-analysis unit tests passed, including synthetic sustained-transition bounds and candidate-row interval display. The VBS script passed a Windows Script Host syntax check using a temporary copy with the app-launch line replaced by a clean exit. The app itself was not launched because the user asked us not to control their screen.
-- Next: rerun analysis for older saved videos to compute estimated intervals; old result JSON contains no detailed frame sequence for backfilling. Feedback remains local and does not automatically change detector logic.
-- Blocker: the user should verify the app starts from the VBS launcher on their PC; we avoided opening any window during the check.
+- Fixed candidate selection referencing a removed `correct_time` field; selection now resets the existing comment field and fills start/end values.
+- Changed the VBS launcher to start a diagnostic entry point. Startup exceptions are written to ignored `.local/video-analysis/startup-error.log` and shown in a Windows message box, making silent `pythonw.exe` failures visible without a console.
+- Verification: `git diff --check` passed. Python tests could not run in this sandbox: the system `python.exe` points to a blocked WindowsApps stub and this session's `%LOCALAPPDATA%` is sandbox-scoped. No app window was opened, per the user's instruction. `git fetch origin` was also denied on `.git/FETCH_HEAD`.
+- Next: user can double-click the VBS again; if startup fails, read the displayed log path and share the error text so the exact environment issue can be fixed. Older result JSON still requires re-analysis to calculate intervals.
+- Blocker: Python test/runtime execution and Git fetch are unavailable in this sandbox; startup on the user's desktop has not been verified.
 
 ## Active video-analysis work (2026-10-07)
 

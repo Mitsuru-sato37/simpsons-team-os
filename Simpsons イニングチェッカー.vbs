@@ -24,5 +24,5 @@ If pythonw = "" Then
     WScript.Quit 1
 End If
 
-command = Chr(34) & pythonw & Chr(34) & " -m video_analysis.app"
+command = Chr(34) & pythonw & Chr(34) & " -m video_analysis.launcher"
 shell.Run command, 0, False

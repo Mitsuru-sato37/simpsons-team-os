@@ -1,13 +1,13 @@
 # Status
 
-Status: Video-analysis results show estimated transition intervals and support corrected/missed intervals
+Status: Video-analysis launcher reports startup errors; transition intervals and feedback are supported
 Last updated: 2026-10-21
 
 This file is the stable handoff entry point. Detailed project context and progress remain authoritative in `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md`.
 
 ## Current state
 
-- Video-analysis work is on `codex/video-inning-mvp`, based on `main`. Candidate rows show heuristic start/end intervals (logic 1.1), prefill editable feedback fields, and distinguish confirmed/manual intervals. Missed intervals can be added manually. The branded VBS launcher starts Python without a terminal. Feedback stays local and does not automatically alter detection logic.
+- Video-analysis work is on `codex/video-inning-mvp`, based on `main`. Candidate rows show heuristic start/end intervals (logic 1.1), prefill editable feedback fields, and distinguish confirmed/manual intervals. Missed intervals can be added manually. The VBS launcher starts Python without a terminal and shows diagnostic details if startup fails. Feedback stays local and does not automatically alter detection logic.
 - Repository initialized for cross-PC Codex development.
 - Durable Simpsons / ラキポタ context is recorded.
 - The fee collector continues on the separate `codex/fee-collector-roster-picker` branch, with PR #13 open. This video branch is based on `main` and does not include that branch's source changes.
@@ -23,7 +23,7 @@ Update this field at the end of each meaningful development session.
 
 ## Next
 
-Rerun analysis on saved videos to compute their estimated intervals, then review and correct interval labels. Older JSON results cannot be backfilled because they do not contain the detailed frame samples. The separate fee-collector next task is to review PR #13.
+Verify the VBS launch on the user's PC, using `.local/video-analysis/startup-error.log` if it still fails. Rerun analysis on saved videos to compute estimated intervals; older JSON results cannot be backfilled because they do not contain detailed frame samples. The separate fee-collector next task is to review PR #13.
 
 ## Required handoff update
 

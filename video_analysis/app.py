@@ -191,7 +191,6 @@ class VideoAnalysisApp:
     def select_candidate(self, _event):
         selected = self.listbox.curselection()
         if selected:
-            self.correct_time.set('')
             self.comment.set('')
             feedback = self.candidates[selected[0]].get('feedback') or {}
             start = feedback.get('start_second')
