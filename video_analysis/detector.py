@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from statistics import median
 
 
-LOGIC_VERSION = '1.0'
+LOGIC_VERSION = '1.1'
 
 
 @dataclass(frozen=True)

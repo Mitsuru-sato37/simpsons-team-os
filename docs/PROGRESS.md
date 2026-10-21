@@ -1,16 +1,17 @@
 # Progress
 
-Status: 動画解析フィードバックで区間入力と見逃し区間追加を実装
+Status: 動画解析候補に開始・終了の推定区間を表示
 Last updated: 2026-10-21
 
 ## Active video-analysis work (2026-10-21)
 
 - Active branch: `codex/video-inning-mvp`.
 - Added start/end interval feedback for detected candidates and a manual form to add transitions the detector missed. Both are stored in the per-analysis local JSON; legacy `correct_second` feedback remains readable.
+- Candidate analysis now estimates the visual transition interval from the first sustained departure from the prior stable color state through the sustained arrival at the new state. Candidate rows display the estimate or a manual confirmation, and candidate selection pre-fills the editable interval fields. Logic version is 1.1.
 - Added `Simpsons イニングチェッカー.vbs`, which starts the UI with `pythonw.exe` so it is independent of a terminal window. Updated the existing CMD launcher to delegate to it and renamed the app window.
 - Added validation for incomplete, reversed, negative, and out-of-video intervals. Updated the local video-analysis README and project context.
-- Verification: 17 video-analysis unit tests passed. The VBS script passed a Windows Script Host syntax check using a temporary copy with the app-launch line replaced by a clean exit. The app itself was not launched because the user asked us not to control their screen.
-- Next: user can start the app from the branded VBS launcher and record missed transitions and interval endpoints. Feedback remains local and does not automatically change detector logic.
+- Verification: 19 video-analysis unit tests passed, including synthetic sustained-transition bounds and candidate-row interval display. The VBS script passed a Windows Script Host syntax check using a temporary copy with the app-launch line replaced by a clean exit. The app itself was not launched because the user asked us not to control their screen.
+- Next: rerun analysis for older saved videos to compute estimated intervals; old result JSON contains no detailed frame sequence for backfilling. Feedback remains local and does not automatically change detector logic.
 - Blocker: the user should verify the app starts from the VBS launcher on their PC; we avoided opening any window during the check.
 
 ## Active video-analysis work (2026-10-07)

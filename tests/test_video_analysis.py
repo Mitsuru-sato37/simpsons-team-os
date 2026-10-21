@@ -8,9 +8,9 @@ from video_analysis.detector import Feature, detect_candidates, format_time, par
 from video_analysis.storage import (load_analysis, save_analysis, save_feedback,
                                     save_missed_transition)
 from video_analysis.extract import find_binary, iter_jpegs
-from video_analysis.pipeline import refine_candidates
+from video_analysis.pipeline import estimate_transition_interval, refine_candidates
 from video_analysis.detector import Candidate
-from video_analysis.app import APP_TITLE
+from video_analysis.app import APP_TITLE, format_candidate_label
 from io import BytesIO
 
 
@@ -21,6 +21,15 @@ class DetectorTests(unittest.TestCase):
     def test_wsh_launcher_source_uses_ascii_only(self):
         launcher = Path(__file__).resolve().parents[1] / 'Simpsons イニングチェッカー.vbs'
         self.assertTrue(all(byte < 128 for byte in launcher.read_bytes()))
+
+    def test_candidate_label_shows_estimated_start_and_end(self):
+        label = format_candidate_label({
+            'second': 60,
+            'score': 70,
+            'evidence': {'estimated_interval': {
+                'start_second': 55, 'end_second': 68}},
+        })
+        self.assertIn('推定 00:55–01:08', label)
 
     def test_persistent_change_produces_one_candidate(self):
         frames = []
@@ -168,6 +177,24 @@ class PipelineTests(unittest.TestCase):
                     for second in range(int(start), int(start + duration))]
         result = refine_candidates(coarse, extract, duration=250)
         self.assertLessEqual(abs(result[0].second - 127), 2)
+        self.assertIsNotNone(result[0].evidence['estimated_interval'])
+
+    def test_transition_interval_covers_sustained_visual_change(self):
+        frames = []
+        for second in range(91):
+            progress = min(1.0, max(0.0, (second - 42) / 18))
+            frames.append(Feature(second,
+                                 0.35 + (0.13 - 0.35) * progress,
+                                 0.001 + (0.018 - 0.001) * progress,
+                                 0.13 + (0.05 - 0.13) * progress,
+                                 3.0))
+        interval = estimate_transition_interval(frames, center=50)
+        self.assertIsNotNone(interval)
+        self.assertLess(interval['start_second'], interval['end_second'])
+        self.assertGreaterEqual(interval['start_second'], 42)
+        self.assertLessEqual(interval['start_second'], 48)
+        self.assertGreaterEqual(interval['end_second'], 54)
+        self.assertLessEqual(interval['end_second'], 62)
 
     def test_sustained_low_motion_adds_only_supporting_evidence(self):
         coarse = [Candidate(120, 70, {})]

@@ -12,6 +12,29 @@ from .storage import load_analysis, save_feedback, save_missed_transition
 APP_TITLE = 'Simpsons イニングチェッカー'
 
 
+def format_candidate_label(item):
+    label = f"{format_time(item['second']):>8}   スコア {item['score']:>3}/100"
+    evidence = item.get('evidence', {})
+    if evidence.get('detail_unresolved'):
+        label += '   詳細時刻は未確定'
+    feedback = item.get('feedback')
+    if feedback:
+        label += '   正解' if feedback['verdict'] == 'correct' else '   不正解'
+    if feedback and feedback.get('start_second') is not None:
+        interval = {'start_second': feedback['start_second'],
+                    'end_second': feedback['end_second']}
+        interval_label = '確認'
+    else:
+        interval = evidence.get('estimated_interval')
+        interval_label = '推定'
+    if interval:
+        label += (f"   {interval_label} {format_time(interval['start_second'])}"
+                  f"–{format_time(interval['end_second'])}")
+    else:
+        label += '   区間未推定'
+    return label
+
+
 class VideoAnalysisApp:
     def __init__(self, root):
         self.root = root
@@ -57,6 +80,8 @@ class VideoAnalysisApp:
         ttk.Label(row, text='終了').pack(side='left')
         ttk.Entry(row, textvariable=self.transition_end, width=12).pack(side='left', padx=6)
         ttk.Label(row, text='MM:SS / H:MM:SS（任意）').pack(side='left', padx=6)
+        ttk.Label(feedback, text='候補の推定区間が入力されます。必要なら時刻を修正してください。',
+                  wraplength=700).pack(anchor='w', pady=(4, 0))
         ttk.Label(feedback, text='理由・コメント').pack(anchor='w', pady=(8, 0))
         ttk.Entry(feedback, textvariable=self.comment).pack(fill='x')
         actions = ttk.Frame(feedback)
@@ -133,16 +158,7 @@ class VideoAnalysisApp:
     def show_candidates(self):
         self.listbox.delete(0, tk.END)
         for item in self.candidates:
-            label = f"{format_time(item['second']):>8}   スコア {item['score']:>3}/100"
-            if item.get('evidence', {}).get('detail_unresolved'):
-                label += '   詳細時刻は未確定'
-            feedback = item.get('feedback')
-            if feedback:
-                label += '   正解' if feedback['verdict'] == 'correct' else '   不正解'
-                if feedback.get('start_second') is not None:
-                    label += (f"   {format_time(feedback['start_second'])}"
-                              f"–{format_time(feedback['end_second'])}")
-            self.listbox.insert(tk.END, label)
+            self.listbox.insert(tk.END, format_candidate_label(item))
 
     def show_missed_transitions(self):
         self.missed_listbox.delete(0, tk.END)
@@ -180,6 +196,11 @@ class VideoAnalysisApp:
             feedback = self.candidates[selected[0]].get('feedback') or {}
             start = feedback.get('start_second')
             end = feedback.get('end_second')
+            if start is None or end is None:
+                interval = self.candidates[selected[0]].get('evidence', {}).get(
+                    'estimated_interval') or {}
+                start = interval.get('start_second')
+                end = interval.get('end_second')
             self.transition_start.set(format_time(start) if start is not None else '')
             self.transition_end.set(format_time(end) if end is not None else '')
 

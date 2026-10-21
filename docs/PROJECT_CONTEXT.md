@@ -90,6 +90,7 @@ The current feature does not include roster-image recognition, automatic partici
 - Analysis is coarse-to-fine: 10-second samples across the video, then 1-second samples around candidates. Current colors derive from the user's existing HSV experiment. Do not treat scores as calibrated probabilities or fabricate exact inning labels.
 - Store per-analysis local JSON with video identity, time, settings, logic version, candidate evidence, and feedback. Do not commit videos or local result files.
 - Review feedback can label candidate boundaries with a start/end interval and add missed transitions manually. These labels are saved locally for later review; they do not automatically train or change subsequent analyses.
+- Candidate results show an estimated start/end span based on when sampled color features depart persistently from the prior stable state and settle into a new stable state. This is a visual heuristic, not baseball-play recognition; selecting a candidate pre-fills the editable feedback interval, and confirmed corrections are shown separately.
 
 ## Scope boundary
 
