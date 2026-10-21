@@ -9,9 +9,9 @@ Last updated: 2026-10-21
 - Added start/end interval feedback for detected candidates and a manual form to add transitions the detector missed. Both are stored in the per-analysis local JSON; legacy `correct_second` feedback remains readable.
 - Added `Simpsons イニングチェッカー.vbs`, which starts the UI with `pythonw.exe` so it is independent of a terminal window. Updated the existing CMD launcher to delegate to it and renamed the app window.
 - Added validation for incomplete, reversed, negative, and out-of-video intervals. Updated the local video-analysis README and project context.
-- Verification: 16 video-analysis unit tests passed; Python syntax compilation and `git diff --check` passed. The VBS smoke test could not run because CScript returned “Loading your settings failed (Access is denied).” The app was not launched because the user asked us not to control their screen.
+- Verification: 17 video-analysis unit tests passed. The VBS script passed a Windows Script Host syntax check using a temporary copy with the app-launch line replaced by a clean exit. The app itself was not launched because the user asked us not to control their screen.
 - Next: user can start the app from the branded VBS launcher and record missed transitions and interval endpoints. Feedback remains local and does not automatically change detector logic.
-- Blocker: VBS launch behavior still needs a user-side check because Windows Script Host settings are inaccessible in this environment.
+- Blocker: the user should verify the app starts from the VBS launcher on their PC; we avoided opening any window during the check.
 
 ## Active video-analysis work (2026-10-07)
 

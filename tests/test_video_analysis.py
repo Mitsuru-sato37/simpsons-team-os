@@ -18,6 +18,10 @@ class DetectorTests(unittest.TestCase):
     def test_application_uses_user_facing_name(self):
         self.assertEqual(APP_TITLE, 'Simpsons イニングチェッカー')
 
+    def test_wsh_launcher_source_uses_ascii_only(self):
+        launcher = Path(__file__).resolve().parents[1] / 'Simpsons イニングチェッカー.vbs'
+        self.assertTrue(all(byte < 128 for byte in launcher.read_bytes()))
+
     def test_persistent_change_produces_one_candidate(self):
         frames = []
         for second in range(0, 250, 10):

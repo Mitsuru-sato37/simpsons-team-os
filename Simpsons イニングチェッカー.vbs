@@ -20,7 +20,7 @@ If fso.FolderExists(pythonRoot) Then
 End If
 
 If pythonw = "" Then
-    MsgBox "Python の pythonw.exe が見つかりません。", vbExclamation, "Simpsons イニングチェッカー"
+    MsgBox "Python pythonw.exe was not found.", vbExclamation, "Simpsons Inning Checker"
     WScript.Quit 1
 End If
 
