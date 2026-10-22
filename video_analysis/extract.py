@@ -95,14 +95,27 @@ def sample_features(video, start, duration, interval, progress=None):
             hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             total = image.shape[0] * image.shape[1]
-            def ratio(lower, upper):
-                return float(cv2.countNonZero(cv2.inRange(hsv, lower, upper)) / total)
+            ranges = (((35, 40, 40), (90, 255, 255)),
+                      ((120, 40, 40), (165, 255, 255)),
+                      ((15, 40, 40), (40, 255, 255)))
+            masks = [cv2.inRange(hsv, lower, upper) for lower, upper in ranges]
+            ratios = [float(cv2.countNonZero(mask) / total) for mask in masks]
+            cell_height = image.shape[0] // 4
+            cell_width = image.shape[1] // 4
+            regions = []
+            for row in range(4):
+                for column in range(4):
+                    y0, x0 = row * cell_height, column * cell_width
+                    y1 = image.shape[0] if row == 3 else y0 + cell_height
+                    x1 = image.shape[1] if column == 3 else x0 + cell_width
+                    cell_size = (y1 - y0) * (x1 - x0)
+                    regions.append(tuple(
+                        float(cv2.countNonZero(mask[y0:y1, x0:x1]) / cell_size)
+                        for mask in masks))
             diff = (float(cv2.absdiff(gray, previous_gray).mean())
                     if previous_gray is not None else 0.0)
-            frames.append(Feature(start + index * interval,
-                                  ratio((35, 40, 40), (90, 255, 255)),
-                                  ratio((120, 40, 40), (165, 255, 255)),
-                                  ratio((15, 40, 40), (40, 255, 255)), diff))
+            frames.append(Feature(start + index * interval, *ratios, diff,
+                                  tuple(regions)))
             previous_gray = gray
             if progress and index % 10 == 0:
                 progress(min(start + index * interval, start + duration))

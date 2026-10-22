@@ -32,6 +32,20 @@ class DetectorTests(unittest.TestCase):
         })
         self.assertIn('推定 00:55–01:08', label)
 
+    def test_spatial_candidate_keeps_its_detected_interval_during_refinement(self):
+        interval = {'start_second': 160, 'end_second': 380}
+        candidate = Candidate(270, 90, {
+            'detection_method': 'spatial_state',
+            'estimated_interval': interval,
+            'regional_distance': 12.0,
+            'spatial_path_ratio': 8.0,
+        })
+
+        result = refine_candidates([candidate], lambda *_: [], 500)
+
+        self.assertEqual(result[0].evidence['estimated_interval'], interval)
+        self.assertEqual(result[0].evidence['detection_method'], 'spatial_state')
+
     def test_selecting_candidate_prefills_transition_interval(self):
         from video_analysis.app import VideoAnalysisApp
         app = VideoAnalysisApp.__new__(VideoAnalysisApp)
@@ -80,6 +94,138 @@ class DetectorTests(unittest.TestCase):
         result = detect_candidates(frames, interval=10)
         self.assertEqual(len(result), 1)
         self.assertLessEqual(abs(result[0].second - 120), 10)
+
+    def test_long_distributed_spatial_shift_finds_transition_interval(self):
+        before = [[0.4, 0.002, 0.2] for _ in range(16)]
+        after = [cell.copy() for cell in before]
+        after[3][1] += 0.006
+        after[7][1] -= 0.006
+        after[10][0] += 0.004
+        after[11][0] -= 0.004
+        after[15][2] += 0.025
+        after[14][2] -= 0.025
+        progress_by_second = {
+            160: 0.0, 180: 0.9, 200: 0.1, 220: 0.9,
+            240: 0.1, 260: 0.9, 280: 0.1, 300: 0.9,
+            320: 0.1, 340: 0.9, 360: 0.1,
+        }
+        frames = []
+        for second in range(0, 601, 20):
+            if second < 160:
+                regions = before
+            elif second >= 380:
+                regions = after
+            else:
+                progress = progress_by_second[second]
+                regions = [[left + (right - left) * progress
+                            for left, right in zip(old, new)]
+                           for old, new in zip(before, after)]
+            averages = [sum(cell[channel] for cell in regions) / 16
+                        for channel in range(3)]
+            frames.append(Feature(second, *averages, 5.0,
+                                  regions=tuple(tuple(cell) for cell in regions)))
+
+        result = detect_candidates(frames, interval=20, min_gap_seconds=90)
+
+        spatial = [candidate for candidate in result
+                   if candidate.evidence.get('detection_method') == 'spatial_state']
+        self.assertEqual(len(spatial), 1)
+        interval = spatial[0].evidence['estimated_interval']
+        self.assertLessEqual(abs(interval['start_second'] - 160), 20)
+        self.assertLessEqual(abs(interval['end_second'] - 380), 20)
+
+    def test_single_sudden_spatial_change_is_not_a_long_transition(self):
+        before = [[0.4, 0.002, 0.2] for _ in range(16)]
+        after = [cell.copy() for cell in before]
+        after[3][1] += 0.006
+        after[7][1] -= 0.006
+        after[10][0] += 0.004
+        after[11][0] -= 0.004
+        after[15][2] += 0.025
+        after[14][2] -= 0.025
+        frames = []
+        for second in range(0, 601, 20):
+            regions = before if second < 160 else after
+            averages = [sum(cell[channel] for cell in regions) / 16
+                        for channel in range(3)]
+            frames.append(Feature(second, *averages, 5.0,
+                                  regions=tuple(tuple(cell) for cell in regions)))
+
+        result = detect_candidates(frames, interval=20, min_gap_seconds=90)
+
+        self.assertFalse(any(candidate.evidence.get('detection_method') ==
+                             'spatial_state' for candidate in result))
+
+    def test_spatial_change_during_a_motion_drop_is_not_a_transition(self):
+        before = [[0.4, 0.002, 0.2] for _ in range(16)]
+        after = [cell.copy() for cell in before]
+        after[3][1] += 0.006
+        after[7][1] -= 0.006
+        after[10][0] += 0.004
+        after[11][0] -= 0.004
+        after[15][2] += 0.025
+        after[14][2] -= 0.025
+        progress_by_second = {
+            160: 0.0, 180: 0.9, 200: 0.1, 220: 0.9,
+            240: 0.1, 260: 0.9, 280: 0.1, 300: 0.9,
+            320: 0.1, 340: 0.9, 360: 0.1,
+        }
+        frames = []
+        for second in range(0, 601, 20):
+            if second < 160:
+                regions, diff = before, 12.0
+            elif second >= 380:
+                regions, diff = after, 6.0
+            else:
+                progress = progress_by_second[second]
+                regions = [[left + (right - left) * progress
+                            for left, right in zip(old, new)]
+                           for old, new in zip(before, after)]
+                diff = 5.0
+            averages = [sum(cell[channel] for cell in regions) / 16
+                        for channel in range(3)]
+            frames.append(Feature(second, *averages, diff,
+                                  regions=tuple(tuple(cell) for cell in regions)))
+
+        result = detect_candidates(frames, interval=20, min_gap_seconds=90)
+
+        self.assertFalse(any(candidate.evidence.get('detection_method') ==
+                             'spatial_state' for candidate in result))
+
+    def test_spatial_change_confined_to_midfield_is_not_a_transition(self):
+        before = [[0.4, 0.002, 0.2] for _ in range(16)]
+        after = [cell.copy() for cell in before]
+        after[0][1] += 0.006
+        after[1][1] -= 0.006
+        after[2][0] += 0.004
+        after[3][0] -= 0.004
+        after[4][2] += 0.025
+        after[5][2] -= 0.025
+        progress_by_second = {
+            160: 0.0, 180: 0.9, 200: 0.1, 220: 0.9,
+            240: 0.1, 260: 0.9, 280: 0.1, 300: 0.9,
+            320: 0.1, 340: 0.9, 360: 0.1,
+        }
+        frames = []
+        for second in range(0, 601, 20):
+            if second < 160:
+                regions = before
+            elif second >= 380:
+                regions = after
+            else:
+                progress = progress_by_second[second]
+                regions = [[left + (right - left) * progress
+                            for left, right in zip(old, new)]
+                           for old, new in zip(before, after)]
+            averages = [sum(cell[channel] for cell in regions) / 16
+                        for channel in range(3)]
+            frames.append(Feature(second, *averages, 5.0,
+                                  regions=tuple(tuple(cell) for cell in regions)))
+
+        result = detect_candidates(frames, interval=20, min_gap_seconds=90)
+
+        self.assertFalse(any(candidate.evidence.get('detection_method') ==
+                             'spatial_state' for candidate in result))
 
     def test_time_round_trip(self):
         self.assertEqual(parse_time('1:02:03'), 3723)

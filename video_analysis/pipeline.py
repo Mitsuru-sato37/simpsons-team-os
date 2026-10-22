@@ -106,12 +106,15 @@ def estimate_transition_interval(frames, center, reference_gap=15,
 def refine_candidates(coarse, extract, duration, radius=45):
     refined = []
     for candidate in coarse:
+        if candidate.evidence.get('detection_method') == 'spatial_state':
+            refined.append(candidate)
+            continue
         start = max(0, candidate.second - radius)
         end = min(duration, candidate.second + radius)
         detail = extract(start, end - start, 1)
         nearby = detect_candidates(detail, interval=1, window_seconds=15,
                                    min_gap_seconds=20, limit=8,
-                                   min_score=38)
+                                   min_score=38, include_spatial=False)
         nearby = [item for item in nearby
                   if abs(item.second - candidate.second) <= 20]
         if nearby:

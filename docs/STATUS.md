@@ -1,13 +1,15 @@
 # Status
 
-Status: Video-analysis launcher reports startup errors; transition intervals and feedback are supported
-Last updated: 2026-10-21
+Status: Video-analysis detector updated from saved local inning feedback (logic 1.2)
+Last updated: 2026-10-22
 
 This file is the stable handoff entry point. Detailed project context and progress remain authoritative in `docs/PROJECT_CONTEXT.md` and `docs/PROGRESS.md`.
 
 ## Current state
 
-- Video-analysis work is on `codex/video-inning-mvp`, based on `main`. Candidate rows show heuristic start/end intervals (logic 1.1), prefill editable feedback fields, and distinguish confirmed/manual intervals. Missed intervals can be added manually. The VBS launcher starts Python without a terminal and shows diagnostic details if startup fails. Feedback stays local and does not automatically alter detection logic.
+- Video-analysis work is on `codex/video-inning-mvp`, based on `main`. Logic 1.2 adds a 4x4 spatial color-state route, using local feedback-derived thresholds and movement checks alongside the existing global-color route. Candidate rows show heuristic start/end intervals and prefill editable feedback fields. Missed intervals can be added manually. Feedback remains local and does not automatically alter logic. Current feedback and camera assumptions are documented in `video_analysis/README.md` and `docs/PROJECT_CONTEXT.md`.
+- Verified: all 25 `tests/test_video_analysis.py` tests pass. Local replay confirmed spatial candidates overlapping all seven manually entered positive intervals, including GX020480 933–1063 (detected 890–1050); checked false-positive examples were rejected after the home-plate-side share gate. The replay is a small, single-camera feedback set and is not a general accuracy estimate.
+- Next: review detector behavior in the user's app on additional recordings, especially whether estimated starts/ends are useful; collect new misses and false positives before changing camera-position assumptions.
 - Repository initialized for cross-PC Codex development.
 - Durable Simpsons / ラキポタ context is recorded.
 - The fee collector continues on the separate `codex/fee-collector-roster-picker` branch, with PR #13 open. This video branch is based on `main` and does not include that branch's source changes.

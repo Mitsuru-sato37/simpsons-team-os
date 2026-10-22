@@ -1,12 +1,15 @@
 # Progress
 
-Status: 動画解析ランチャーの起動診断と候補選択を修正
+Status: 保存済みフィードバックを用いてイニング検出ロジックを更新
 Last updated: 2026-10-21
 
 ## Active video-analysis work (2026-10-21)
 
 - Active branch: `codex/video-inning-mvp`.
 - Added start/end interval feedback for detected candidates and a manual form to add transitions the detector missed. Both are stored in the per-analysis local JSON; legacy `correct_second` feedback remains readable.
+- Reviewed local feedback and sampled matching source footage. Added detector logic 1.2 with 4×4 regional color features, stable-state distance, long transition path, activity and spatial-distribution gates, and a rightmost/home-plate-side share gate tuned to the current fixed wide camera. This is manually calibrated from seven positive intervals and five incorrect/negative examples, not automatic learning.
+- Local replay produced overlapping candidates for all seven positive intervals, including GX020480 933–1063 (detected 890–1050). Known negative examples were rejected in replay. All 25 video-analysis unit tests pass. Results are limited to the available footage and camera angle.
+- Active branch: `codex/video-inning-mvp`. Next: user reviews results in the desktop app and supplies additional misses/false positives; evaluate start/end usefulness before further tuning. No blocking dependency.
 - Candidate analysis now estimates the visual transition interval from the first sustained departure from the prior stable color state through the sustained arrival at the new state. Candidate rows display the estimate or a manual confirmation, and candidate selection pre-fills the editable interval fields. Logic version is 1.1.
 - Added `Simpsons イニングチェッカー.vbs`, which starts the UI with `pythonw.exe` so it is independent of a terminal window. Updated the existing CMD launcher to delegate to it and renamed the app window.
 - Added validation for incomplete, reversed, negative, and out-of-video intervals. Updated the local video-analysis README and project context.
