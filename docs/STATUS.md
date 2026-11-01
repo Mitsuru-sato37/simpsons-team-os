@@ -35,3 +35,11 @@ Before ending a meaningful session:
 4. Commit and push all intended changes.
 
 Codex chat history is optional context only; GitHub documentation must be sufficient to resume on another PC.
+
+
+## Shared standard alignment — 2026-11-02
+
+- Updated this repository's instructions for scope-based idea storage and public-repository privacy.
+- Canonical source: https://github.com/Mitsuru-sato37/ai-workspace-foundation/blob/main/docs/11_idea_intake.md
+- Rollout record: https://github.com/Mitsuru-sato37/ai-workspace-foundation/blob/main/docs/14_shared_standard_rollout.md
+- This branch contains the alignment change; it is complete after the PR is merged.
